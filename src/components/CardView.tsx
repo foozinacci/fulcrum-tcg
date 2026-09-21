@@ -160,7 +160,7 @@ export const CardView: React.FC<CardViewProps> = ({
     >
       {/* CARD BACK */}
       {isCurrentlyBack ? (
-        <div className={`w-full h-full rounded-xl overflow-hidden border-2 border-fulcrum-gold/80 shadow-2xl relative bg-[#0a0814] ${isFlippingAnim ? '[transform:rotateY(180deg)]' : ''}`}>
+        <div className={`w-full h-full rounded-xl overflow-hidden border-2 border-fulcrum-gold/80 shadow-2xl relative bg-[#0a0814] ${showBackDuringAnim ? '[transform:scaleX(-1)]' : ''}`}>
           <img
             src="/assets/card-back.jpg"
             alt="FULCRUM Card Back"
