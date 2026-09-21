@@ -93,7 +93,9 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
             <div>
               <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Official FULCRUM Stats</div>
               <div className="flex flex-wrap gap-4 mt-1 text-sm font-semibold">
-                <span className="text-amber-300">Load: {selectedCard.load} (Expedite: {selectedCard.expediteLoad || selectedCard.load + 2})</span>
+                <span className="text-amber-300">
+                  Load: {selectedCard.load}{selectedCard.expediteLoad !== undefined ? ` (Expedite: ${selectedCard.expediteLoad})` : ''}
+                </span>
                 <span className="text-emerald-300">Core Value: {selectedCard.coreValue !== undefined && !selectedCard.isPrimal ? `+${selectedCard.coreValue}` : 'N/A'}</span>
                 <span className="text-cyan-300">Pace: {selectedCard.pace}</span>
                 {selectedCard.edge !== undefined && (
