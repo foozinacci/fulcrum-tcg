@@ -171,11 +171,270 @@ export const PRIMAL_AVATARS_LIST: Card[] = [
   KHARV_ROTWATCH,
 ];
 
-export const CARD_DATABASE: Card[] = [
-  ...PRIMAL_AVATARS_LIST,
+// --- 6 PACT RELICS (PACE 2, LOAD 2, CORE 2) ---
+export const COREFEAST_TOTEM: Card = {
+  id: 'relic_corefeast_01',
+  name: 'Corefeast Totem',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'relic',
+  pact: 'Corefeast',
+  colors: ['amber', 'green'],
+  description: 'First Corefeast spell each turn with Load 3+ costs 1 less.',
+  svgArtId: 'neutral_relic',
+  ability: {
+    trigger: 'static',
+    description: 'First Corefeast spell each turn with Load 3+ costs 1 less.',
+  },
+};
+
+export const IRONBOUND_TOTEM: Card = {
+  id: 'relic_ironbound_02',
+  name: 'Ironbound Totem',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'relic',
+  pact: 'Ironbound',
+  colors: ['amber', 'red'],
+  description: 'First Ironbound spell each turn with Load 3+ costs 1 less.',
+  svgArtId: 'neutral_relic',
+  ability: {
+    trigger: 'static',
+    description: 'First Ironbound spell each turn with Load 3+ costs 1 less.',
+  },
+};
+
+export const VOIDHALLOW_TOTEM: Card = {
+  id: 'relic_voidhallow_03',
+  name: 'Voidhallow Totem',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'relic',
+  pact: 'Voidhallow',
+  colors: ['purple', 'amber'],
+  description: 'First Voidhallow spell each turn with Load 3+ costs 1 less.',
+  svgArtId: 'neutral_relic',
+  ability: {
+    trigger: 'static',
+    description: 'First Voidhallow spell each turn with Load 3+ costs 1 less.',
+  },
+};
+
+export const CHARMBRAND_TOTEM: Card = {
+  id: 'relic_charmbrand_04',
+  name: 'Charmbrand Totem',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'relic',
+  pact: 'Charmbrand',
+  colors: ['purple', 'red'],
+  description: 'First Charmbrand spell each turn with Load 3+ costs 1 less.',
+  svgArtId: 'neutral_relic',
+  ability: {
+    trigger: 'static',
+    description: 'First Charmbrand spell each turn with Load 3+ costs 1 less.',
+  },
+};
+
+export const RUNESCALE_TOTEM: Card = {
+  id: 'relic_runescale_05',
+  name: 'Runescale Totem',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'relic',
+  pact: 'Runescale',
+  colors: ['green', 'red'],
+  description: 'First Runescale spell each turn with Load 3+ costs 1 less.',
+  svgArtId: 'neutral_relic',
+  ability: {
+    trigger: 'static',
+    description: 'First Runescale spell each turn with Load 3+ costs 1 less.',
+  },
+};
+
+export const ROTWATCH_TOTEM: Card = {
+  id: 'relic_rotwatch_06',
+  name: 'Rotwatch Totem',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'relic',
+  pact: 'Rotwatch',
+  colors: ['purple', 'green'],
+  description: 'First Rotwatch spell each turn with Load 3+ costs 1 less.',
+  svgArtId: 'neutral_relic',
+  ability: {
+    trigger: 'static',
+    description: 'First Rotwatch spell each turn with Load 3+ costs 1 less.',
+  },
+};
+
+export const PACT_RELICS_LIST: Card[] = [
+  COREFEAST_TOTEM,
+  IRONBOUND_TOTEM,
+  VOIDHALLOW_TOTEM,
+  CHARMBRAND_TOTEM,
+  RUNESCALE_TOTEM,
+  ROTWATCH_TOTEM,
 ];
 
-export const PLAYABLE_SPELLS: Card[] = [];
+// --- 6 PACT RUNES (PACE 2, LOAD 2, CORE 2) ---
+export const COREFEAST_INCANTATION: Card = {
+  id: 'rune_corefeast_01',
+  name: 'Corefeast Incantation',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'rune',
+  pact: 'Corefeast',
+  colors: ['amber', 'green'],
+  description: 'Generates 1 Core each of your turns.\nSacrifice: return a Corefeast spell from discard to hand.',
+  svgArtId: 'neutral_golem',
+  ability: {
+    trigger: 'onTurnStart',
+    description: 'Generates 1 Core each of your turns.',
+    produceCore: 1,
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Sacrifice: return a Corefeast spell from discard to hand.',
+  },
+};
+
+export const IRONBOUND_INCANTATION: Card = {
+  id: 'rune_ironbound_02',
+  name: 'Ironbound Incantation',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'rune',
+  pact: 'Ironbound',
+  colors: ['amber', 'red'],
+  description: 'Generates 1 Core each of your turns.\nSacrifice: return an Ironbound spell from discard to hand.',
+  svgArtId: 'neutral_golem',
+  ability: {
+    trigger: 'onTurnStart',
+    description: 'Generates 1 Core each of your turns.',
+    produceCore: 1,
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Sacrifice: return an Ironbound spell from discard to hand.',
+  },
+};
+
+export const VOIDHALLOW_INCANTATION: Card = {
+  id: 'rune_voidhallow_03',
+  name: 'Voidhallow Incantation',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'rune',
+  pact: 'Voidhallow',
+  colors: ['purple', 'amber'],
+  description: 'Generates 1 Core each of your turns.\nSacrifice: return a Voidhallow spell from discard to hand.',
+  svgArtId: 'neutral_golem',
+  ability: {
+    trigger: 'onTurnStart',
+    description: 'Generates 1 Core each of your turns.',
+    produceCore: 1,
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Sacrifice: return a Voidhallow spell from discard to hand.',
+  },
+};
+
+export const CHARMBRAND_INCANTATION: Card = {
+  id: 'rune_charmbrand_04',
+  name: 'Charmbrand Incantation',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'rune',
+  pact: 'Charmbrand',
+  colors: ['purple', 'red'],
+  description: 'Generates 1 Core each of your turns.\nSacrifice: return a Charmbrand spell from discard to hand.',
+  svgArtId: 'neutral_golem',
+  ability: {
+    trigger: 'onTurnStart',
+    description: 'Generates 1 Core each of your turns.',
+    produceCore: 1,
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Sacrifice: return a Charmbrand spell from discard to hand.',
+  },
+};
+
+export const RUNESCALE_INCANTATION: Card = {
+  id: 'rune_runescale_05',
+  name: 'Runescale Incantation',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'rune',
+  pact: 'Runescale',
+  colors: ['green', 'red'],
+  description: 'Generates 1 Core each of your turns.\nSacrifice: return a Runescale spell from discard to hand.',
+  svgArtId: 'neutral_golem',
+  ability: {
+    trigger: 'onTurnStart',
+    description: 'Generates 1 Core each of your turns.',
+    produceCore: 1,
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Sacrifice: return a Runescale spell from discard to hand.',
+  },
+};
+
+export const ROTWATCH_INCANTATION: Card = {
+  id: 'rune_rotwatch_06',
+  name: 'Rotwatch Incantation',
+  load: 2,
+  pace: 2,
+  coreValue: 2,
+  type: 'rune',
+  pact: 'Rotwatch',
+  colors: ['purple', 'green'],
+  description: 'Generates 1 Core each of your turns.\nSacrifice: return a Rotwatch spell from discard to hand.',
+  svgArtId: 'neutral_golem',
+  ability: {
+    trigger: 'onTurnStart',
+    description: 'Generates 1 Core each of your turns.',
+    produceCore: 1,
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Sacrifice: return a Rotwatch spell from discard to hand.',
+  },
+};
+
+export const PACT_RUNES_LIST: Card[] = [
+  COREFEAST_INCANTATION,
+  IRONBOUND_INCANTATION,
+  VOIDHALLOW_INCANTATION,
+  CHARMBRAND_INCANTATION,
+  RUNESCALE_INCANTATION,
+  ROTWATCH_INCANTATION,
+];
+
+export const CARD_DATABASE: Card[] = [
+  ...PRIMAL_AVATARS_LIST,
+  ...PACT_RELICS_LIST,
+  ...PACT_RUNES_LIST,
+];
+
+export const PLAYABLE_SPELLS: Card[] = [
+  ...PACT_RELICS_LIST,
+  ...PACT_RUNES_LIST,
+];
 
 export const STARTER_DECK_A: Card[] = [];
 

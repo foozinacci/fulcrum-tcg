@@ -12,7 +12,7 @@ export interface HandCard {
 }
 
 export interface CardAbility {
-  trigger: 'onSummon' | 'onDeath' | 'onTurnStart' | 'onAttack' | 'expedite' | 'counterspell' | 'activated';
+  trigger: 'onSummon' | 'onDeath' | 'onTurnStart' | 'onAttack' | 'expedite' | 'counterspell' | 'activated' | 'static';
   description: string;
   damage?: number;
   heal?: number;
