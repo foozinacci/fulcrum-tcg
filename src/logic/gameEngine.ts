@@ -1,5 +1,5 @@
 import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase } from '../types/game';
-import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, PRIMAL_AVATARS_LIST } from '../data/cards';
+import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, NYSSARA_HALLOWER, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
 function shuffleDeck(deck: Card[]): Card[] {
@@ -135,6 +135,9 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
     return { ...state, logs };
   }
 
+  const opponentKey = isPlayer ? 'opponent' : 'player';
+  const opp = { ...state[opponentKey] };
+
   const card = handCard.card;
   const coreGain = card.coreValue || 0;
   p.hand.splice(cardIndex, 1);
@@ -148,11 +151,25 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
     timestamp: new Date().toLocaleTimeString(),
   });
 
+  // Nyssara Ability 1: Whenever an opponent converts a card for core, siphon 2 core from that player.
+  if (opp.primalAvatar.id === NYSSARA_HALLOWER.id) {
+    const siphoned = Math.min(2, p.corePool);
+    p.corePool -= siphoned;
+    opp.corePool += siphoned;
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Nyssara Ability 1 Triggered! ${opp.name} siphoned ${siphoned} Core from ${p.name}!`,
+      type: 'primal',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+
   soundFx.playCardSummonSound();
 
   return {
     ...state,
     [playerKey]: p,
+    [opponentKey]: opp,
     logs,
   };
 }
@@ -637,6 +654,55 @@ export function activatePrimalAvatarAbility2(state: GameState): GameState {
     }
     soundFx.playSpellCastSound();
     return { ...state, [playerKey]: p, logs };
+  } else if (p.primalAvatar.id === NYSSARA_HALLOWER.id) {
+    if (p.corePool < 3) {
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `Nyssara Ability 2 requires 3 Core! Current pool: ${p.corePool}.`,
+        type: 'info',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      return { ...state, logs };
+    }
+    p.corePool -= 3;
+    const opponentKey = isPlayer ? 'opponent' : 'player';
+    const opp = { ...state[opponentKey] };
+
+    if (opp.deck.length > 0) {
+      const [topCard, ...remainingDeck] = opp.deck;
+      opp.deck = remainingDeck;
+      opp.graveyard.push(topCard);
+      const convertedCore = topCard.coreValue || 0;
+      opp.corePool += convertedCore;
+
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `${p.name} activated Nyssara Ability 2 (Paid 3 Core): Forced ${opp.name} to convert top card ${topCard.name} (+${convertedCore} Core)!`,
+        type: 'primal',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+
+      // Nyssara Ability 1 triggers on opponent conversion!
+      const siphoned = Math.min(2, opp.corePool);
+      opp.corePool -= siphoned;
+      p.corePool += siphoned;
+
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `Nyssara Ability 1 Siphoned ${siphoned} Core back from ${opp.name}!`,
+        type: 'primal',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    } else {
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `${p.name} activated Nyssara Ability 2, but ${opp.name}'s deck is empty!`,
+        type: 'info',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+    soundFx.playSpellCastSound();
+    return { ...state, [playerKey]: p, [opponentKey]: opp, logs };
   }
 
   return state;

@@ -54,9 +54,35 @@ export const VORRATH_IRONBOUND: Card = {
   },
 };
 
+export const NYSSARA_HALLOWER: Card = {
+  id: 'primal_nyssara_03',
+  name: 'Nyssara, Hallower',
+  load: 2,
+  expediteLoad: 5,
+  pace: 5,
+  type: 'primal_avatar',
+  isPrimal: true,
+  edge: 2,
+  grit: 5,
+  coreAttackRatio: 1.5,
+  description: 'Pace 5. Ability 1: Whenever an opponent converts a card for Core, siphon 2 Core from them. Ability 2: Pay 3 Core: Target player converts top card of deck for its Core value.',
+  flavorText: 'A veiled weaver of sacred threads, siphoning raw essence from every conversion.',
+  imageArtUrl: '/assets/nyssara.jpg',
+  svgArtId: 'sol_herald',
+  ability: {
+    trigger: 'activated',
+    description: 'Whenever an opponent converts a card for Core, siphon 2 Core from that player.',
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Pay 3 Core: Target player converts the top card of their deck for its Core value.',
+  },
+};
+
 export const PRIMAL_AVATARS_LIST: Card[] = [
   GLUTTRIX_CORESEEKER,
   VORRATH_IRONBOUND,
+  NYSSARA_HALLOWER,
 ];
 
 export const CARD_DATABASE: Card[] = [
