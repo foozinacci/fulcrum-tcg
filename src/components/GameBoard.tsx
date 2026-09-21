@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GameState, Card, BoardPermanent } from '../types/game';
 import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn, activatePrimalAvatarAbility2 } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
-import { CardView } from './CardView';
+import { CardView, getPactBorderStyle } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
 import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
@@ -419,7 +419,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
         <div className="lg:col-span-1 flex flex-col justify-between gap-2 h-full min-h-0 overflow-y-auto bg-fulcrum-panel/90 border border-fulcrum-border rounded-2xl p-3 shadow-2xl">
           
           {/* TOP: CARD INSPECTION HOVER PREVIEW */}
-          <div className="bg-black/60 border border-white/10 rounded-xl p-3 flex flex-col justify-between shadow-inner flex-1 min-h-[260px] overflow-hidden">
+          <div className={`rounded-xl p-3 flex flex-col justify-between shadow-inner flex-1 min-h-[260px] overflow-hidden transition-all duration-300 border-2 ${
+            hoveredCard ? getPactBorderStyle(hoveredCard) : 'bg-black/60 border-white/10'
+          }`}>
             {hoveredCard ? (
               <div className="flex flex-col h-full justify-between animate-in fade-in duration-150 overflow-hidden">
                 <div className="text-center font-serif font-bold text-amber-300 text-sm border-b border-white/10 pb-1 truncate">

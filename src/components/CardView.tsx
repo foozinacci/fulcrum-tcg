@@ -23,6 +23,29 @@ interface CardViewProps {
   disableClickFlip?: boolean;
 }
 
+export const getPactBorderStyle = (card: Card) => {
+  if (card.pact === 'Voidhallow' || (card.colors?.includes('purple') && card.colors?.includes('amber'))) {
+    return 'border-purple-400 shadow-[0_0_22px_rgba(168,85,247,0.6),0_0_22px_rgba(245,158,11,0.5)] bg-gradient-to-b from-[#2e1065] via-[#120826] to-[#451a03]';
+  }
+  if (card.pact === 'Rotwatch' || (card.colors?.includes('purple') && card.colors?.includes('green'))) {
+    return 'border-emerald-400 shadow-[0_0_22px_rgba(168,85,247,0.6),0_0_22px_rgba(16,185,129,0.5)] bg-gradient-to-b from-[#2e1065] via-[#0b1f14] to-[#064e3b]';
+  }
+  if (card.pact === 'Charmbrand' || (card.colors?.includes('purple') && card.colors?.includes('red'))) {
+    return 'border-red-500 shadow-[0_0_22px_rgba(168,85,247,0.6),0_0_22px_rgba(239,68,68,0.5)] bg-gradient-to-b from-[#2e1065] via-[#240a16] to-[#450a0a]';
+  }
+  if (card.pact === 'Corefeast' || (card.colors?.includes('amber') && card.colors?.includes('green'))) {
+    return 'border-amber-400 shadow-[0_0_22px_rgba(245,158,11,0.6),0_0_22px_rgba(16,185,129,0.5)] bg-gradient-to-b from-[#451a03] via-[#1a240c] to-[#064e3b]';
+  }
+  if (card.pact === 'Ironbound' || (card.colors?.includes('amber') && card.colors?.includes('red'))) {
+    return 'border-amber-500 shadow-[0_0_22px_rgba(245,158,11,0.6),0_0_22px_rgba(239,68,68,0.5)] bg-gradient-to-b from-[#451a03] via-[#281308] to-[#450a0a]';
+  }
+  if (card.pact === 'Runescale' || (card.colors?.includes('green') && card.colors?.includes('red'))) {
+    return 'border-emerald-400 shadow-[0_0_22px_rgba(16,185,129,0.6),0_0_22px_rgba(239,68,68,0.5)] bg-gradient-to-b from-[#064e3b] via-[#1f190c] to-[#450a0a]';
+  }
+  if (card.isPrimal) return 'border-fulcrum-gold shadow-[0_0_25px_rgba(243,198,105,0.7)] bg-gradient-to-b from-[#3d2a06] to-[#140b02]';
+  return 'border-fulcrum-gold/70 shadow-[0_0_15px_rgba(243,198,105,0.3)] bg-gradient-to-b from-[#21183b] to-[#0c0817]';
+};
+
 export const CardView: React.FC<CardViewProps> = ({
   card,
   isFlipped = false,
@@ -128,29 +151,6 @@ export const CardView: React.FC<CardViewProps> = ({
     lg: 'w-56 h-[336px] text-sm',
   }[size];
 
-  const getCardBorder = () => {
-    if (card.pact === 'Voidhallow' || (card.colors?.includes('purple') && card.colors?.includes('amber'))) {
-      return 'border-purple-400 shadow-[0_0_18px_rgba(168,85,247,0.5),0_0_18px_rgba(245,158,11,0.4)] bg-gradient-to-b from-[#2e1065] via-[#120826] to-[#451a03]';
-    }
-    if (card.pact === 'Rotwatch' || (card.colors?.includes('purple') && card.colors?.includes('green'))) {
-      return 'border-emerald-400 shadow-[0_0_18px_rgba(168,85,247,0.5),0_0_18px_rgba(16,185,129,0.4)] bg-gradient-to-b from-[#2e1065] via-[#0b1f14] to-[#064e3b]';
-    }
-    if (card.pact === 'Charmbrand' || (card.colors?.includes('purple') && card.colors?.includes('red'))) {
-      return 'border-red-500 shadow-[0_0_18px_rgba(168,85,247,0.5),0_0_18px_rgba(239,68,68,0.4)] bg-gradient-to-b from-[#2e1065] via-[#240a16] to-[#450a0a]';
-    }
-    if (card.pact === 'Corefeast' || (card.colors?.includes('amber') && card.colors?.includes('green'))) {
-      return 'border-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.5),0_0_18px_rgba(16,185,129,0.4)] bg-gradient-to-b from-[#451a03] via-[#1a240c] to-[#064e3b]';
-    }
-    if (card.pact === 'Ironbound' || (card.colors?.includes('amber') && card.colors?.includes('red'))) {
-      return 'border-amber-500 shadow-[0_0_18px_rgba(245,158,11,0.5),0_0_18px_rgba(239,68,68,0.4)] bg-gradient-to-b from-[#451a03] via-[#281308] to-[#450a0a]';
-    }
-    if (card.pact === 'Runescale' || (card.colors?.includes('green') && card.colors?.includes('red'))) {
-      return 'border-emerald-400 shadow-[0_0_18px_rgba(16,185,129,0.5),0_0_18px_rgba(239,68,68,0.4)] bg-gradient-to-b from-[#064e3b] via-[#1f190c] to-[#450a0a]';
-    }
-    if (card.isPrimal) return 'border-fulcrum-gold shadow-[0_0_20px_rgba(243,198,105,0.6)] bg-gradient-to-b from-[#3d2a06] to-[#140b02]';
-    return 'border-fulcrum-gold/70 shadow-[0_0_12px_rgba(243,198,105,0.2)] bg-gradient-to-b from-[#21183b] to-[#0c0817]';
-  };
-
   const currentEdge = customEdge !== undefined ? customEdge : card.edge || 0;
   const currentGrit = customGrit !== undefined ? customGrit : card.grit || 0;
 
@@ -194,7 +194,7 @@ export const CardView: React.FC<CardViewProps> = ({
       >
         {/* CARD FRONT FACE */}
         <div
-          className={`absolute inset-0 w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden shadow-xl backface-hidden ${getCardBorder()}`}
+          className={`absolute inset-0 w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden shadow-xl backface-hidden ${getPactBorderStyle(card)}`}
         >
           {/* Header: Full width Card Name (No truncating) */}
           <div className="flex items-center justify-center z-10 flex-shrink-0 py-0.5 px-0.5">
@@ -298,7 +298,7 @@ export const CardView: React.FC<CardViewProps> = ({
               left: `${hoverPos.left}px`,
               zIndex: 99999,
             }}
-            className="w-80 max-h-[85vh] pointer-events-none rounded-2xl border-2 border-fulcrum-gold bg-[#0f0a1c] p-3 shadow-[0_0_40px_rgba(243,198,105,0.6)] flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150"
+            className={`w-80 max-h-[85vh] pointer-events-none rounded-2xl border-2 p-3 shadow-2xl flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150 ${getPactBorderStyle(card)}`}
           >
             <div className="flex items-center justify-center border-b border-white/10 pb-1.5 flex-shrink-0">
               <div className="font-serif font-bold text-slate-100 text-base text-center px-1 truncate">{card.name}</div>
