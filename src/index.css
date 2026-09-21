@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #080512;
+    background-image: 
+      radial-gradient(at 50% 0%, rgba(46, 37, 84, 0.4) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(20, 10, 40, 0.6) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(20, 10, 40, 0.6) 0px, transparent 50%);
+    min-height: 100vh;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d091f;
+}
+::-webkit-scrollbar-thumb {
+  background: #2e2554;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f3c669;
+}
+
+/* Card 3D Perspective */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Metallic text & border gradients */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #fff3b0 0%, #f3c669 50%, #c48b28 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-sol-gradient {
+  background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-umbra-gradient {
+  background: linear-gradient(135deg, #f5d0fe 0%, #c084fc 50%, #7e22ce 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-gold-glow {
+  border-image: linear-gradient(to bottom, #f3c669, #7e22ce) 1;
+}
+
+@keyframes attackTargetPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.animate-target-pulse {
+  animation: attackTargetPulse 1.2s ease-in-out infinite;
+}
