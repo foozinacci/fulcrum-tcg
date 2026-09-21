@@ -1,38 +1,39 @@
 export type CardType = 'being' | 'charm' | 'relic' | 'attachment' | 'rune' | 'primal_avatar';
 
-export type Faction = 'sol' | 'umbra' | 'neutral';
+export type AttachmentType = 'weapon' | 'armor';
 
-export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
+export interface HandCard {
+  card: Card;
+  drawnThisTurn: boolean; // Conversion into Core is only legal the turn it is drawn!
+}
 
 export interface CardAbility {
-  trigger: 'onSummon' | 'onDeath' | 'onTurnStart' | 'onAttack' | 'passive' | 'expedite';
+  trigger: 'onSummon' | 'onDeath' | 'onTurnStart' | 'onAttack' | 'expedite' | 'counterspell';
   description: string;
-  fulcrumShift?: number; // Shifts Fulcrum Balance
   damage?: number;
   heal?: number;
   drawCards?: number;
   buffEdge?: number;
   buffGrit?: number;
-  grantGuard?: boolean;
+  produceCore?: number;
 }
 
 export interface Card {
   id: string;
   name: string;
-  load: number;          // Cost to cast normal
-  expediteLoad?: number; // Cost to cast with Expedite (ignores Pace)
-  coreValue: number;     // Value if converted into Core resource pool
-  pace: number;          // Earliest legal turn to cast
-  faction: Faction;
+  load: number;           // Cost to cast
+  expediteLoad?: number;  // Higher Load cost to ignore Pace restriction
+  coreValue: number;      // Value if converted into Core pool
+  pace: number;           // Earliest legal turn (1, 2, 3, etc.)
   type: CardType;
-  rarity: Rarity;
-  isPrimal?: boolean;    // Primal supertype (max 1 copy)
-  edge?: number;         // Attack power (Offense)
-  grit?: number;         // Toughness/Defense (Resets each turn)
-  coreAttackRatio?: number; // Core banked to damage ratio (default 1)
+  attachmentType?: AttachmentType; // Weapon (Edge) or Armor (Grit)
+  isPrimal?: boolean;     // Primal supertype (max 1 copy)
+  isGuard?: boolean;      // Protects Life & non-guard allies
+  edge?: number;          // Offense (Attack power)
+  grit?: number;          // Defense/Toughness (Resets each turn)
+  coreAttackRatio?: number; // Custom ratio converting banked Core to extra damage
   description: string;
   flavorText?: string;
-  isGuard?: boolean;
   ability?: CardAbility;
   svgArtId: string;
 }
@@ -44,7 +45,8 @@ export interface BoardPermanent {
   currentGrit: number;
   maxGrit: number;
   state: 'dormant' | 'alert'; // Dormant = tapped/summoning sick; Alert = ready
-  bankedCore: number;         // Core banked on creature for boosted damage
+  bankedCore: number;         // Banked Core converting to damage on attack
+  attachments: Card[];        // Attached Weapons or Armor
   isGuard: boolean;
 }
 
@@ -54,13 +56,13 @@ export interface PlayerState {
   isAi: boolean;
   lifeTotal: number;
   startingLife: number;
-  primalDamageTaken: Record<string, number>; // Tracked per Primal source ID
+  primalDamageTaken: Record<string, number>; // Cumulative Primal damage per source ID
   corePool: number;           // Current Core resource pool
-  hand: Card[];
+  hand: HandCard[];          // Fully revealed hand cards
   deck: Card[];
   graveyard: Card[];
   primalAvatar: Card;         // Dedicated 61st slot Primal Avatar
-  field: BoardPermanent[];    // Beings, Relics, Runes, Attachments on field
+  field: BoardPermanent[];    // Beings, Relics, Runes, Attachments in play
 }
 
 export type GamePhase = 'draw' | 'conversion' | 'main1' | 'combat' | 'main2' | 'end' | 'gameover';
@@ -78,11 +80,10 @@ export interface GameState {
   turnOwner: 'player' | 'opponent';
   turnNumber: number;
   phase: GamePhase;
-  fulcrumBalance: number;     // -5 (Umbra) to +5 (Sol)
   winner: 'player' | 'opponent' | null;
   logs: GameLogEntry[];
 
-  // Interactive UI state
+  // Interactive state
   selectedHandCardId: string | null;
   selectedBoardInstanceId: string | null;
   isExpediteMode: boolean;

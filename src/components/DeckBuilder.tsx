@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Faction } from '../types/game';
-import { CARD_DATABASE, STARTER_DECK_SOL, STARTER_DECK_UMBRA } from '../data/cards';
+import { Card, CardType } from '../types/game';
+import { CARD_DATABASE, STARTER_DECK_A, STARTER_DECK_B } from '../data/cards';
 import { CardView } from './CardView';
 import { Plus, Trash2, Save } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
@@ -11,9 +11,9 @@ interface DeckBuilderProps {
 }
 
 export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) => {
-  const [currentDeck, setCurrentDeck] = useState<Card[]>(STARTER_DECK_SOL);
-  const [factionFilter, setFactionFilter] = useState<'all' | Faction>('all');
-  const [deckName, setDeckName] = useState('Custom Sol Deck');
+  const [currentDeck, setCurrentDeck] = useState<Card[]>(STARTER_DECK_A);
+  const [typeFilter, setTypeFilter] = useState<'all' | CardType>('all');
+  const [deckName, setDeckName] = useState('Custom Fulcrum Deck');
 
   const addCardToDeck = (card: Card) => {
     if (currentDeck.length >= 30) return;
@@ -31,14 +31,14 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
     setCurrentDeck(next);
   };
 
-  const loadPreset = (preset: 'sol' | 'umbra') => {
+  const loadPreset = (preset: 'A' | 'B') => {
     soundFx.playButtonClickSound();
-    if (preset === 'sol') {
-      setCurrentDeck(STARTER_DECK_SOL);
-      setDeckName('Sol Starter Deck');
+    if (preset === 'A') {
+      setCurrentDeck(STARTER_DECK_A);
+      setDeckName('Starter Deck A');
     } else {
-      setCurrentDeck(STARTER_DECK_UMBRA);
-      setDeckName('Umbra Starter Deck');
+      setCurrentDeck(STARTER_DECK_B);
+      setDeckName('Starter Deck B');
     }
   };
 
@@ -49,7 +49,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
   };
 
   const filteredPool = CARD_DATABASE.filter((card) => {
-    if (factionFilter !== 'all' && card.faction !== factionFilter) return false;
+    if (typeFilter !== 'all' && card.type !== typeFilter) return false;
     return true;
   });
 
@@ -77,22 +77,22 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
             ← Back to Menu
           </button>
           <h2 className="font-serif font-black text-xl text-gold-gradient tracking-wide">
-            FULCRUM DECK FORGE (60-Card Deck + 61st Primal)
+            FULCRUM DECK FORGE (60-Card Deck + 61st Primal Avatar)
           </h2>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => loadPreset('sol')}
+            onClick={() => loadPreset('A')}
             className="px-3 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-xs font-bold"
           >
-            Load Sol Starter
+            Load Starter A
           </button>
           <button
-            onClick={() => loadPreset('umbra')}
-            className="px-3 py-1.5 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 text-purple-300 text-xs font-bold"
+            onClick={() => loadPreset('B')}
+            className="px-3 py-1.5 rounded-lg bg-slate-950/80 hover:bg-slate-900 border border-slate-500/50 text-slate-300 text-xs font-bold"
           >
-            Load Umbra Starter
+            Load Starter B
           </button>
           <button
             onClick={handleSave}
@@ -106,7 +106,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
-        {/* Left 2 Columns: Card Collection */}
+        {/* Left 2 Columns */}
         <div className="lg:col-span-2 bg-fulcrum-panel/70 border border-fulcrum-border rounded-2xl p-4 flex flex-col gap-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-fulcrum-border pb-3">
             <span className="font-serif font-bold text-sm text-slate-300">
@@ -114,17 +114,17 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
             </span>
 
             <div className="flex gap-2 text-xs">
-              {(['all', 'sol', 'umbra', 'neutral'] as const).map((f) => (
+              {(['all', 'being', 'charm', 'relic', 'attachment', 'rune'] as const).map((t) => (
                 <button
-                  key={f}
-                  onClick={() => setFactionFilter(f)}
+                  key={t}
+                  onClick={() => setTypeFilter(t)}
                   className={`px-3 py-1 rounded-full uppercase font-bold text-[10px] tracking-wider transition ${
-                    factionFilter === f
+                    typeFilter === t
                       ? 'bg-fulcrum-gold text-slate-950 shadow-[0_0_10px_#f3c669]'
                       : 'bg-slate-900 text-slate-400 border border-slate-700 hover:text-white'
                   }`}
                 >
-                  {f}
+                  {t}
                 </button>
               ))}
             </div>
@@ -146,7 +146,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
           </div>
         </div>
 
-        {/* Right Column: Deck & Load Curve */}
+        {/* Right Column */}
         <div className="bg-fulcrum-panel/90 border border-fulcrum-border rounded-2xl p-4 flex flex-col justify-between shadow-xl">
           <div>
             <div className="flex justify-between items-center border-b border-fulcrum-border pb-3 mb-3">

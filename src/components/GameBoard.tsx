@@ -3,8 +3,8 @@ import { GameState, Card, BoardPermanent } from '../types/game';
 import { playHandCard, executeCombat, convertHandCardToCore, endTurn } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
-import { FulcrumDial } from './FulcrumDial';
-import { Shield, Zap, ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, Flame, Clock } from 'lucide-react';
+import { TurnPhaseBar } from './TurnPhaseBar';
+import { Shield, ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, Flame } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface GameBoardProps {
@@ -99,7 +99,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
   const isAttackerSelected = !!state.selectedBoardInstanceId;
   const isSpellSelected = !!state.selectedHandCardId;
 
-  // Primal Damage progress for opponent
   const oppPrimalDmg = state.opponent.primalDamageTaken[state.player.primalAvatar.id] || 0;
 
   return (
@@ -108,13 +107,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
       <div className="flex justify-between items-center bg-fulcrum-panel/90 border border-fulcrum-border rounded-xl px-4 py-2 backdrop-blur-md z-30 shadow-lg">
         <div className="flex items-center gap-3">
           <span className="font-serif font-black text-xl text-gold-gradient tracking-wider">FULCRUM</span>
-          <span className="text-xs bg-purple-900/60 border border-purple-500/40 text-purple-200 px-2.5 py-0.5 rounded-full font-sans">
+          <span className="text-xs bg-amber-900/60 border border-amber-500/40 text-amber-200 px-2.5 py-0.5 rounded-full font-sans">
             Turn {state.turnNumber} • {state.turnOwner === 'player' ? 'Your Move' : 'AI Thinking...'}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Expedite Toggle Button */}
+          {/* Expedite Mode Toggle */}
           <button
             onClick={() => setIsExpediteMode(!isExpediteMode)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
@@ -155,26 +154,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
       <div className="flex-1 flex flex-col justify-between py-2 relative gap-2">
         {/* OPPONENT ZONE */}
         <div className="flex flex-col items-center gap-2">
-          {/* Opponent Stat Bar */}
           <div
             onClick={handleOpponentNexusClick}
-            className={`w-full max-w-xl bg-gradient-to-r from-purple-950/90 via-slate-900/90 to-purple-950/90 border border-purple-500/40 rounded-xl p-2.5 flex items-center justify-between shadow-2xl transition ${
+            className={`w-full max-w-xl bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-amber-500/40 rounded-xl p-2.5 flex items-center justify-between shadow-2xl transition ${
               isAttackerSelected || isSpellSelected ? 'hover:border-red-500 cursor-pointer hover:shadow-[0_0_20px_#ef4444]' : ''
             }`}
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-900 border-2 border-purple-400 flex items-center justify-center font-bold text-lg text-purple-200">
+              <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-amber-400 flex items-center justify-center font-bold text-lg text-amber-200">
                 AI
               </div>
               <div>
                 <div className="font-serif font-bold text-slate-100 text-sm">{state.opponent.name}</div>
-                <div className="text-[11px] text-purple-300 font-sans">
+                <div className="text-[11px] text-amber-300 font-sans">
                   Primal Dmg Taken: <span className="font-bold text-amber-300">{oppPrimalDmg}/5</span> (Head-Removal)
                 </div>
               </div>
             </div>
 
-            {/* Life Total & Core Pool */}
             <div className="flex items-center gap-3">
               <div className="w-40 bg-slate-950 h-5 rounded-full border border-slate-700 overflow-hidden relative">
                 <div
@@ -186,7 +183,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                 </span>
               </div>
 
-              {/* Core Pool */}
               <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500/60 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-300">
                 <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" />
                 <span>{state.opponent.corePool} Core</span>
@@ -194,16 +190,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
             </div>
           </div>
 
-          {/* Opponent Hand (Fully Revealed as per FULCRUM rules!) */}
+          {/* Opponent Hand (Revealed Hand Cards!) */}
           <div className="flex justify-center -space-x-6">
-            {state.opponent.hand.map((card, idx) => (
-              <CardView key={card.id + idx} card={card} size="sm" className="shadow-lg" />
+            {state.opponent.hand.map((hc, idx) => (
+              <CardView key={hc.card.id + idx} card={hc.card} size="sm" className="shadow-lg" />
             ))}
           </div>
 
-          {/* Opponent Field (Beings + Primal Avatar) */}
-          <div className="w-full max-w-4xl min-h-[140px] bg-purple-950/20 border border-purple-900/30 rounded-2xl p-2 flex justify-center items-center gap-3">
-            {/* Primal Avatar Card */}
+          {/* Opponent Field */}
+          <div className="w-full max-w-4xl min-h-[140px] bg-slate-950/40 border border-slate-800 rounded-2xl p-2 flex justify-center items-center gap-3">
+            {/* Primal Avatar */}
             <div className="relative">
               <CardView
                 card={state.opponent.primalAvatar}
@@ -230,14 +226,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
           </div>
         </div>
 
-        {/* FULCRUM DIAL & ACTION BAR */}
+        {/* TURN PHASE BAR */}
         <div className="flex items-center justify-between px-4 z-20">
           <div className="w-48 text-xs text-slate-400 font-sans hidden md:block">
-            <span className="font-bold text-amber-300">Attacking Cost:</span>
+            <span className="font-bold text-amber-300">Attack Cost:</span>
             <div className="text-slate-300">1 Core per attacker</div>
           </div>
 
-          <FulcrumDial balance={state.fulcrumBalance} />
+          <TurnPhaseBar currentPhase={state.phase} turnNumber={state.turnNumber} corePool={state.player.corePool} />
 
           <div className="w-48 flex justify-end">
             <button
@@ -257,7 +253,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
         {/* PLAYER ZONE */}
         <div className="flex flex-col items-center gap-2">
           {/* Player Field */}
-          <div className="w-full max-w-4xl min-h-[140px] bg-amber-950/15 border border-amber-900/30 rounded-2xl p-2 flex justify-center items-center gap-3">
+          <div className="w-full max-w-4xl min-h-[140px] bg-slate-950/40 border border-slate-800 rounded-2xl p-2 flex justify-center items-center gap-3">
             {/* Player Primal Avatar */}
             <div className="relative">
               <CardView
@@ -273,7 +269,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                     maxGrit: state.player.primalAvatar.grit || 6,
                     state: 'alert',
                     bankedCore: 0,
-                    isGuard: true,
+                    attachments: [],
+                    isGuard: false,
                   })
                 }
               />
@@ -296,9 +293,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
             ))}
           </div>
 
-          {/* Player Hand & Conversion Buttons */}
+          {/* Player Hand */}
           <div className="flex justify-center -space-x-3 hover:space-x-1 transition-all py-1">
-            {state.player.hand.map((card) => {
+            {state.player.hand.map((hc) => {
+              const card = hc.card;
               const isSelected = state.selectedHandCardId === card.id;
               return (
                 <div key={card.id} className="relative group flex flex-col items-center">
@@ -310,24 +308,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                     onClick={() => handleHandCardClick(card)}
                     className="hover:-translate-y-4 hover:z-30 transition-transform"
                   />
-                  {/* Convert to Core Button */}
-                  <button
-                    onClick={(e) => handleConvertCard(card, e)}
-                    className="mt-1 opacity-0 group-hover:opacity-100 transition px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-[9px] font-bold text-emerald-300 flex items-center gap-1 shadow-lg"
-                    title="Convert card into Core pool"
-                  >
-                    <CircleDollarSign className="w-3 h-3 text-emerald-400" />
-                    <span>Convert +{card.coreValue}</span>
-                  </button>
+                  {/* Convert to Core button (Legal only turn drawn!) */}
+                  {hc.drawnThisTurn && (
+                    <button
+                      onClick={(e) => handleConvertCard(card, e)}
+                      className="mt-1 opacity-0 group-hover:opacity-100 transition px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-[9px] font-bold text-emerald-300 flex items-center gap-1 shadow-lg"
+                      title="Convert card into Core pool (Legal only turn drawn!)"
+                    >
+                      <CircleDollarSign className="w-3 h-3 text-emerald-400" />
+                      <span>Convert +{card.coreValue}</span>
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
 
           {/* Player Stat Bar */}
-          <div className="w-full max-w-xl bg-gradient-to-r from-amber-950/90 via-slate-900/90 to-amber-950/90 border border-amber-500/40 rounded-xl p-2.5 flex items-center justify-between shadow-2xl">
+          <div className="w-full max-w-xl bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-amber-500/40 rounded-xl p-2.5 flex items-center justify-between shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-900 border-2 border-amber-400 flex items-center justify-center font-bold text-lg text-amber-200">
+              <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-amber-400 flex items-center justify-center font-bold text-lg text-amber-200">
                 YOU
               </div>
               <div>
@@ -349,7 +349,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                 </span>
               </div>
 
-              {/* Core Pool Counter */}
               <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500/60 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-300">
                 <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" />
                 <span>{state.player.corePool} Core</span>
@@ -400,7 +399,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
           <div className="bg-gradient-to-b from-[#1c1538] to-[#0a0717] border-2 border-fulcrum-gold rounded-3xl p-8 max-w-md w-full text-center shadow-2xl flex flex-col items-center gap-4">
             <Crown className="w-16 h-16 text-fulcrum-gold animate-bounce" />
             <h2 className="font-serif font-black text-3xl tracking-widest uppercase text-gold-gradient">
-              {state.winner === 'player' ? 'VICTORY Achieved!' : 'DEFEAT'}
+              {state.winner === 'player' ? 'VICTORY!' : 'DEFEAT'}
             </h2>
             <button
               onClick={onRestart}

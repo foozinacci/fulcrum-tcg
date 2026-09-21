@@ -46,7 +46,7 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
             soundFx.playCardDrawSound();
             setIsFlipped(!isFlipped);
           }}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-purple-950 border border-purple-500/60 hover:bg-purple-900 text-purple-200 text-xs font-bold transition"
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-slate-900 border border-amber-500/60 hover:bg-slate-800 text-amber-200 text-xs font-bold transition"
         >
           <FlipHorizontal className="w-4 h-4" />
           <span>{isFlipped ? 'View Front Face' : 'View Card Back'}</span>
@@ -82,7 +82,7 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
         <div className="flex flex-col gap-4">
           <div>
             <span className="text-xs uppercase font-bold tracking-widest px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300">
-              {selectedCard.faction} Faction • {selectedCard.rarity}
+              Type: {selectedCard.type.toUpperCase()}
             </span>
             <h1 className="font-serif font-black text-3xl text-gold-gradient mt-3">
               {selectedCard.name}

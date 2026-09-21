@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '../types/game';
 import { CardSvgArt } from './CardSvgArt';
-import { Shield, Zap, Swords, Heart, Crown, CircleDollarSign, Clock } from 'lucide-react';
+import { Shield, Swords, Crown, CircleDollarSign, Clock, Flame } from 'lucide-react';
 
 interface CardViewProps {
   card: Card;
@@ -50,16 +50,9 @@ export const CardView: React.FC<CardViewProps> = ({
     lg: 'w-56 h-84 text-sm',
   }[size];
 
-  const getFactionBorder = () => {
+  const getCardBorder = () => {
     if (card.isPrimal) return 'border-fulcrum-gold shadow-[0_0_20px_rgba(243,198,105,0.6)] bg-gradient-to-b from-[#3d2a06] to-[#140b02]';
-    switch (card.faction) {
-      case 'sol':
-        return 'border-fulcrum-gold/80 shadow-[0_0_12px_rgba(234,179,8,0.25)] bg-gradient-to-b from-[#2a1e05] to-[#120c02]';
-      case 'umbra':
-        return 'border-fulcrum-umbra/80 shadow-[0_0_12px_rgba(168,85,247,0.25)] bg-gradient-to-b from-[#210638] to-[#0c0217]';
-      default:
-        return 'border-fulcrum-aether/80 shadow-[0_0_12px_rgba(6,182,212,0.25)] bg-gradient-to-b from-[#042136] to-[#020d18]';
-    }
+    return 'border-fulcrum-gold/70 shadow-[0_0_12px_rgba(243,198,105,0.2)] bg-gradient-to-b from-[#21183b] to-[#0c0817]';
   };
 
   const currentEdge = customEdge !== undefined ? customEdge : card.edge || 0;
@@ -93,16 +86,16 @@ export const CardView: React.FC<CardViewProps> = ({
       ) : (
         /* CARD FRONT */
         <div
-          className={`w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden relative shadow-xl ${getFactionBorder()}`}
+          className={`w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden relative shadow-xl ${getCardBorder()}`}
         >
-          {/* Header: Load Cost & Pace Badge & Name */}
+          {/* Header: Load Cost & Pace Badge */}
           <div className="flex items-center justify-between gap-1 z-10">
-            {/* Load Orb */}
+            {/* Load Cost Orb */}
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-200 flex items-center justify-center font-bold font-serif text-slate-950 text-xs shadow-md">
               {showExpedite ? card.expediteLoad || card.load + 2 : card.load}
             </div>
 
-            {/* Name */}
+            {/* Card Name */}
             <div className="flex-1 text-center font-serif font-bold text-slate-100 truncate px-0.5 tracking-tight text-[11px]">
               {card.name}
             </div>
@@ -116,9 +109,9 @@ export const CardView: React.FC<CardViewProps> = ({
 
           {/* SVG Artwork Container */}
           <div className="my-1 flex-1 relative rounded border border-white/10 overflow-hidden bg-black/40">
-            <CardSvgArt artId={card.svgArtId} faction={card.faction} />
+            <CardSvgArt artId={card.svgArtId} />
 
-            {/* Core Conversion & Primal Badges */}
+            {/* Core Value & Primal Badges */}
             <div className="absolute top-1 left-1 flex flex-col gap-0.5">
               <span className="px-1 py-0.2 rounded bg-emerald-950/90 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 flex items-center gap-0.5">
                 <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" /> +{card.coreValue} Core
@@ -138,7 +131,7 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
           </div>
 
-          {/* Card Description Box */}
+          {/* Description Box */}
           <div className="bg-black/60 rounded border border-white/10 p-1 text-[9.5px] leading-tight text-slate-200 font-sans min-h-[44px] flex items-center justify-center text-center">
             {card.description}
           </div>

@@ -9,15 +9,15 @@ export function runAiTurnStep(state: GameState): GameState {
 
   // 1. Conversion Phase: Convert extra card if Core is low
   if (ai.corePool < 2 && ai.hand.length > 3) {
-    const cardToConvert = ai.hand[0];
+    const cardToConvert = ai.hand[0].card;
     return convertHandCardToCore(state, cardToConvert.id);
   }
 
   // 2. Play Hand Cards
-  const playableCards = ai.hand.filter((c) => c.load <= ai.corePool && state.turnNumber >= c.pace);
-  if (playableCards.length > 0 && ai.field.length < 5) {
-    playableCards.sort((a, b) => b.load - a.load);
-    const cardToPlay = playableCards[0];
+  const playableHandCards = ai.hand.filter((hc) => hc.card.load <= ai.corePool && state.turnNumber >= hc.card.pace);
+  if (playableHandCards.length > 0 && ai.field.length < 5) {
+    playableHandCards.sort((a, b) => b.card.load - a.card.load);
+    const cardToPlay = playableHandCards[0].card;
 
     let target: string | 'nexus' | undefined = undefined;
     if (cardToPlay.type === 'charm' && cardToPlay.ability?.damage) {
@@ -35,7 +35,7 @@ export function runAiTurnStep(state: GameState): GameState {
   const alertAttackers = ai.field.filter((p) => p.state === 'alert' && p.currentEdge > 0);
   if (alertAttackers.length > 0 && ai.corePool >= 1) {
     const attacker = alertAttackers[0];
-    const playerGuards = player.field.filter((p) => p.isGuard);
+    const playerGuards = player.field.filter((p) => p.card.isGuard);
 
     let targetId: string | 'nexus' = 'nexus';
     if (playerGuards.length > 0) {
