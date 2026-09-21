@@ -17,6 +17,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
   const [showLogs, setShowLogs] = useState(false);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
 
   useEffect(() => {
     if (state.turnOwner === 'opponent' && !state.winner) {
@@ -139,115 +140,85 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
   const oppPrimalDmg = state.opponent.primalDamageTaken[state.player.primalAvatar.id] || 0;
 
   return (
-    <div className="w-full h-screen max-h-screen flex flex-col justify-between p-2 md:p-3 max-w-7xl mx-auto relative select-none overflow-hidden">
-      {/* Top Navbar */}
-      <div className="flex justify-between items-center bg-fulcrum-panel/90 border border-fulcrum-border rounded-xl px-4 py-1.5 backdrop-blur-md z-30 shadow-lg flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="font-serif font-black text-lg text-gold-gradient tracking-wider">FULCRUM</span>
-          <span className="text-xs bg-amber-900/60 border border-amber-500/40 text-amber-200 px-2.5 py-0.5 rounded-full font-sans">
-            Turn {state.turnNumber} • {state.turnOwner === 'player' ? 'Your Turn' : 'AI Turn'}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleSound}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600"
-          >
-            {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-fulcrum-gold" />}
-          </button>
-          <button
-            onClick={() => setShowLogs(!showLogs)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-600"
-          >
-            <ScrollText className="w-4 h-4 text-cyan-400" />
-            <span>Logs</span>
-          </button>
-          <button
-            onClick={onRestart}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-900/60 hover:bg-amber-800 text-xs font-semibold text-amber-200 border border-amber-600"
-          >
-            <RotateCcw className="w-4 h-4 text-amber-400" />
-            <span>Restart</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Playmat */}
-      <div className="flex-1 flex flex-col justify-between py-1 relative gap-2 min-h-0 overflow-hidden">
-        {/* OPPONENT SELF-CONTAINED FIELD */}
-        <div className="bg-fulcrum-panel/60 border border-fulcrum-border rounded-2xl p-2.5 flex flex-col gap-2 shadow-xl flex-1 justify-between min-h-0">
-          {/* Opponent Header Stats Bar */}
-          <div
-            onClick={handleOpponentNexusClick}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDropOnTargetUnit(e, { instanceId: 'nexus' } as unknown as BoardPermanent)}
-            className={`w-full bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-amber-500/40 rounded-xl px-3 py-1.5 flex items-center justify-between shadow-md transition ${
-              isAttackerSelected || isSpellSelected ? 'hover:border-red-500 cursor-pointer hover:shadow-[0_0_20px_#ef4444]' : ''
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-amber-400 flex items-center justify-center font-bold text-xs text-amber-200">
-                AI
-              </div>
-              <div>
-                <div className="font-serif font-bold text-slate-100 text-xs">{state.opponent.name}</div>
-                <div className="text-[10px] text-amber-300 font-sans">
-                  Primal Dmg Taken: <span className="font-bold text-amber-300">{oppPrimalDmg}/5</span> (Head-Removal)
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-32 sm:w-44 bg-slate-950 h-4 rounded-full border border-slate-700 overflow-hidden relative">
-                <div
-                  className="h-full bg-gradient-to-r from-red-600 to-rose-400 transition-all duration-500"
-                  style={{ width: `${(state.opponent.lifeTotal / state.opponent.startingLife) * 100}%` }}
-                />
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow">
-                  {state.opponent.lifeTotal} / {state.opponent.startingLife} Life
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500/60 px-2 py-0.5 rounded-lg text-xs font-bold text-emerald-300">
-                <CircleDollarSign className="w-3 h-3 text-emerald-400" />
-                <span>{state.opponent.corePool} Core</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Opponent Field & Command Avatar Area */}
-          <div className="flex-1 flex items-center justify-between gap-3 min-h-0 bg-black/30 border border-white/5 rounded-xl p-2 overflow-x-auto">
-            {/* Command Slot Primal Avatar */}
-            <div className="flex flex-col items-center flex-shrink-0 relative">
+    <div className="w-full h-screen max-h-screen overflow-hidden p-2 bg-[#080512] text-slate-100 select-none">
+      <div className="grid grid-cols-1 lg:grid-cols-4 h-full gap-2 min-h-0 overflow-hidden">
+        {/* LEFT PLAYMAT AREA (3 COLUMNS = THE 4 ROWS) */}
+        <div className="lg:col-span-3 flex flex-col justify-between gap-1.5 h-full min-h-0 overflow-hidden bg-fulcrum-panel/40 border border-fulcrum-border rounded-2xl p-2 shadow-2xl relative">
+          
+          {/* ROW 1: OPPONENT HAND ROW */}
+          <div className="flex items-center justify-between gap-2 h-[22%] bg-black/40 border border-white/5 rounded-xl px-3 py-1 min-h-0">
+            {/* Left: Opponent Avatar Command Slot */}
+            <div
+              onMouseEnter={() => setHoveredCard(state.opponent.primalAvatar)}
+              className="flex flex-col items-center flex-shrink-0 relative group"
+            >
               <CardView
                 card={state.opponent.primalAvatar}
                 size="sm"
                 disableClickFlip={true}
+                disableHoverPreview={true}
                 customEdge={state.opponent.primalAvatar.isDynamicStats ? state.opponent.corePool : (state.opponent.primalAvatar.edge || 5)}
                 customGrit={state.opponent.primalAvatar.isDynamicStats ? state.opponent.corePool : (state.opponent.primalAvatar.grit || 6)}
                 isTargetable={isAttackerSelected || isSpellSelected}
                 onClick={handleOpponentNexusClick}
               />
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold text-[8px] px-1.5 rounded-full uppercase flex items-center gap-0.5 z-10 shadow">
-                <Crown className="w-2.5 h-2.5" /> 61st Slot
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold text-[8px] px-1.5 rounded-full uppercase flex items-center gap-0.5 z-10 shadow">
+                <Crown className="w-2.5 h-2.5" /> Avatar
               </div>
             </div>
 
-            {/* Active Permanents */}
+            {/* Middle: Opponent Hand Cards */}
+            <div className="flex-1 flex items-center justify-center -space-x-8 overflow-x-auto">
+              {state.opponent.hand.length === 0 ? (
+                <span className="text-[10px] text-slate-600 italic">Opponent Hand Empty</span>
+              ) : (
+                state.opponent.hand.map((hc, idx) => (
+                  <div
+                    key={hc.card.id + idx}
+                    onMouseEnter={() => setHoveredCard(hc.card)}
+                    className="flex-shrink-0"
+                  >
+                    <CardView card={hc.card} size="sm" disableClickFlip={true} disableHoverPreview={true} className="shadow-lg scale-90" />
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Right: Opponent Deck Stack */}
+            <div className="flex flex-col items-center flex-shrink-0 px-2">
+              <div className="w-14 h-20 sm:w-16 sm:h-24 rounded-lg border border-fulcrum-gold/60 bg-[#0a0814] overflow-hidden relative shadow-lg">
+                <img src="/assets/card-back.jpg" alt="Opponent Deck" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center font-bold text-xs text-amber-300">
+                  {state.opponent.deck.length}
+                </div>
+              </div>
+              <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">Opp Deck</span>
+            </div>
+          </div>
+
+          {/* ROW 2: OPPONENT FIELD ROW */}
+          <div className="flex items-center justify-between gap-2 h-[26%] bg-black/20 border border-white/5 rounded-xl px-3 py-1 min-h-0">
+            <div className="w-14 flex-shrink-0 text-[10px] text-slate-500 font-bold uppercase tracking-wider hidden sm:block">
+              Opp Field
+            </div>
+
+            {/* Middle: Opponent Active Units / Permanents */}
             <div className="flex-1 flex items-center justify-center gap-2 overflow-x-auto">
               {state.opponent.field.length === 0 ? (
-                <div className="text-[11px] text-slate-600 italic">No Active Opponent Units</div>
+                <span className="text-[11px] text-slate-600 italic">Opponent Field Empty</span>
               ) : (
                 state.opponent.field.map((perm) => (
                   <div
                     key={perm.instanceId}
+                    onMouseEnter={() => setHoveredCard(perm.card)}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDropOnTargetUnit(e, perm)}
+                    className="flex-shrink-0"
                   >
                     <CardView
                       card={perm.card}
                       disableClickFlip={true}
+                      disableHoverPreview={true}
                       customEdge={perm.currentEdge}
                       customGrit={perm.currentGrit}
                       isDormant={perm.state === 'dormant'}
@@ -260,66 +231,91 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
               )}
             </div>
 
-            {/* Opponent Revealed Hand Cards */}
-            <div className="flex items-center -space-x-8 flex-shrink-0">
-              {state.opponent.hand.length === 0 ? (
-                <div className="text-[10px] text-slate-600 italic px-2">Hand Empty</div>
-              ) : (
-                state.opponent.hand.map((hc, idx) => (
-                  <CardView key={hc.card.id + idx} card={hc.card} size="sm" disableClickFlip={true} className="shadow-lg scale-90" />
-                ))
-              )}
+            {/* Right: Opponent Discard Pile (Positioned above deck!) */}
+            <div className="flex flex-col items-center flex-shrink-0 px-2">
+              <div className="w-14 h-20 sm:w-16 sm:h-24 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow">
+                {state.opponent.graveyard.length > 0 ? (
+                  <CardView card={state.opponent.graveyard[state.opponent.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-600">Empty</span>
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center font-bold text-xs text-slate-200">
+                  {state.opponent.graveyard.length}
+                </div>
+              </div>
+              <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">Opp Discard</span>
             </div>
           </div>
-        </div>
 
-        {/* TURN PHASE BAR (CENTER CONTROL LINE) */}
-        <div className="flex items-center justify-between px-3 py-1 bg-black/40 border border-white/10 rounded-xl z-20 flex-shrink-0">
-          <div className="text-[11px] text-slate-400 font-sans hidden md:block">
-            <span className="font-bold text-amber-300">Attack Cost:</span> 1 Core per attack
-          </div>
-
-          <TurnPhaseBar
-            currentPhase={state.phase}
-            turnNumber={state.turnNumber}
-            corePool={state.player.corePool}
-            isPlayerTurn={state.turnOwner === 'player'}
-            onAdvancePhase={() => setState((prev) => advancePhase(prev))}
-          />
-
-          <div>
-            <button
-              onClick={() => setState((prev) => endTurn(prev))}
-              disabled={state.turnOwner !== 'player' || !!state.winner}
-              className={`px-5 py-2 rounded-xl font-serif font-bold text-xs tracking-wider uppercase shadow-xl transition-all ${
-                state.turnOwner === 'player' && !state.winner
-                  ? 'bg-gradient-to-r from-fulcrum-gold to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-[0_0_15px_rgba(243,198,105,0.4)] cursor-pointer'
-                  : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
-              }`}
-            >
-              {state.turnOwner === 'player' ? 'End Turn' : 'AI Turn'}
-            </button>
-          </div>
-        </div>
-
-        {/* PLAYER SELF-CONTAINED FIELD */}
-        <div className="bg-fulcrum-panel/60 border border-fulcrum-border rounded-2xl p-2.5 flex flex-col gap-2 shadow-xl flex-1 justify-between min-h-0">
-          {/* Player Field & Command Avatar Area (Drop Target for playing cards!) */}
+          {/* ROW 3: OUR FIELD ROW (Drop Target for playing cards!) */}
           <div
             onDragOver={handleDragOver}
             onDrop={handleDropOnField}
-            className={`flex-1 flex items-center justify-between gap-3 min-h-0 border rounded-xl p-2 transition overflow-x-auto ${
+            className={`flex items-center justify-between gap-2 h-[26%] border rounded-xl px-3 py-1 min-h-0 transition ${
               draggedCardId
                 ? 'bg-amber-950/30 border-amber-400/80 shadow-[0_0_20px_rgba(243,198,105,0.3)]'
-                : 'bg-black/30 border-white/5'
+                : 'bg-black/20 border-white/5'
             }`}
           >
-            {/* Player Command Slot Primal Avatar */}
-            <div className="flex flex-col items-center flex-shrink-0 relative">
+            <div className="w-14 flex-shrink-0 text-[10px] text-emerald-400 font-bold uppercase tracking-wider hidden sm:block">
+              Your Field
+            </div>
+
+            {/* Middle: Our Active Units / Permanents */}
+            <div className="flex-1 flex items-center justify-center gap-2 overflow-x-auto">
+              {state.player.field.length === 0 ? (
+                <span className="text-[11px] text-slate-600 italic">Your Field Empty (Drag or click cards from hand to play)</span>
+              ) : (
+                state.player.field.map((perm) => (
+                  <div
+                    key={perm.instanceId}
+                    onMouseEnter={() => setHoveredCard(perm.card)}
+                    className="flex-shrink-0"
+                  >
+                    <CardView
+                      card={perm.card}
+                      disableClickFlip={true}
+                      disableHoverPreview={true}
+                      customEdge={perm.currentEdge}
+                      customGrit={perm.currentGrit}
+                      isDormant={perm.state === 'dormant'}
+                      size="sm"
+                      isSelected={state.selectedBoardInstanceId === perm.instanceId}
+                      onClick={() => handleFriendlyUnitClick(perm)}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Right: Our Discard Pile (Positioned above deck!) */}
+            <div className="flex flex-col items-center flex-shrink-0 px-2">
+              <div className="w-14 h-20 sm:w-16 sm:h-24 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow">
+                {state.player.graveyard.length > 0 ? (
+                  <CardView card={state.player.graveyard[state.player.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-600">Empty</span>
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center font-bold text-xs text-slate-200">
+                  {state.player.graveyard.length}
+                </div>
+              </div>
+              <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">Your Discard</span>
+            </div>
+          </div>
+
+          {/* ROW 4: OUR HAND ROW */}
+          <div className="flex items-center justify-between gap-2 h-[22%] bg-black/40 border border-white/5 rounded-xl px-3 py-1 min-h-0">
+            {/* Left: Our Avatar Command Slot */}
+            <div
+              onMouseEnter={() => setHoveredCard(state.player.primalAvatar)}
+              className="flex flex-col items-center flex-shrink-0 relative group"
+            >
               <CardView
                 card={state.player.primalAvatar}
                 size="sm"
                 disableClickFlip={true}
+                disableHoverPreview={true}
                 customEdge={state.player.primalAvatar.isDynamicStats ? state.player.corePool : (state.player.primalAvatar.edge || 5)}
                 customGrit={state.player.primalAvatar.isDynamicStats ? state.player.corePool : (state.player.primalAvatar.grit || 6)}
                 isSelected={state.selectedBoardInstanceId === state.player.primalAvatar.id}
@@ -339,56 +335,40 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                   });
                 }}
               />
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold text-[8px] px-1.5 rounded-full uppercase flex items-center gap-0.5 z-10 shadow">
-                <Crown className="w-2.5 h-2.5" /> 61st Slot
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold text-[8px] px-1.5 rounded-full uppercase flex items-center gap-0.5 z-10 shadow">
+                <Crown className="w-2.5 h-2.5" /> Avatar
               </div>
 
               {state.turnOwner === 'player' && !state.winner && (
                 <button
                   onClick={() => setState((prev) => activatePrimalAvatarAbility2(prev))}
-                  className="mt-1 px-2 py-0.5 rounded bg-amber-950/90 hover:bg-amber-900 border border-amber-400 text-[8.5px] font-bold text-amber-300 shadow-md transition flex items-center gap-1"
+                  className="mt-0.5 px-1.5 py-0.5 rounded bg-amber-950/90 hover:bg-amber-900 border border-amber-400 text-[8px] font-bold text-amber-300 shadow transition flex items-center gap-0.5"
                   title="Activate Primal Avatar Ability 2"
                 >
-                  <span>Use Ability 2</span>
+                  <span>Ability 2</span>
                 </button>
               )}
             </div>
 
-            {/* Player Active Field Permanents */}
-            <div className="flex-1 flex items-center justify-center gap-2 overflow-x-auto">
-              {state.player.field.length === 0 ? (
-                <div className="text-[11px] text-slate-600 italic">No Active Units (Drag or click cards from hand to play)</div>
-              ) : (
-                state.player.field.map((perm) => (
-                  <CardView
-                    key={perm.instanceId}
-                    card={perm.card}
-                    disableClickFlip={true}
-                    customEdge={perm.currentEdge}
-                    customGrit={perm.currentGrit}
-                    isDormant={perm.state === 'dormant'}
-                    size="sm"
-                    isSelected={state.selectedBoardInstanceId === perm.instanceId}
-                    onClick={() => handleFriendlyUnitClick(perm)}
-                  />
-                ))
-              )}
-            </div>
-
-            {/* Player Hand Cards */}
-            <div className="flex items-center -space-x-3 hover:space-x-1 transition-all flex-shrink-0">
+            {/* Middle: Our Hand Cards */}
+            <div className="flex-1 flex items-center justify-center -space-x-3 hover:space-x-1 transition-all overflow-x-auto">
               {state.player.hand.length === 0 ? (
-                <div className="text-[10px] text-slate-600 italic px-2">Hand Empty</div>
+                <span className="text-[10px] text-slate-600 italic">Your Hand Empty</span>
               ) : (
                 state.player.hand.map((hc) => {
                   const card = hc.card;
                   const isSelected = state.selectedHandCardId === card.id;
                   return (
-                    <div key={card.id} className="relative group flex flex-col items-center">
+                    <div
+                      key={card.id}
+                      onMouseEnter={() => setHoveredCard(card)}
+                      className="relative group flex flex-col items-center flex-shrink-0"
+                    >
                       <CardView
                         card={card}
                         size="sm"
                         disableClickFlip={true}
+                        disableHoverPreview={true}
                         isSelected={isSelected}
                         draggable={state.turnOwner === 'player' && !state.winner}
                         onDragStart={() => setDraggedCardId(card.id)}
@@ -401,11 +381,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                           onClick={(e) => handleConvertCard(card, e)}
                           onDragOver={handleDragOver}
                           onDrop={handleDropOnConvertZone}
-                          className="mt-1 transition px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-[8.5px] font-bold text-emerald-300 flex items-center gap-0.5 shadow-lg"
+                          className="mt-0.5 transition px-1 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-[8px] font-bold text-emerald-300 flex items-center gap-0.5 shadow"
                           title="Convert card into Core pool"
                         >
                           <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" />
-                          <span>Convert +{card.coreValue}</span>
+                          <span>+{card.coreValue}</span>
                         </button>
                       )}
                     </div>
@@ -413,45 +393,184 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                 })
               )}
             </div>
+
+            {/* Right: Our Deck Stack (Conversion drop target!) */}
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDropOnConvertZone}
+              className={`flex flex-col items-center flex-shrink-0 px-2 rounded-lg p-1 transition ${
+                draggedCardId && state.phase === 'conversion'
+                  ? 'bg-emerald-950/80 border border-emerald-400 shadow-[0_0_15px_#10b981]'
+                  : ''
+              }`}
+            >
+              <div className="w-14 h-20 sm:w-16 sm:h-24 rounded-lg border border-fulcrum-gold/60 bg-[#0a0814] overflow-hidden relative shadow-lg cursor-pointer">
+                <img src="/assets/card-back.jpg" alt="Your Deck" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center font-bold text-xs text-amber-300">
+                  {state.player.deck.length}
+                </div>
+              </div>
+              <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">Your Deck</span>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN (SIDEBAR: TOP = CARD INSPECTOR PREVIEW; BOTTOM = TRACKERS & STATS) */}
+        <div className="lg:col-span-1 flex flex-col justify-between gap-2 h-full min-h-0 overflow-y-auto bg-fulcrum-panel/90 border border-fulcrum-border rounded-2xl p-3 shadow-2xl">
+          
+          {/* TOP: CARD INSPECTION HOVER PREVIEW */}
+          <div className="bg-black/60 border border-white/10 rounded-xl p-3 flex flex-col justify-between shadow-inner flex-1 min-h-[260px] overflow-hidden">
+            {hoveredCard ? (
+              <div className="flex flex-col h-full justify-between animate-in fade-in duration-150 overflow-hidden">
+                <div className="text-center font-serif font-bold text-amber-300 text-sm border-b border-white/10 pb-1 truncate">
+                  {hoveredCard.name}
+                </div>
+
+                <div className="my-1.5 h-32 rounded-lg overflow-hidden border border-white/10 bg-black relative flex-shrink-0">
+                  {hoveredCard.imageArtUrl ? (
+                    <img
+                      src={hoveredCard.imageArtUrl}
+                      alt={hoveredCard.name}
+                      className={`w-full h-full object-cover ${hoveredCard.imageObjectPosition || 'object-top'}`}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-slate-500 font-bold">
+                      {hoveredCard.name}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-slate-950/80 border border-white/10 rounded-lg p-2 text-[11px] text-slate-200 flex-1 flex flex-col justify-between overflow-y-auto">
+                  <div className="text-[9.5px] font-bold text-amber-400 uppercase tracking-widest text-center border-b border-white/10 pb-0.5 mb-1">
+                    {hoveredCard.isPrimal || hoveredCard.type === 'primal_avatar' ? 'Primal Avatar' : hoveredCard.type.toUpperCase()}
+                  </div>
+                  <div className="whitespace-pre-line leading-tight text-slate-300 text-center font-sans text-[10.5px]">
+                    {hoveredCard.description}
+                  </div>
+                  {hoveredCard.flavorText && (
+                    <div className="mt-1 pt-1 border-t border-white/10 italic text-[9.5px] text-slate-400 text-center font-serif">
+                      "{hoveredCard.flavorText}"
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Card Stats */}
+                <div className="flex justify-between items-center px-1 mt-1.5 text-[10px] font-bold border-t border-white/10 pt-1">
+                  <span className="text-lime-400">Pace: {hoveredCard.pace}</span>
+                  <span className="text-pink-400">Load: {hoveredCard.load}</span>
+                  {hoveredCard.coreValue !== undefined && !hoveredCard.isPrimal && (
+                    <span className="text-yellow-400">Core: +{hoveredCard.coreValue}</span>
+                  )}
+                  {hoveredCard.edge !== undefined && <span className="text-cyan-400">Edge: {hoveredCard.edge}</span>}
+                  {hoveredCard.grit !== undefined && <span className="text-blue-400">Grit: {hoveredCard.grit}</span>}
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 text-xs p-3">
+                <Crown className="w-8 h-8 text-amber-500/40 mb-2 animate-pulse" />
+                <p className="font-serif font-bold text-slate-300">CARD INSPECTOR</p>
+                <p className="text-[10.5px] text-slate-500 mt-1">Hover over any card in hand or on the field to view details.</p>
+              </div>
+            )}
           </div>
 
-          {/* Player Header Stats Bar (Core Drop Target for Conversion!) */}
-          <div
-            onDragOver={handleDragOver}
-            onDrop={handleDropOnConvertZone}
-            className={`w-full border rounded-xl px-3 py-1.5 flex items-center justify-between shadow-md transition ${
-              draggedCardId && state.phase === 'conversion'
-                ? 'bg-emerald-950/80 border-emerald-400/80 shadow-[0_0_20px_#10b981]'
-                : 'bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border-amber-500/40'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-amber-400 flex items-center justify-center font-bold text-xs text-amber-200">
-                YOU
+          {/* BOTTOM: PLAYER & GAME STATS / TRACKERS */}
+          <div className="bg-black/50 border border-white/10 rounded-xl p-2.5 flex flex-col gap-2 shadow-inner">
+            {/* Opponent Stats Bar */}
+            <div className="bg-red-950/40 border border-red-500/40 rounded-lg p-2 flex flex-col gap-1">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-serif font-bold text-red-300">{state.opponent.name} (AI)</span>
+                <span className="text-[10px] text-amber-300">Primal Dmg: {oppPrimalDmg}/5</span>
               </div>
-              <div>
-                <div className="font-serif font-bold text-slate-100 text-xs">{state.player.name}</div>
-                <div className="text-[10px] text-amber-300 font-sans">
-                  Deck: {state.player.deck.length} | Discard: {state.player.graveyard.length}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-slate-950 h-3 rounded-full border border-slate-700 overflow-hidden relative">
+                  <div
+                    className="h-full bg-gradient-to-r from-red-600 to-rose-400 transition-all duration-300"
+                    style={{ width: `${(state.opponent.lifeTotal / state.opponent.startingLife) * 100}%` }}
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow">
+                    {state.opponent.lifeTotal} / {state.opponent.startingLife} HP
+                  </span>
+                </div>
+                <div className="text-[11px] font-bold text-emerald-300 bg-emerald-950 border border-emerald-500/60 px-2 py-0.5 rounded">
+                  {state.opponent.corePool} Core
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="w-32 sm:w-44 bg-slate-950 h-4 rounded-full border border-slate-700 overflow-hidden relative">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-600 to-teal-400 transition-all duration-500"
-                  style={{ width: `${(state.player.lifeTotal / state.player.startingLife) * 100}%` }}
-                />
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow">
-                  {state.player.lifeTotal} / {state.player.startingLife} Life
-                </span>
+            {/* Player Stats Bar */}
+            <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-lg p-2 flex flex-col gap-1">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-serif font-bold text-emerald-300">{state.player.name} (YOU)</span>
+                <span className="text-[10px] text-slate-400">Deck: {state.player.deck.length} | Discard: {state.player.graveyard.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-slate-950 h-3 rounded-full border border-slate-700 overflow-hidden relative">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-600 to-teal-400 transition-all duration-300"
+                    style={{ width: `${(state.player.lifeTotal / state.player.startingLife) * 100}%` }}
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow">
+                    {state.player.lifeTotal} / {state.player.startingLife} HP
+                  </span>
+                </div>
+                <div className="text-[11px] font-bold text-emerald-300 bg-emerald-950 border border-emerald-500/60 px-2 py-0.5 rounded">
+                  {state.player.corePool} Core
+                </div>
+              </div>
+            </div>
+
+            {/* Turn & Phase Controls */}
+            <div className="bg-slate-900/90 border border-slate-700 rounded-lg p-2 flex flex-col gap-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-amber-300">Turn {state.turnNumber}</span>
+                <span className="text-[10px] text-slate-400">{state.turnOwner === 'player' ? 'Your Turn' : 'AI Turn'}</span>
               </div>
 
-              <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500/60 px-2 py-0.5 rounded-lg text-xs font-bold text-emerald-300">
-                <CircleDollarSign className="w-3 h-3 text-emerald-400" />
-                <span>{state.player.corePool} Core</span>
-              </div>
+              <TurnPhaseBar
+                currentPhase={state.phase}
+                turnNumber={state.turnNumber}
+                corePool={state.player.corePool}
+                isPlayerTurn={state.turnOwner === 'player'}
+                onAdvancePhase={() => setState((prev) => advancePhase(prev))}
+              />
+
+              <button
+                onClick={() => setState((prev) => endTurn(prev))}
+                disabled={state.turnOwner !== 'player' || !!state.winner}
+                className={`w-full py-2 rounded-lg font-serif font-bold text-xs tracking-wider uppercase shadow-lg transition-all ${
+                  state.turnOwner === 'player' && !state.winner
+                    ? 'bg-gradient-to-r from-fulcrum-gold via-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-[0_0_15px_rgba(243,198,105,0.4)] cursor-pointer'
+                    : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                }`}
+              >
+                {state.turnOwner === 'player' ? 'End Turn' : 'AI Turn'}
+              </button>
+            </div>
+
+            {/* System Toolbar */}
+            <div className="flex items-center justify-between gap-1 pt-0.5">
+              <button
+                onClick={toggleSound}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600"
+                title="Toggle Sound"
+              >
+                {isMuted ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5 text-fulcrum-gold" />}
+              </button>
+              <button
+                onClick={() => setShowLogs(!showLogs)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-slate-200 border border-slate-600"
+              >
+                <ScrollText className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Logs</span>
+              </button>
+              <button
+                onClick={onRestart}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-900/60 hover:bg-amber-800 text-[11px] font-semibold text-amber-200 border border-amber-600"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                <span>Restart</span>
+              </button>
             </div>
           </div>
         </div>
