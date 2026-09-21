@@ -4,7 +4,7 @@ export type AttachmentType = 'weapon' | 'armor';
 
 export interface HandCard {
   card: Card;
-  drawnThisTurn: boolean; // Conversion into Core is only legal the turn it is drawn!
+  drawnThisTurn: boolean; // Conversion is only legal the turn it is drawn!
 }
 
 export interface CardAbility {
@@ -21,17 +21,18 @@ export interface CardAbility {
 export interface Card {
   id: string;
   name: string;
-  load: number;           // Standard Load cost (used when turn >= pace)
-  expediteLoad?: number;  // Expedite mechanic: Alternative higher Load cost to cast before Pace turn!
-  coreValue: number;      // Value if converted into Core pool
+  load: number;           // Standard Load cost to cast
+  expediteLoad?: number;  // Expedite: Higher Load cost to ignore Pace restriction
+  coreValue: number;      // Fixed Core value when converted
   pace: number;           // Earliest legal turn to cast at standard Load
   type: CardType;
   attachmentType?: AttachmentType; // Weapon (Edge) or Armor (Grit)
   isPrimal?: boolean;     // Primal supertype (max 1 copy)
   isGuard?: boolean;      // Protects Life & non-guard allies
   edge?: number;          // Offense (Attack power)
-  grit?: number;          // Defense/Toughness (Resets each turn)
-  coreAttackRatio?: number; // Custom ratio converting banked Core to extra damage
+  grit?: number;          // Defense/Toughness (Resets at End Step)
+  attackCoreCost?: number; // Fixed Core cost paid per attack (default 1)
+  coreAttackRatio?: number; // Ratio converting banked Core to extra damage
   description: string;
   flavorText?: string;
   ability?: CardAbility;
@@ -44,9 +45,9 @@ export interface BoardPermanent {
   currentEdge: number;
   currentGrit: number;
   maxGrit: number;
-  state: 'dormant' | 'alert'; // Dormant = tapped/summoning sick; Alert = ready
-  bankedCore: number;         // Banked Core converting to damage on attack
-  attachments: Card[];        // Attached Weapons or Armor
+  state: 'dormant' | 'alert'; // Dormant = tapped; Alert = untapped/ready
+  bankedCore: number;         // Core banked as reserve converting to damage at a ratio
+  attachments: Card[];
   isGuard: boolean;
 }
 
@@ -57,12 +58,12 @@ export interface PlayerState {
   lifeTotal: number;
   startingLife: number;
   primalDamageTaken: Record<string, number>; // Cumulative Primal damage per source ID
-  corePool: number;           // Current Core resource pool
+  corePool: number;           // Active Core resource pool
   hand: HandCard[];          // Fully revealed hand cards
   deck: Card[];
   graveyard: Card[];
   primalAvatar: Card;         // Dedicated 61st slot Primal Avatar
-  field: BoardPermanent[];    // Beings, Relics, Runes, Attachments in play
+  field: BoardPermanent[];    // Field permanents
 }
 
 export type GamePhase = 'draw' | 'conversion' | 'main1' | 'combat' | 'main2' | 'end' | 'gameover';
@@ -86,6 +87,7 @@ export interface GameState {
   // Interactive state
   selectedHandCardId: string | null;
   selectedBoardInstanceId: string | null;
+  bankCoreAmount: number;     // Core amount to bank onto selected attacker
   isTargeting: boolean;
   validTargetType: 'being' | 'nexus' | 'any' | null;
 }

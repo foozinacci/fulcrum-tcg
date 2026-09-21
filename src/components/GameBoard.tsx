@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card, BoardPermanent } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, endTurn } from '../logic/gameEngine';
+import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
@@ -78,7 +78,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
     soundFx.playButtonClickSound();
 
     if (state.selectedBoardInstanceId) {
-      setState((prev) => executeCombat(prev, prev.selectedBoardInstanceId!, perm.instanceId));
+      setState((prev) => executeCombat(prev, prev.selectedBoardInstanceId!, perm.instanceId, prev.bankCoreAmount));
     } else if (state.selectedHandCardId) {
       setState((prev) => playHandCard(prev, prev.selectedHandCardId!, perm.instanceId));
     }
@@ -89,7 +89,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
     soundFx.playButtonClickSound();
 
     if (state.selectedBoardInstanceId) {
-      setState((prev) => executeCombat(prev, prev.selectedBoardInstanceId!, 'nexus'));
+      setState((prev) => executeCombat(prev, prev.selectedBoardInstanceId!, 'nexus', prev.bankCoreAmount));
     } else if (state.selectedHandCardId) {
       setState((prev) => playHandCard(prev, prev.selectedHandCardId!, 'nexus'));
     }
@@ -107,7 +107,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
         <div className="flex items-center gap-3">
           <span className="font-serif font-black text-xl text-gold-gradient tracking-wider">FULCRUM</span>
           <span className="text-xs bg-amber-900/60 border border-amber-500/40 text-amber-200 px-2.5 py-0.5 rounded-full font-sans">
-            Turn {state.turnNumber} • {state.turnOwner === 'player' ? 'Your Move' : 'AI Thinking...'}
+            Turn {state.turnNumber} • {state.turnOwner === 'player' ? 'Your Turn' : 'AI Turn'}
           </span>
         </div>
 
@@ -215,10 +215,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
         <div className="flex items-center justify-between px-4 z-20">
           <div className="w-48 text-xs text-slate-400 font-sans hidden md:block">
             <span className="font-bold text-amber-300">Attack Cost:</span>
-            <div className="text-slate-300">1 Core per attacker</div>
+            <div className="text-slate-300">1 Core per attack</div>
           </div>
 
-          <TurnPhaseBar currentPhase={state.phase} turnNumber={state.turnNumber} corePool={state.player.corePool} />
+          <TurnPhaseBar
+            currentPhase={state.phase}
+            turnNumber={state.turnNumber}
+            corePool={state.player.corePool}
+            isPlayerTurn={state.turnOwner === 'player'}
+            onAdvancePhase={() => setState((prev) => advancePhase(prev))}
+          />
 
           <div className="w-48 flex justify-end">
             <button
@@ -293,11 +299,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                     className="hover:-translate-y-4 hover:z-30 transition-transform"
                   />
                   {/* Convert to Core button */}
-                  {hc.drawnThisTurn && (
+                  {hc.drawnThisTurn && state.phase === 'conversion' && (
                     <button
                       onClick={(e) => handleConvertCard(card, e)}
-                      className="mt-1 opacity-0 group-hover:opacity-100 transition px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-[9px] font-bold text-emerald-300 flex items-center gap-1 shadow-lg"
-                      title="Convert card into Core pool (Legal only turn drawn!)"
+                      className="mt-1 transition px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-[9px] font-bold text-emerald-300 flex items-center gap-1 shadow-lg"
+                      title="Convert card into Core pool (Legal during Conversion Decision Phase!)"
                     >
                       <CircleDollarSign className="w-3 h-3 text-emerald-400" />
                       <span>Convert +{card.coreValue}</span>

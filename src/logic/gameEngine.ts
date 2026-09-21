@@ -1,4 +1,4 @@
-import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry } from '../types/game';
+import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase } from '../types/game';
 import { STARTER_DECK_A, STARTER_DECK_B, PRIMAL_AVATAR_A, PRIMAL_AVATAR_B } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
@@ -24,6 +24,7 @@ export function createInitialGameState(
   const pHand: HandCard[] = pRawHand.map((card) => ({ card, drawnThisTurn: true }));
   const oHand: HandCard[] = oRawHand.map((card) => ({ card, drawnThisTurn: true }));
 
+  // Opening hand's total Core value seeds one-time starting Core pool!
   const pCoreSeed = pRawHand.reduce((acc, c) => acc + c.coreValue, 0);
   const oCoreSeed = oRawHand.reduce((acc, c) => acc + c.coreValue, 0);
 
@@ -60,7 +61,7 @@ export function createInitialGameState(
   const initialLogs: GameLogEntry[] = [
     {
       id: Math.random().toString(),
-      text: 'Official FULCRUM Match Started! Opening hand total seeded Core pools.',
+      text: 'Official FULCRUM Match Initiated! Opening hand total seeded starting Core pools.',
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     },
@@ -76,9 +77,37 @@ export function createInitialGameState(
     logs: initialLogs,
     selectedHandCardId: null,
     selectedBoardInstanceId: null,
+    bankCoreAmount: 0,
     isTargeting: false,
     validTargetType: null,
   };
+}
+
+export function drawCard(playerState: PlayerState, logs: GameLogEntry[]): PlayerState {
+  const p = { ...playerState };
+  if (p.deck.length === 0) {
+    p.lifeTotal = Math.max(0, p.lifeTotal - 1);
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `${p.name} deck empty! Suffered 1 deckout damage.`,
+      type: 'combat',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+    return p;
+  }
+
+  const [topCard, ...remainingDeck] = p.deck;
+  p.deck = remainingDeck;
+  p.hand = [...p.hand, { card: topCard, drawnThisTurn: true }];
+
+  logs.unshift({
+    id: Math.random().toString(),
+    text: `${p.name} drew ${topCard.name}.`,
+    type: 'info',
+    timestamp: new Date().toLocaleTimeString(),
+  });
+
+  return p;
 }
 
 export function convertHandCardToCore(state: GameState, cardId: string): GameState {
@@ -92,6 +121,7 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
 
   const handCard = p.hand[cardIndex];
 
+  // Rule: Core conversion is legal ONLY for cards drawn this turn during Conversion Phase!
   if (!handCard.drawnThisTurn) {
     logs.unshift({
       id: Math.random().toString(),
@@ -123,31 +153,32 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
   };
 }
 
-export function drawCard(playerState: PlayerState, logs: GameLogEntry[]): PlayerState {
-  const p = { ...playerState };
-  if (p.deck.length === 0) {
-    p.lifeTotal = Math.max(0, p.lifeTotal - 1);
-    logs.unshift({
-      id: Math.random().toString(),
-      text: `${p.name} deck empty! Suffered 1 fatigue damage.`,
-      type: 'combat',
-      timestamp: new Date().toLocaleTimeString(),
-    });
-    return p;
+export function advancePhase(state: GameState): GameState {
+  if (state.winner) return state;
+
+  const phaseOrder: GamePhase[] = ['draw', 'conversion', 'main1', 'combat', 'main2', 'end'];
+  const currentIndex = phaseOrder.indexOf(state.phase);
+
+  if (currentIndex === -1 || currentIndex === phaseOrder.length - 1) {
+    // End Step -> Switch Turn Owner & Start Draw Phase of Next Turn
+    return endTurn(state);
   }
 
-  const [topCard, ...remainingDeck] = p.deck;
-  p.deck = remainingDeck;
-  p.hand = [...p.hand, { card: topCard, drawnThisTurn: true }];
+  const nextPhase = phaseOrder[currentIndex + 1];
+  const logs = [...state.logs];
 
   logs.unshift({
     id: Math.random().toString(),
-    text: `${p.name} drew ${topCard.name}.`,
+    text: `Phase Advanced: ${nextPhase.toUpperCase()}`,
     type: 'info',
     timestamp: new Date().toLocaleTimeString(),
   });
 
-  return p;
+  return {
+    ...state,
+    phase: nextPhase,
+    logs,
+  };
 }
 
 export function startTurn(state: GameState): GameState {
@@ -157,16 +188,13 @@ export function startTurn(state: GameState): GameState {
   let activePlayer = { ...state[activeKey] };
   const logs = [...state.logs];
 
+  // 1. Mark previous hand cards as drawnThisTurn = false
   activePlayer.hand = activePlayer.hand.map((hc) => ({ ...hc, drawnThisTurn: false }));
 
-  activePlayer.field = activePlayer.field.map((perm) => ({
-    ...perm,
-    state: 'alert',
-    currentGrit: perm.maxGrit,
-  }));
-
+  // 2. Draw Phase: Draw top card
   activePlayer = drawCard(activePlayer, logs);
 
+  // 3. Trigger Runes while Alert
   activePlayer.field.forEach((perm) => {
     if (perm.card.type === 'rune' && perm.card.ability?.produceCore) {
       const extraCore = perm.card.ability.produceCore;
@@ -215,7 +243,6 @@ export function playHandCard(
 
   const card = player.hand[cardIndex].card;
 
-  // Determine if Expedite is required (current turn < Pace)
   const isExpediteRequired = state.turnNumber < card.pace;
   let requiredLoadCost = card.load;
 
@@ -232,18 +259,16 @@ export function playHandCard(
     requiredLoadCost = card.expediteLoad;
   }
 
-  // Load cost check
   if (player.corePool < requiredLoadCost) {
     logs.unshift({
       id: Math.random().toString(),
-      text: `Not enough Core pool to cast ${card.name}! ${isExpediteRequired ? 'Expedite Cost' : 'Cost'}: ${requiredLoadCost}, Core: ${player.corePool}.`,
+      text: `Not enough Core pool to cast ${card.name}! Cost: ${requiredLoadCost}, Core: ${player.corePool}.`,
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     });
     return { ...state, logs };
   }
 
-  // Deduct Load from Core pool & remove from hand
   player.corePool -= requiredLoadCost;
   player.hand.splice(cardIndex, 1);
 
@@ -254,7 +279,7 @@ export function playHandCard(
       currentEdge: card.edge || 1,
       currentGrit: card.grit || 1,
       maxGrit: card.grit || 1,
-      state: isExpediteRequired ? 'alert' : 'dormant', // Expedited cast enters Alert!
+      state: isExpediteRequired ? 'alert' : 'dormant',
       bankedCore: 0,
       attachments: [],
       isGuard: card.isGuard || false,
@@ -356,7 +381,8 @@ export function playHandCard(
 export function executeCombat(
   state: GameState,
   attackerInstanceId: string,
-  targetId: string | 'nexus'
+  targetId: string | 'nexus',
+  bankedCoreInput: number = 0
 ): GameState {
   const isPlayer = state.turnOwner === 'player';
   const playerKey = isPlayer ? 'player' : 'opponent';
@@ -369,24 +395,30 @@ export function executeCombat(
   const attacker = player.field.find((p) => p.instanceId === attackerInstanceId);
   if (!attacker || attacker.state !== 'alert') return state;
 
-  if (player.corePool < 1) {
+  const perAttackCost = attacker.card.attackCoreCost || 1;
+  const totalCoreCost = perAttackCost + bankedCoreInput;
+
+  if (player.corePool < totalCoreCost) {
     logs.unshift({
       id: Math.random().toString(),
-      text: `Attacking costs 1 Core! (Core pool: ${player.corePool})`,
+      text: `Attacking requires ${totalCoreCost} Core (${perAttackCost} Attack Cost + ${bankedCoreInput} Banked)! Core pool: ${player.corePool}.`,
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     });
     return { ...state, logs };
   }
 
-  player.corePool -= 1;
+  player.corePool -= totalCoreCost;
   attacker.state = 'dormant';
+  attacker.bankedCore += bankedCoreInput;
 
   const ratio = attacker.card.coreAttackRatio || 1.0;
-  const totalDamage = Math.floor(attacker.currentEdge + attacker.bankedCore * ratio);
+  const bonusDamage = Math.floor(attacker.bankedCore * ratio);
+  const totalDamage = attacker.currentEdge + bonusDamage;
 
   if (targetId === 'nexus') {
     if (attacker.card.isPrimal) {
+      // PRIMAL DAMAGE HEAD-REMOVAL
       const sourceId = attacker.card.id;
       const currentPrimalDmg = (opponent.primalDamageTaken[sourceId] || 0) + totalDamage;
       opponent.primalDamageTaken[sourceId] = currentPrimalDmg;
@@ -414,7 +446,7 @@ export function executeCombat(
       opponent.lifeTotal = Math.max(0, opponent.lifeTotal - totalDamage);
       logs.unshift({
         id: Math.random().toString(),
-        text: `${attacker.card.name} attacked ${opponent.name} Life pool for ${totalDamage} damage!`,
+        text: `${attacker.card.name} attacked ${opponent.name} Life pool for ${totalDamage} damage (Edge ${attacker.currentEdge} + Banked ${bonusDamage})!`,
         type: 'combat',
         timestamp: new Date().toLocaleTimeString(),
       });
@@ -432,7 +464,7 @@ export function executeCombat(
 
     logs.unshift({
       id: Math.random().toString(),
-      text: `${attacker.card.name} (Edge ${totalDamage}) engaged ${defender.card.name} (Grit ${defender.currentGrit}).`,
+      text: `${attacker.card.name} (Damage ${totalDamage}) engaged ${defender.card.name} (Grit ${defender.currentGrit}).`,
       type: 'combat',
       timestamp: new Date().toLocaleTimeString(),
     });
@@ -458,6 +490,7 @@ export function executeCombat(
     winner,
     logs,
     selectedBoardInstanceId: null,
+    bankCoreAmount: 0,
     isTargeting: false,
   };
 }
@@ -467,13 +500,39 @@ export function endTurn(state: GameState): GameState {
 
   const nextOwner = state.turnOwner === 'player' ? 'opponent' : 'player';
   const nextTurnNumber = state.turnNumber + 1;
+  const logs = [...state.logs];
+
+  // End Step: Toughness / Grit damage resets to max; creatures untap / become Alert
+  const player = { ...state.player };
+  const opponent = { ...state.opponent };
+
+  player.field = player.field.map((perm) => ({
+    ...perm,
+    state: 'alert',
+    currentGrit: perm.maxGrit,
+  }));
+  opponent.field = opponent.field.filter((perm) => ({
+    ...perm,
+    state: 'alert',
+    currentGrit: perm.maxGrit,
+  }));
+
+  logs.unshift({
+    id: Math.random().toString(),
+    text: `End Step: Grit (Defense) damage reset to max. Permanents become Alert.`,
+    type: 'turn',
+    timestamp: new Date().toLocaleTimeString(),
+  });
 
   const newState: GameState = {
     ...state,
+    player,
+    opponent,
     turnOwner: nextOwner,
     turnNumber: nextTurnNumber,
     selectedHandCardId: null,
     selectedBoardInstanceId: null,
+    bankCoreAmount: 0,
     isTargeting: false,
   };
 

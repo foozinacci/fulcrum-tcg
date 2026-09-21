@@ -1,26 +1,34 @@
 import React from 'react';
 import { GamePhase } from '../types/game';
-import { CircleDollarSign, Swords, Clock, Layers } from 'lucide-react';
+import { CircleDollarSign, Clock, ChevronRight } from 'lucide-react';
 
 interface TurnPhaseBarProps {
   currentPhase: GamePhase;
   turnNumber: number;
   corePool: number;
+  onAdvancePhase?: () => void;
+  isPlayerTurn: boolean;
 }
 
-export const TurnPhaseBar: React.FC<TurnPhaseBarProps> = ({ currentPhase, turnNumber, corePool }) => {
+export const TurnPhaseBar: React.FC<TurnPhaseBarProps> = ({
+  currentPhase,
+  turnNumber,
+  corePool,
+  onAdvancePhase,
+  isPlayerTurn,
+}) => {
   const phases: { id: GamePhase; label: string }[] = [
     { id: 'draw', label: 'Draw' },
-    { id: 'conversion', label: 'Conversion' },
+    { id: 'conversion', label: 'Convert' },
     { id: 'main1', label: 'Main 1' },
     { id: 'combat', label: 'Combat' },
     { id: 'main2', label: 'Main 2' },
-    { id: 'end', label: 'End' },
+    { id: 'end', label: 'End Step' },
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center bg-fulcrum-panel/90 border border-fulcrum-border rounded-xl p-2.5 shadow-2xl backdrop-blur-md w-72">
-      {/* Turn & Core Display */}
+    <div className="flex flex-col items-center justify-center bg-fulcrum-panel/90 border border-fulcrum-border rounded-xl p-2.5 shadow-2xl backdrop-blur-md w-80">
+      {/* Header Info */}
       <div className="flex items-center justify-between w-full mb-2 px-1">
         <div className="flex items-center gap-1.5 text-xs font-serif font-bold text-amber-300">
           <Clock className="w-3.5 h-3.5 text-cyan-400" />
@@ -40,7 +48,7 @@ export const TurnPhaseBar: React.FC<TurnPhaseBarProps> = ({ currentPhase, turnNu
           return (
             <div
               key={p.id}
-              className={`flex-1 text-center py-1 rounded text-[9px] font-bold uppercase transition ${
+              className={`flex-1 text-center py-1 rounded text-[8.5px] font-bold uppercase transition ${
                 isActive
                   ? 'bg-gradient-to-r from-fulcrum-gold to-amber-500 text-slate-950 shadow-[0_0_10px_#f3c669]'
                   : 'bg-slate-900/80 text-slate-500 border border-slate-800'
@@ -51,6 +59,17 @@ export const TurnPhaseBar: React.FC<TurnPhaseBarProps> = ({ currentPhase, turnNu
           );
         })}
       </div>
+
+      {/* Advance Phase Button */}
+      {onAdvancePhase && isPlayerTurn && (
+        <button
+          onClick={onAdvancePhase}
+          className="mt-2 w-full py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 flex items-center justify-center gap-1 transition shadow"
+        >
+          <span>Next Phase</span>
+          <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
+        </button>
+      )}
     </div>
   );
 };
