@@ -1,5 +1,5 @@
 import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase } from '../types/game';
-import { STARTER_DECK_A, STARTER_DECK_B, PRIMAL_AVATAR_A, PRIMAL_AVATAR_B } from '../data/cards';
+import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
 function shuffleDeck(deck: Card[]): Card[] {
@@ -13,10 +13,15 @@ function shuffleDeck(deck: Card[]): Card[] {
 
 export function createInitialGameState(
   customPlayerDeck?: Card[],
-  customOpponentDeck?: Card[]
+  customOpponentDeck?: Card[],
+  playerAvatar?: Card,
+  opponentAvatar?: Card
 ): GameState {
+  const pAvatar = playerAvatar || PRIMAL_AVATARS_LIST[0];
+  const oAvatar = opponentAvatar || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
+
   const pDeck = shuffleDeck(customPlayerDeck || STARTER_DECK_A);
-  const oDeck = shuffleDeck(customOpponentDeck || STARTER_DECK_B);
+  const oDeck = shuffleDeck(customOpponentDeck || STARTER_DECK_A);
 
   const pRawHand = pDeck.splice(0, 4);
   const oRawHand = oDeck.splice(0, 4);
@@ -24,9 +29,8 @@ export function createInitialGameState(
   const pHand: HandCard[] = pRawHand.map((card) => ({ card, drawnThisTurn: true }));
   const oHand: HandCard[] = oRawHand.map((card) => ({ card, drawnThisTurn: true }));
 
-  // Opening hand's total Core value seeds one-time starting Core pool!
-  const pCoreSeed = pRawHand.reduce((acc, c) => acc + c.coreValue, 0);
-  const oCoreSeed = oRawHand.reduce((acc, c) => acc + c.coreValue, 0);
+  const pCoreSeed = pRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
+  const oCoreSeed = oRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
 
   const player: PlayerState = {
     id: 'player',
@@ -39,7 +43,7 @@ export function createInitialGameState(
     hand: pHand,
     deck: pDeck,
     graveyard: [],
-    primalAvatar: PRIMAL_AVATAR_A,
+    primalAvatar: pAvatar,
     field: [],
   };
 
@@ -54,14 +58,14 @@ export function createInitialGameState(
     hand: oHand,
     deck: oDeck,
     graveyard: [],
-    primalAvatar: PRIMAL_AVATAR_B,
+    primalAvatar: oAvatar,
     field: [],
   };
 
   const initialLogs: GameLogEntry[] = [
     {
       id: Math.random().toString(),
-      text: 'Official FULCRUM Match Initiated! Opening hand total seeded starting Core pools.',
+      text: `Official FULCRUM Match Started! ${pAvatar.name} deployed in 61st Slot.`,
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     },
@@ -121,7 +125,6 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
 
   const handCard = p.hand[cardIndex];
 
-  // Rule: Core conversion is legal ONLY for cards drawn this turn during Conversion Phase!
   if (!handCard.drawnThisTurn) {
     logs.unshift({
       id: Math.random().toString(),
@@ -133,13 +136,14 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
   }
 
   const card = handCard.card;
+  const coreGain = card.coreValue || 0;
   p.hand.splice(cardIndex, 1);
   p.graveyard.push(card);
-  p.corePool += card.coreValue;
+  p.corePool += coreGain;
 
   logs.unshift({
     id: Math.random().toString(),
-    text: `${p.name} converted ${card.name} into +${card.coreValue} Core! (Total Core Pool: ${p.corePool})`,
+    text: `${p.name} converted ${card.name} into +${coreGain} Core! (Total Core Pool: ${p.corePool})`,
     type: 'conversion',
     timestamp: new Date().toLocaleTimeString(),
   });
@@ -160,7 +164,6 @@ export function advancePhase(state: GameState): GameState {
   const currentIndex = phaseOrder.indexOf(state.phase);
 
   if (currentIndex === -1 || currentIndex === phaseOrder.length - 1) {
-    // End Step -> Switch Turn Owner & Start Draw Phase of Next Turn
     return endTurn(state);
   }
 
@@ -188,13 +191,27 @@ export function startTurn(state: GameState): GameState {
   let activePlayer = { ...state[activeKey] };
   const logs = [...state.logs];
 
-  // 1. Mark previous hand cards as drawnThisTurn = false
   activePlayer.hand = activePlayer.hand.map((hc) => ({ ...hc, drawnThisTurn: false }));
 
-  // 2. Draw Phase: Draw top card
-  activePlayer = drawCard(activePlayer, logs);
+  activePlayer.field = activePlayer.field.map((perm) => ({
+    ...perm,
+    state: 'alert',
+    currentGrit: perm.maxGrit,
+    ability2UsedThisTurn: false,
+  }));
 
-  // 3. Trigger Runes while Alert
+  // Gluttrix Ability 1: Each player draws an additional card at turn start!
+  activePlayer = drawCard(activePlayer, logs);
+  if (activePlayer.primalAvatar.id === GLUTTRIX_CORESEEKER.id) {
+    activePlayer = drawCard(activePlayer, logs);
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Gluttrix Ability 1: Drew +1 additional card at start of turn!`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+
   activePlayer.field.forEach((perm) => {
     if (perm.card.type === 'rune' && perm.card.ability?.produceCore) {
       const extraCore = perm.card.ability.produceCore;
@@ -418,7 +435,6 @@ export function executeCombat(
 
   if (targetId === 'nexus') {
     if (attacker.card.isPrimal) {
-      // PRIMAL DAMAGE HEAD-REMOVAL
       const sourceId = attacker.card.id;
       const currentPrimalDmg = (opponent.primalDamageTaken[sourceId] || 0) + totalDamage;
       opponent.primalDamageTaken[sourceId] = currentPrimalDmg;
@@ -502,7 +518,6 @@ export function endTurn(state: GameState): GameState {
   const nextTurnNumber = state.turnNumber + 1;
   const logs = [...state.logs];
 
-  // End Step: Toughness / Grit damage resets to max; creatures untap / become Alert
   const player = { ...state.player };
   const opponent = { ...state.opponent };
 
@@ -510,16 +525,18 @@ export function endTurn(state: GameState): GameState {
     ...perm,
     state: 'alert',
     currentGrit: perm.maxGrit,
+    ability2UsedThisTurn: false,
   }));
-  opponent.field = opponent.field.filter((perm) => ({
+  opponent.field = opponent.field.map((perm) => ({
     ...perm,
     state: 'alert',
     currentGrit: perm.maxGrit,
+    ability2UsedThisTurn: false,
   }));
 
   logs.unshift({
     id: Math.random().toString(),
-    text: `End Step: Grit (Defense) damage reset to max. Permanents become Alert.`,
+    text: `End Step: Grit damage reset to max. Permanents become Alert.`,
     type: 'turn',
     timestamp: new Date().toLocaleTimeString(),
   });
@@ -537,4 +554,90 @@ export function endTurn(state: GameState): GameState {
   };
 
   return startTurn(newState);
+}
+
+export function activatePrimalAvatarAbility2(state: GameState): GameState {
+  const isPlayer = state.turnOwner === 'player';
+  const playerKey = isPlayer ? 'player' : 'opponent';
+  const p = { ...state[playerKey] };
+  const logs = [...state.logs];
+
+  if (p.primalAvatar.id === GLUTTRIX_CORESEEKER.id) {
+    if (p.corePool < 3) {
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `Gluttrix Ability 2 requires 3 Core! Current pool: ${p.corePool}.`,
+        type: 'info',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      return { ...state, logs };
+    }
+    p.corePool -= 3;
+    const targetIdx = p.deck.findIndex((c) => c.type === 'relic' || c.type === 'rune');
+    if (targetIdx !== -1) {
+      const [tutored] = p.deck.splice(targetIdx, 1);
+      p.hand.push({ card: tutored, drawnThisTurn: false });
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `${p.name} activated Gluttrix Ability 2 (Paid 3 Core): Tutored ${tutored.name} into hand!`,
+        type: 'primal',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    } else {
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `${p.name} activated Gluttrix Ability 2 (Paid 3 Core), but no Relic or Rune was found in deck!`,
+        type: 'primal',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+    soundFx.playSpellCastSound();
+    return { ...state, [playerKey]: p, logs };
+  } else if (p.primalAvatar.id === VORRATH_IRONBOUND.id) {
+    let sacrificedAttachment: Card | null = null;
+    for (const perm of p.field) {
+      if (perm.attachments.length > 0) {
+        sacrificedAttachment = perm.attachments.pop() || null;
+        if (sacrificedAttachment) {
+          if (sacrificedAttachment.attachmentType === 'weapon' && sacrificedAttachment.ability?.buffEdge) {
+            perm.currentEdge -= sacrificedAttachment.ability.buffEdge;
+          }
+          if (sacrificedAttachment.attachmentType === 'armor' && sacrificedAttachment.ability?.buffGrit) {
+            perm.currentGrit -= sacrificedAttachment.ability.buffGrit;
+            perm.maxGrit -= sacrificedAttachment.ability.buffGrit;
+          }
+          p.graveyard.push(sacrificedAttachment);
+          break;
+        }
+      }
+    }
+
+    const sacCoreVal = sacrificedAttachment?.coreValue || 2;
+    const tutorIdx = p.deck.findIndex((c) => c.type === 'attachment' && c.load <= sacCoreVal);
+
+    if (tutorIdx !== -1) {
+      const [tutored] = p.deck.splice(tutorIdx, 1);
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `${p.name} activated Vorrath Ability 2: Sacrificed ${
+          sacrificedAttachment ? sacrificedAttachment.name : 'Attachment'
+        } to tutor & attach ${tutored.name} (Load ${tutored.load} <= ${sacCoreVal}) to Vorrath!`,
+        type: 'primal',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    } else {
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `${p.name} activated Vorrath Ability 2: Sacrificed ${
+          sacrificedAttachment ? sacrificedAttachment.name : 'Attachment'
+        }, but no Attachment (Load <= ${sacCoreVal}) was found in deck.`,
+        type: 'primal',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+    soundFx.playSpellCastSound();
+    return { ...state, [playerKey]: p, logs };
+  }
+
+  return state;
 }

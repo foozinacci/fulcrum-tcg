@@ -1,46 +1,63 @@
 import { Card } from '../types/game';
 
-export const PRIMAL_AVATAR_A: Card = {
-  id: 'primal_avatar_01',
-  name: 'Vanguard Archon',
-  load: 6,
-  expediteLoad: 8,
-  coreValue: 4,
-  pace: 1,
+export const GLUTTRIX_CORESEEKER: Card = {
+  id: 'primal_gluttrix_01',
+  name: 'Gluttrix, Coreseeker',
+  load: 4,
+  expediteLoad: 7,
+  pace: 6,
   type: 'primal_avatar',
   isPrimal: true,
   edge: 5,
-  grit: 6,
+  grit: 2,
   coreAttackRatio: 1.5,
-  description: 'PRIMAL AVATAR (61st Slot). Attacks deal Primal Damage (Eliminates target at half starting life). Turn Start: +2 Core.',
-  flavorText: 'The supreme commander of the frontline.',
+  description: 'Pace 6. Ability 1: Draw +1 extra card at turn start. Ability 2: Pay 3 Core to Tutor a Relic or Rune (1x/turn).',
+  flavorText: 'An insatiable celestial devourer feeding on the raw essence of the Core.',
+  imageArtUrl: '/assets/gluttrix.jpg',
+  svgArtId: 'gluttrix_art',
   ability: {
     trigger: 'onTurnStart',
-    description: 'Gain +2 Core',
+    description: 'Draw 1 extra card at start of turn.',
+    drawCards: 1,
   },
-  svgArtId: 'sol_hero',
+  ability2: {
+    trigger: 'activated',
+    description: 'Pay 3 Core: Tutor a Relic or Rune into hand.',
+    tutorType: 'relic',
+  },
 };
 
-export const PRIMAL_AVATAR_B: Card = {
-  id: 'primal_avatar_02',
-  name: 'Titan of the Core',
-  load: 6,
-  expediteLoad: 8,
-  coreValue: 4,
-  pace: 1,
+export const VORRATH_IRONBOUND: Card = {
+  id: 'primal_vorrath_02',
+  name: 'Vorrath, Ironbound',
+  load: 4,
+  expediteLoad: 7,
+  pace: 4,
   type: 'primal_avatar',
   isPrimal: true,
-  edge: 6,
-  grit: 5,
+  edge: 0,
+  grit: 0,
+  isDynamicStats: true,
   coreAttackRatio: 1.5,
-  description: 'PRIMAL AVATAR (61st Slot). Attacks deal Primal Damage. On Attack: Drain 1 Life from target.',
-  flavorText: 'An ancient leviathan powered by pure Core energy.',
+  description: "Pace 4. Ability 1: Edge & Grit equal unused Core pool (*/*). Ability 2: Sacrifice an Attachment to tutor an Attachment (Load <= sacrificed Core) & attach to Vorrath (1x/turn).",
+  flavorText: 'Bound in cosmic iron, forging power directly from stored Core resonance.',
+  imageArtUrl: '/assets/vorrath.jpg',
+  svgArtId: 'neutral_golem',
   ability: {
-    trigger: 'onAttack',
-    description: 'Drain 1 Life',
+    trigger: 'onTurnStart',
+    description: "Vorrath's Edge and Grit are each equal to your unused core value.",
   },
-  svgArtId: 'umbra_hero',
+  ability2: {
+    trigger: 'activated',
+    description: 'Sacrifice an Attachment to tutor an Attachment with Load <= sacrificed Core value and attach to Vorrath.',
+    tutorType: 'attachment',
+  },
 };
+
+export const PRIMAL_AVATARS_LIST: Card[] = [
+  GLUTTRIX_CORESEEKER,
+  VORRATH_IRONBOUND,
+];
 
 export const CARD_DATABASE: Card[] = [
   // --- PACE 1 CARDS ---
@@ -220,22 +237,6 @@ export const CARD_DATABASE: Card[] = [
     },
     svgArtId: 'sol_prism',
   },
-
-  // --- PACE 4 CARDS ---
-  {
-    id: 'f_12',
-    name: 'Dreadnought Leviathan',
-    load: 6,
-    expediteLoad: 8,
-    coreValue: 4,
-    pace: 4,
-    type: 'being',
-    edge: 6,
-    grit: 7,
-    coreAttackRatio: 1.5,
-    description: 'Pace 4 Being. Massive assault unit.',
-    svgArtId: 'umbra_hero',
-  },
 ];
 
 export const STARTER_DECK_A: Card[] = [
@@ -251,12 +252,12 @@ export const STARTER_DECK_A: Card[] = [
 ];
 
 export const STARTER_DECK_B: Card[] = [
-  CARD_DATABASE[0], CARD_DATABASE[0], CARD_DATABASE[0], // Core Scout x3
-  CARD_DATABASE[1], CARD_DATABASE[1],                   // Pace 1 Counter x2
-  CARD_DATABASE[3], CARD_DATABASE[3], CARD_DATABASE[3], // Rune of Extraction x3
-  CARD_DATABASE[4], CARD_DATABASE[4],                   // Line Sentinel x2
-  CARD_DATABASE[5], CARD_DATABASE[5],                   // Pace 2 Counter x2
-  CARD_DATABASE[8], CARD_DATABASE[8], CARD_DATABASE[8], // Heavy Juggernaut x3
-  CARD_DATABASE[9], CARD_DATABASE[9],                   // Pace 3 Counter x2
-  CARD_DATABASE[10], CARD_DATABASE[10],                 // Rune of Amp x2
+  CARD_DATABASE[0], CARD_DATABASE[0],
+  CARD_DATABASE[2], CARD_DATABASE[2], CARD_DATABASE[2],
+  CARD_DATABASE[3], CARD_DATABASE[3],
+  CARD_DATABASE[4], CARD_DATABASE[4], CARD_DATABASE[4],
+  CARD_DATABASE[6], CARD_DATABASE[6], CARD_DATABASE[6],
+  CARD_DATABASE[7], CARD_DATABASE[7],
+  CARD_DATABASE[8], CARD_DATABASE[8], CARD_DATABASE[8],
+  CARD_DATABASE[9], CARD_DATABASE[9],
 ];

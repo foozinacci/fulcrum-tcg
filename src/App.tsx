@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card } from './types/game';
 import { createInitialGameState } from './logic/gameEngine';
+import { PRIMAL_AVATARS_LIST } from './data/cards';
 import { GameBoard } from './components/GameBoard';
 import { DeckBuilder } from './components/DeckBuilder';
 import { CardCodex } from './components/CardCodex';
@@ -30,7 +31,10 @@ export const App: React.FC = () => {
 
   const handleStartGame = () => {
     soundFx.playVictorySound();
-    const initial = createInitialGameState(customDeck);
+    const savedAvatarId = localStorage.getItem('fulcrum_primal_avatar_id');
+    const pAvatar = PRIMAL_AVATARS_LIST.find((a: Card) => a.id === savedAvatarId) || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
+    const oAvatar = PRIMAL_AVATARS_LIST[0];
+    const initial = createInitialGameState(customDeck, undefined, pAvatar, oAvatar);
     setGameState(initial);
     setViewMode('game');
   };

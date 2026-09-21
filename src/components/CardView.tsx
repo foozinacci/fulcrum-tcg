@@ -126,14 +126,20 @@ export const CardView: React.FC<CardViewProps> = ({
             </div>
           </div>
 
-          {/* SVG Art */}
+          {/* Art: Image or SVG */}
           <div className="my-1 flex-1 relative rounded border border-white/10 overflow-hidden bg-black/40">
-            <CardSvgArt artId={card.svgArtId} />
+            {card.imageArtUrl ? (
+              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover" />
+            ) : (
+              <CardSvgArt artId={card.svgArtId} />
+            )}
 
             <div className="absolute top-1 left-1 flex flex-col gap-0.5">
-              <span className="px-1 py-0.2 rounded bg-emerald-950/90 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 flex items-center gap-0.5">
-                <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" /> +{card.coreValue} Core
-              </span>
+              {card.coreValue !== undefined && !card.isPrimal && (
+                <span className="px-1 py-0.2 rounded bg-emerald-950/90 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 flex items-center gap-0.5">
+                  <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" /> +{card.coreValue} Core
+                </span>
+              )}
               {card.expediteLoad && (
                 <span className="px-1 py-0.2 rounded bg-amber-950/90 border border-amber-500/50 text-[8px] font-bold text-amber-300 flex items-center gap-0.5">
                   <Flame className="w-2.5 h-2.5 text-amber-400" /> Expedite: {card.expediteLoad}
@@ -163,11 +169,11 @@ export const CardView: React.FC<CardViewProps> = ({
             <div className="flex justify-between items-center px-1 mt-1 z-10">
               <div className="flex items-center gap-0.5 bg-amber-950/90 border border-amber-500/80 text-amber-300 font-bold px-1.5 py-0.5 rounded-full text-xs shadow-md">
                 <Swords className="w-3 h-3 text-amber-400" />
-                <span>{currentEdge}</span>
+                <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
               </div>
               <div className="flex items-center gap-0.5 bg-blue-950/90 border border-blue-500/80 text-blue-300 font-bold px-1.5 py-0.5 rounded-full text-xs shadow-md">
                 <Shield className="w-3 h-3 text-blue-400" />
-                <span>{currentGrit}</span>
+                <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
               </div>
             </div>
           )}

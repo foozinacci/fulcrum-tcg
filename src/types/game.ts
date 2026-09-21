@@ -4,11 +4,11 @@ export type AttachmentType = 'weapon' | 'armor';
 
 export interface HandCard {
   card: Card;
-  drawnThisTurn: boolean; // Conversion is only legal the turn it is drawn!
+  drawnThisTurn: boolean; // Conversion into Core is only legal the turn it is drawn!
 }
 
 export interface CardAbility {
-  trigger: 'onSummon' | 'onDeath' | 'onTurnStart' | 'onAttack' | 'expedite' | 'counterspell';
+  trigger: 'onSummon' | 'onDeath' | 'onTurnStart' | 'onAttack' | 'expedite' | 'counterspell' | 'activated';
   description: string;
   damage?: number;
   heal?: number;
@@ -16,6 +16,7 @@ export interface CardAbility {
   buffEdge?: number;
   buffGrit?: number;
   produceCore?: number;
+  tutorType?: 'relic' | 'rune' | 'attachment';
 }
 
 export interface Card {
@@ -23,7 +24,7 @@ export interface Card {
   name: string;
   load: number;           // Standard Load cost to cast
   expediteLoad?: number;  // Expedite: Higher Load cost to ignore Pace restriction
-  coreValue: number;      // Fixed Core value when converted
+  coreValue?: number;     // Fixed Core value when converted (N/A for Primal Avatars)
   pace: number;           // Earliest legal turn to cast at standard Load
   type: CardType;
   attachmentType?: AttachmentType; // Weapon (Edge) or Armor (Grit)
@@ -31,12 +32,15 @@ export interface Card {
   isGuard?: boolean;      // Protects Life & non-guard allies
   edge?: number;          // Offense (Attack power)
   grit?: number;          // Defense/Toughness (Resets at End Step)
+  isDynamicStats?: boolean; // Stats (*/*) derived from active game state (e.g. Vorrath)
   attackCoreCost?: number; // Fixed Core cost paid per attack (default 1)
   coreAttackRatio?: number; // Ratio converting banked Core to extra damage
   description: string;
   flavorText?: string;
   ability?: CardAbility;
+  ability2?: CardAbility;
   svgArtId: string;
+  imageArtUrl?: string;   // High-res custom card artwork image URL
 }
 
 export interface BoardPermanent {
@@ -49,6 +53,7 @@ export interface BoardPermanent {
   bankedCore: number;         // Core banked as reserve converting to damage at a ratio
   attachments: Card[];
   isGuard: boolean;
+  ability2UsedThisTurn?: boolean;
 }
 
 export interface PlayerState {
@@ -87,7 +92,7 @@ export interface GameState {
   // Interactive state
   selectedHandCardId: string | null;
   selectedBoardInstanceId: string | null;
-  bankCoreAmount: number;     // Core amount to bank onto selected attacker
+  bankCoreAmount: number;
   isTargeting: boolean;
   validTargetType: 'being' | 'nexus' | 'any' | null;
 }

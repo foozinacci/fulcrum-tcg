@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card, BoardPermanent } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn } from '../logic/gameEngine';
+import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn, activatePrimalAvatarAbility2 } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
@@ -228,6 +228,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
               <CardView
                 card={state.opponent.primalAvatar}
                 size="md"
+                customEdge={state.opponent.primalAvatar.isDynamicStats ? state.opponent.corePool : (state.opponent.primalAvatar.edge || 5)}
+                customGrit={state.opponent.primalAvatar.isDynamicStats ? state.opponent.corePool : (state.opponent.primalAvatar.grit || 6)}
                 isTargetable={isAttackerSelected || isSpellSelected}
               />
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold text-[9px] px-1.5 rounded-full uppercase flex items-center gap-0.5">
@@ -298,28 +300,43 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
             }`}
           >
             {/* Player Primal Avatar */}
-            <div className="relative">
+            <div className="relative group flex flex-col items-center">
               <CardView
                 card={state.player.primalAvatar}
                 size="md"
+                customEdge={state.player.primalAvatar.isDynamicStats ? state.player.corePool : (state.player.primalAvatar.edge || 5)}
+                customGrit={state.player.primalAvatar.isDynamicStats ? state.player.corePool : (state.player.primalAvatar.grit || 6)}
                 isSelected={state.selectedBoardInstanceId === state.player.primalAvatar.id}
-                onClick={() =>
+                onClick={() => {
+                  const pEdge = state.player.primalAvatar.isDynamicStats ? state.player.corePool : (state.player.primalAvatar.edge || 5);
+                  const pGrit = state.player.primalAvatar.isDynamicStats ? state.player.corePool : (state.player.primalAvatar.grit || 6);
                   handleFriendlyUnitClick({
                     instanceId: state.player.primalAvatar.id,
                     card: state.player.primalAvatar,
-                    currentEdge: state.player.primalAvatar.edge || 5,
-                    currentGrit: state.player.primalAvatar.grit || 6,
-                    maxGrit: state.player.primalAvatar.grit || 6,
+                    currentEdge: pEdge,
+                    currentGrit: pGrit,
+                    maxGrit: pGrit,
                     state: 'alert',
                     bankedCore: 0,
                     attachments: [],
                     isGuard: false,
-                  })
-                }
+                  });
+                }}
               />
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold text-[9px] px-1.5 rounded-full uppercase flex items-center gap-0.5">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-bold text-[9px] px-1.5 rounded-full uppercase flex items-center gap-0.5 z-10">
                 <Crown className="w-2.5 h-2.5" /> 61st Slot
               </div>
+
+              {/* Activated Ability 2 Button */}
+              {state.turnOwner === 'player' && !state.winner && (
+                <button
+                  onClick={() => setState((prev) => activatePrimalAvatarAbility2(prev))}
+                  className="mt-1 px-2 py-0.5 rounded bg-amber-950/90 hover:bg-amber-900 border border-amber-400 text-[9px] font-bold text-amber-300 shadow-md transition flex items-center gap-1"
+                  title="Activate Primal Avatar Ability 2"
+                >
+                  <span>Use Ability 2</span>
+                </button>
+              )}
             </div>
 
             {state.player.field.map((perm) => (

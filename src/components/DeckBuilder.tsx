@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardType } from '../types/game';
-import { CARD_DATABASE, STARTER_DECK_A, STARTER_DECK_B } from '../data/cards';
+import { CARD_DATABASE, PRIMAL_AVATARS_LIST, STARTER_DECK_A, STARTER_DECK_B } from '../data/cards';
 import { CardView } from './CardView';
 import { Plus, Trash2, Save } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface DeckBuilderProps {
   onBack: () => void;
-  onSaveDeck: (customDeck: Card[]) => void;
+  onSaveDeck: (customDeck: Card[], primalAvatar?: Card) => void;
 }
 
 export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) => {
   const [currentDeck, setCurrentDeck] = useState<Card[]>(STARTER_DECK_A);
+  const [selectedPrimalAvatar, setSelectedPrimalAvatar] = useState<Card>(PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0]);
   const [typeFilter, setTypeFilter] = useState<'all' | CardType>('all');
   const [deckName, setDeckName] = useState('Custom Fulcrum Deck');
+
+  useEffect(() => {
+    const savedAvatarId = localStorage.getItem('fulcrum_primal_avatar_id');
+    if (savedAvatarId) {
+      const found = PRIMAL_AVATARS_LIST.find((a) => a.id === savedAvatarId);
+      if (found) setSelectedPrimalAvatar(found);
+    }
+  }, []);
 
   const addCardToDeck = (card: Card) => {
     if (currentDeck.length >= 30) return;
@@ -45,7 +54,8 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
   const handleSave = () => {
     soundFx.playVictorySound();
     localStorage.setItem('fulcrum_custom_deck', JSON.stringify(currentDeck));
-    onSaveDeck(currentDeck);
+    localStorage.setItem('fulcrum_primal_avatar_id', selectedPrimalAvatar.id);
+    onSaveDeck(currentDeck, selectedPrimalAvatar);
   };
 
   const filteredPool = CARD_DATABASE.filter((card) => {
@@ -168,6 +178,34 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
               >
                 <Trash2 className="w-4 h-4" />
               </button>
+            </div>
+
+            {/* 61st Slot Primal Avatar Selector */}
+            <div className="bg-amber-950/40 border border-amber-500/50 rounded-xl p-3 mb-3">
+              <div className="text-[10px] font-bold text-amber-300 uppercase tracking-widest mb-1.5 flex items-center justify-between">
+                <span>61st Slot Primal Avatar</span>
+                <span className="text-slate-400 font-normal">Command Slot</span>
+              </div>
+              <select
+                value={selectedPrimalAvatar.id}
+                onChange={(e) => {
+                  const found = PRIMAL_AVATARS_LIST.find((a) => a.id === e.target.value);
+                  if (found) {
+                    setSelectedPrimalAvatar(found);
+                    localStorage.setItem('fulcrum_primal_avatar_id', found.id);
+                  }
+                }}
+                className="w-full bg-slate-900 border border-amber-500/70 text-amber-200 text-xs font-bold rounded-lg p-2 focus:outline-none"
+              >
+                {PRIMAL_AVATARS_LIST.map((avatar) => (
+                  <option key={avatar.id} value={avatar.id}>
+                    {avatar.name} (Pace {avatar.pace})
+                  </option>
+                ))}
+              </select>
+              <div className="text-[10px] text-slate-300 mt-1.5 italic">
+                {selectedPrimalAvatar.description}
+              </div>
             </div>
 
             {/* Load Cost Curve */}
