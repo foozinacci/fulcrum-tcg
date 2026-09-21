@@ -161,7 +161,7 @@ export const CardView: React.FC<CardViewProps> = ({
       {/* CARD BACK */}
       {isCurrentlyBack ? (
         <div
-          style={{ transform: showBackDuringAnim ? 'rotateY(180deg)' : 'none' }}
+          style={{ transform: showBackDuringAnim ? 'scaleX(-1)' : 'none' }}
           className="w-full h-full rounded-xl overflow-hidden border-2 border-fulcrum-gold/80 shadow-2xl relative bg-[#0a0814]"
         >
           <img
@@ -174,7 +174,7 @@ export const CardView: React.FC<CardViewProps> = ({
       ) : (
         /* CARD FRONT */
         <div
-          style={{ transform: showBackDuringAnim ? 'rotateY(180deg)' : 'none' }}
+          style={{ transform: showBackDuringAnim ? 'scaleX(-1)' : 'none' }}
           className={`w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden relative shadow-xl ${getCardBorder()}`}
         >
           {/* Header: Full width Card Name (No truncating) */}
