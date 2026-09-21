@@ -79,10 +79,36 @@ export const NYSSARA_HALLOWER: Card = {
   },
 };
 
+export const GROTHMAW_CHARMBRANDED: Card = {
+  id: 'primal_grothmaw_04',
+  name: 'Grothmaw, Charmbranded',
+  load: 4,
+  expediteLoad: 6,
+  pace: 3,
+  type: 'primal_avatar',
+  isPrimal: true,
+  edge: 4,
+  grit: 3,
+  coreAttackRatio: 1.5,
+  description: 'Pace 3. Ability 1: Converting a Charm lets you cast it from graveyard that turn, then exile it. Ability 2: Casting a Charm after Grothmaw deals combat damage to a player copies that Charm.',
+  flavorText: 'A runic behemoth branded with ancient Charms, amplifying cast sorceries.',
+  imageArtUrl: '/assets/grothmaw.jpg',
+  svgArtId: 'neutral_golem',
+  ability: {
+    trigger: 'activated',
+    description: 'Cast Charms converted this turn from graveyard (exiled on cast).',
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Copy Charms cast after Grothmaw deals combat damage to a player this turn.',
+  },
+};
+
 export const PRIMAL_AVATARS_LIST: Card[] = [
   GLUTTRIX_CORESEEKER,
   VORRATH_IRONBOUND,
   NYSSARA_HALLOWER,
+  GROTHMAW_CHARMBRANDED,
 ];
 
 export const CARD_DATABASE: Card[] = [

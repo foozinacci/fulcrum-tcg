@@ -41,6 +41,7 @@ export interface Card {
   ability2?: CardAbility;
   svgArtId: string;
   imageArtUrl?: string;   // High-res custom card artwork image URL
+  castableFromGraveyardThisTurn?: boolean; // Grothmaw Ability 1 flag
 }
 
 export interface BoardPermanent {
@@ -69,6 +70,7 @@ export interface PlayerState {
   graveyard: Card[];
   primalAvatar: Card;         // Dedicated 61st slot Primal Avatar
   field: BoardPermanent[];    // Field permanents
+  grothmawDealtDamageThisTurn?: boolean; // Grothmaw Ability 2 flag
 }
 
 export type GamePhase = 'draw' | 'conversion' | 'main1' | 'combat' | 'main2' | 'end' | 'gameover';

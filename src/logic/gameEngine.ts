@@ -1,5 +1,5 @@
 import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase } from '../types/game';
-import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, NYSSARA_HALLOWER, PRIMAL_AVATARS_LIST } from '../data/cards';
+import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, NYSSARA_HALLOWER, GROTHMAW_CHARMBRANDED, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
 function shuffleDeck(deck: Card[]): Card[] {
@@ -151,6 +151,17 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
     timestamp: new Date().toLocaleTimeString(),
   });
 
+  // Grothmaw Ability 1: Whenever you convert a Charm for Core, you may cast that Charm from graveyard that turn
+  if (p.primalAvatar.id === GROTHMAW_CHARMBRANDED.id && card.type === 'charm') {
+    card.castableFromGraveyardThisTurn = true;
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Grothmaw Ability 1: ${card.name} is now castable from Graveyard this turn!`,
+      type: 'primal',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+
   // Nyssara Ability 1: Whenever an opponent converts a card for core, siphon 2 core from that player.
   if (opp.primalAvatar.id === NYSSARA_HALLOWER.id) {
     const siphoned = Math.min(2, p.corePool);
@@ -209,6 +220,11 @@ export function startTurn(state: GameState): GameState {
   const logs = [...state.logs];
 
   activePlayer.hand = activePlayer.hand.map((hc) => ({ ...hc, drawnThisTurn: false }));
+  activePlayer.grothmawDealtDamageThisTurn = false;
+  activePlayer.graveyard = activePlayer.graveyard.map((card) => ({
+    ...card,
+    castableFromGraveyardThisTurn: false,
+  }));
 
   activePlayer.field = activePlayer.field.map((perm) => ({
     ...perm,
@@ -332,26 +348,40 @@ export function playHandCard(
     player.graveyard.push(card);
     soundFx.playSpellCastSound();
 
-    if (card.ability) {
-      if (card.ability.damage) {
-        const dmg = card.ability.damage;
-        if (targetInstanceId === 'nexus') {
-          opponent.lifeTotal = Math.max(0, opponent.lifeTotal - dmg);
-        } else if (targetInstanceId) {
-          const target = opponent.field.find((p) => p.instanceId === targetInstanceId);
-          if (target) {
-            target.currentGrit -= dmg;
-            opponent.field = opponent.field.filter((p) => p.currentGrit > 0);
+    const isCopied = !!player.grothmawDealtDamageThisTurn;
+    const iterations = isCopied ? 2 : 1;
+
+    if (isCopied) {
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `Grothmaw Ability 2 Triggered: COPYING ${card.name}!`,
+        type: 'primal',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+
+    for (let it = 0; it < iterations; it++) {
+      if (card.ability) {
+        if (card.ability.damage) {
+          const dmg = card.ability.damage;
+          if (targetInstanceId === 'nexus') {
+            opponent.lifeTotal = Math.max(0, opponent.lifeTotal - dmg);
+          } else if (targetInstanceId) {
+            const target = opponent.field.find((p) => p.instanceId === targetInstanceId);
+            if (target) {
+              target.currentGrit -= dmg;
+              opponent.field = opponent.field.filter((p) => p.currentGrit > 0);
+            }
           }
         }
-      }
-      if (card.ability.drawCards) {
-        for (let i = 0; i < card.ability.drawCards; i++) {
-          player = drawCard(player, logs);
+        if (card.ability.drawCards) {
+          for (let i = 0; i < card.ability.drawCards; i++) {
+            player = drawCard(player, logs);
+          }
         }
-      }
-      if (card.ability.produceCore) {
-        player.corePool += card.ability.produceCore;
+        if (card.ability.produceCore) {
+          player.corePool += card.ability.produceCore;
+        }
       }
     }
 
@@ -463,6 +493,16 @@ export function executeCombat(
         type: 'primal',
         timestamp: new Date().toLocaleTimeString(),
       });
+
+      if (attacker.card.id === GROTHMAW_CHARMBRANDED.id && totalDamage > 0) {
+        player.grothmawDealtDamageThisTurn = true;
+        logs.unshift({
+          id: Math.random().toString(),
+          text: `Grothmaw Ability 2: Grothmaw dealt combat damage! Charms cast this turn will be copied!`,
+          type: 'primal',
+          timestamp: new Date().toLocaleTimeString(),
+        });
+      }
 
       if (currentPrimalDmg >= threshold) {
         opponent.lifeTotal = 0;
@@ -706,4 +746,95 @@ export function activatePrimalAvatarAbility2(state: GameState): GameState {
   }
 
   return state;
+}
+
+export function playGraveyardCard(
+  state: GameState,
+  cardId: string,
+  targetInstanceId?: string | 'nexus'
+): GameState {
+  const isPlayer = state.turnOwner === 'player';
+  const playerKey = isPlayer ? 'player' : 'opponent';
+  const opponentKey = isPlayer ? 'opponent' : 'player';
+
+  let player = { ...state[playerKey] };
+  let opponent = { ...state[opponentKey] };
+  const logs = [...state.logs];
+
+  const cardIndex = player.graveyard.findIndex((c) => c.id === cardId && c.castableFromGraveyardThisTurn);
+  if (cardIndex === -1) return state;
+
+  const card = player.graveyard[cardIndex];
+
+  if (player.corePool < card.load) {
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Not enough Core pool to cast ${card.name} from Graveyard! Cost: ${card.load}, Core: ${player.corePool}.`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+    return { ...state, logs };
+  }
+
+  player.corePool -= card.load;
+  // Exiled / removed from game on cast!
+  player.graveyard.splice(cardIndex, 1);
+
+  const isCopied = !!player.grothmawDealtDamageThisTurn;
+  const iterations = isCopied ? 2 : 1;
+
+  if (isCopied) {
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Grothmaw Ability 2 Triggered: COPYING ${card.name} cast from Graveyard!`,
+      type: 'primal',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+
+  for (let it = 0; it < iterations; it++) {
+    if (card.ability) {
+      if (card.ability.damage) {
+        const dmg = card.ability.damage;
+        if (targetInstanceId === 'nexus') {
+          opponent.lifeTotal = Math.max(0, opponent.lifeTotal - dmg);
+        } else if (targetInstanceId) {
+          const target = opponent.field.find((p) => p.instanceId === targetInstanceId);
+          if (target) {
+            target.currentGrit -= dmg;
+            opponent.field = opponent.field.filter((p) => p.currentGrit > 0);
+          }
+        }
+      }
+      if (card.ability.drawCards) {
+        for (let i = 0; i < card.ability.drawCards; i++) {
+          player = drawCard(player, logs);
+        }
+      }
+      if (card.ability.produceCore) {
+        player.corePool += card.ability.produceCore;
+      }
+    }
+  }
+
+  logs.unshift({
+    id: Math.random().toString(),
+    text: `${player.name} cast ${card.name} from Graveyard via Grothmaw Ability 1 (Exiled from game).`,
+    type: 'primal',
+    timestamp: new Date().toLocaleTimeString(),
+  });
+
+  soundFx.playSpellCastSound();
+
+  let winner: 'player' | 'opponent' | null = null;
+  if (opponent.lifeTotal <= 0) winner = isPlayer ? 'player' : 'opponent';
+  if (player.lifeTotal <= 0) winner = isPlayer ? 'opponent' : 'player';
+
+  return {
+    ...state,
+    [playerKey]: player,
+    [opponentKey]: opponent,
+    winner,
+    logs,
+  };
 }
