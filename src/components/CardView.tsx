@@ -233,46 +233,46 @@ export const CardView: React.FC<CardViewProps> = ({
           </div>
 
           {/* Bottom Stats Bar: PACE - LOAD - CORE - EDGE - GRIT */}
-          <div className="grid grid-cols-5 gap-0.5 items-center mt-1 z-10 flex-shrink-0 text-[8.5px] font-bold w-full">
-            {/* 1. PACE (Lime Green) */}
-            <div className="flex items-center justify-center gap-0.5 bg-lime-950/90 border border-lime-500/80 px-0.5 py-0.5 rounded text-lime-300 shadow-sm w-full">
-              <Clock className="w-2.5 h-2.5 text-lime-400 flex-shrink-0" />
-              <span>P{card.pace}</span>
+          <div className="relative flex justify-between items-center mt-1 z-10 flex-shrink-0 text-[8.5px] font-bold w-full">
+            {/* Left Group: PACE + LOAD */}
+            <div className="flex items-center gap-0.5">
+              {/* 1. PACE (Lime Green) */}
+              <div className="flex items-center justify-center gap-0.5 bg-lime-950/90 border border-lime-500/80 px-1 py-0.5 rounded text-lime-300 shadow-sm">
+                <Clock className="w-2.5 h-2.5 text-lime-400 flex-shrink-0" />
+                <span>P{card.pace}</span>
+              </div>
+
+              {/* 2. LOAD (Neon Pink) */}
+              <div className="flex items-center justify-center gap-0.5 bg-pink-950/90 border border-pink-500/80 px-1 py-0.5 rounded text-pink-300 shadow-sm">
+                <span className="font-serif font-black text-pink-300 text-[9.5px]">L{card.load}</span>
+              </div>
             </div>
 
-            {/* 2. LOAD (Neon Pink) */}
-            <div className="flex items-center justify-center gap-0.5 bg-pink-950/90 border border-pink-500/80 px-0.5 py-0.5 rounded text-pink-300 shadow-sm w-full">
-              <span className="font-serif font-black text-pink-300 text-[9.5px]">L{card.load}</span>
-            </div>
-
-            {/* 3. CORE (Neon Yellow - ALWAYS Center Slot) */}
-            {card.coreValue !== undefined && !card.isPrimal ? (
-              <div className="flex items-center justify-center gap-0.5 bg-yellow-950/90 border border-yellow-400/80 px-0.5 py-0.5 rounded text-yellow-300 shadow-sm w-full">
+            {/* Center Anchor: CORE (Neon Yellow - ALWAYS Exact 50% Center) */}
+            {card.coreValue !== undefined && !card.isPrimal && (
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-0.5 bg-yellow-950/90 border border-yellow-400/80 px-1 py-0.5 rounded text-yellow-300 shadow-sm whitespace-nowrap z-10">
                 <CircleDollarSign className="w-2.5 h-2.5 text-yellow-400 flex-shrink-0" />
                 <span>+{card.coreValue}</span>
               </div>
-            ) : (
-              <div className="w-full h-4" />
             )}
 
-            {/* 4. EDGE (Cyan) */}
-            {card.type === 'being' || card.type === 'primal_avatar' ? (
-              <div className="flex items-center justify-center gap-0.5 bg-cyan-950/90 border border-cyan-400/80 px-0.5 py-0.5 rounded text-cyan-300 shadow-sm w-full">
-                <Swords className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />
-                <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
-              </div>
-            ) : (
-              <div className="w-full h-4" />
-            )}
+            {/* Right Group: EDGE + GRIT (Beings & Avatars) */}
+            {(card.type === 'being' || card.type === 'primal_avatar') ? (
+              <div className="flex items-center gap-0.5">
+                {/* 4. EDGE (Cyan) */}
+                <div className="flex items-center justify-center gap-0.5 bg-cyan-950/90 border border-cyan-400/80 px-1 py-0.5 rounded text-cyan-300 shadow-sm">
+                  <Swords className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />
+                  <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
+                </div>
 
-            {/* 5. GRIT (Neon Blue) */}
-            {card.type === 'being' || card.type === 'primal_avatar' ? (
-              <div className="flex items-center justify-center gap-0.5 bg-blue-950/90 border border-blue-400/80 px-0.5 py-0.5 rounded text-blue-300 shadow-sm w-full">
-                <Shield className="w-2.5 h-2.5 text-blue-400 flex-shrink-0" />
-                <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+                {/* 5. GRIT (Neon Blue) */}
+                <div className="flex items-center justify-center gap-0.5 bg-blue-950/90 border border-blue-400/80 px-1 py-0.5 rounded text-blue-300 shadow-sm">
+                  <Shield className="w-2.5 h-2.5 text-blue-400 flex-shrink-0" />
+                  <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+                </div>
               </div>
             ) : (
-              <div className="w-full h-4" />
+              <div className="w-1" />
             )}
           </div>
         </div>
@@ -331,46 +331,46 @@ export const CardView: React.FC<CardViewProps> = ({
             </div>
 
             {/* Hover Preview Stats Row: PACE - LOAD - CORE - EDGE - GRIT */}
-            <div className="grid grid-cols-5 gap-1.5 items-center mt-2 font-bold text-xs flex-shrink-0 w-full">
-              {/* 1. PACE (Lime Green) */}
-              <div className="flex items-center justify-center gap-1 bg-lime-950/90 border border-lime-500 text-lime-300 px-1 py-1 rounded-md shadow w-full">
-                <Clock className="w-3 h-3 text-lime-400 flex-shrink-0" />
-                <span>P{card.pace}</span>
+            <div className="relative flex justify-between items-center mt-2 font-bold text-xs flex-shrink-0 w-full">
+              {/* Left Group: PACE + LOAD */}
+              <div className="flex items-center gap-1.5">
+                {/* 1. PACE (Lime Green) */}
+                <div className="flex items-center justify-center gap-1 bg-lime-950/90 border border-lime-500 text-lime-300 px-2 py-1 rounded-md shadow">
+                  <Clock className="w-3 h-3 text-lime-400 flex-shrink-0" />
+                  <span>P{card.pace}</span>
+                </div>
+
+                {/* 2. LOAD (Neon Pink) */}
+                <div className="flex items-center justify-center gap-1 bg-pink-950/90 border border-pink-500 text-pink-300 px-2 py-1 rounded-md shadow">
+                  <span>L{card.load}</span>
+                </div>
               </div>
 
-              {/* 2. LOAD (Neon Pink) */}
-              <div className="flex items-center justify-center gap-1 bg-pink-950/90 border border-pink-500 text-pink-300 px-1 py-1 rounded-md shadow w-full">
-                <span>L{card.load}</span>
-              </div>
-
-              {/* 3. CORE (Neon Yellow - ALWAYS Center Slot) */}
-              {card.coreValue !== undefined && !card.isPrimal ? (
-                <div className="flex items-center justify-center gap-1 bg-yellow-950/90 border border-yellow-400 text-yellow-300 px-1 py-1 rounded-md shadow w-full">
+              {/* Center Anchor: CORE (Neon Yellow - ALWAYS Exact 50% Center) */}
+              {card.coreValue !== undefined && !card.isPrimal && (
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 bg-yellow-950/90 border border-yellow-400 text-yellow-300 px-2 py-1 rounded-md shadow z-10 whitespace-nowrap">
                   <CircleDollarSign className="w-3 h-3 text-yellow-400 flex-shrink-0" />
                   <span>+{card.coreValue}</span>
                 </div>
-              ) : (
-                <div className="w-full h-6" />
               )}
 
-              {/* 4. EDGE (Cyan) */}
-              {card.type === 'being' || card.type === 'primal_avatar' ? (
-                <div className="flex items-center justify-center gap-1 bg-cyan-950/90 border border-cyan-400 text-cyan-300 px-1 py-1 rounded-md shadow w-full">
-                  <Swords className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
-                  <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
-                </div>
-              ) : (
-                <div className="w-full h-6" />
-              )}
+              {/* Right Group: EDGE + GRIT (Beings & Avatars) */}
+              {(card.type === 'being' || card.type === 'primal_avatar') ? (
+                <div className="flex items-center gap-1.5">
+                  {/* 4. EDGE (Cyan) */}
+                  <div className="flex items-center justify-center gap-1 bg-cyan-950/90 border border-cyan-400 text-cyan-300 px-2 py-1 rounded-md shadow">
+                    <Swords className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                    <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
+                  </div>
 
-              {/* 5. GRIT (Neon Blue) */}
-              {card.type === 'being' || card.type === 'primal_avatar' ? (
-                <div className="flex items-center justify-center gap-1 bg-blue-950/90 border border-blue-400 text-blue-300 px-1 py-1 rounded-md shadow w-full">
-                  <Shield className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                  <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+                  {/* 5. GRIT (Neon Blue) */}
+                  <div className="flex items-center justify-center gap-1 bg-blue-950/90 border border-blue-400 text-blue-300 px-2 py-1 rounded-md shadow">
+                    <Shield className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                    <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+                  </div>
                 </div>
               ) : (
-                <div className="w-full h-6" />
+                <div className="w-1" />
               )}
             </div>
           </div>,
