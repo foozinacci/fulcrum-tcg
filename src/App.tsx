@@ -6,7 +6,7 @@ import { DeckBuilder } from './components/DeckBuilder';
 import { CardCodex } from './components/CardCodex';
 import { RulesModal } from './components/RulesModal';
 import { ParticleCanvas } from './components/ParticleCanvas';
-import { Play, Shield, BookOpen, Layers, Sparkles, Swords } from 'lucide-react';
+import { Play, Shield, BookOpen, Layers, Sparkles } from 'lucide-react';
 import { soundFx } from './utils/soundFx';
 
 type ViewMode = 'menu' | 'game' | 'deckbuilder' | 'codex';
@@ -43,7 +43,7 @@ export const App: React.FC = () => {
       {/* View Switcher */}
       {viewMode === 'menu' && (
         <div className="relative z-10 flex flex-col items-center justify-between min-h-screen p-6 max-w-5xl mx-auto">
-          {/* Top Logo / Title Banner */}
+          {/* Top Logo Banner */}
           <div className="flex flex-col items-center text-center mt-6">
             <div className="flex items-center gap-2 px-4 py-1 rounded-full bg-fulcrum-panel border border-fulcrum-border text-xs text-fulcrum-gold font-serif mb-3 shadow-lg">
               <Sparkles className="w-3.5 h-3.5 text-fulcrum-gold animate-pulse" />
@@ -53,11 +53,11 @@ export const App: React.FC = () => {
               FULCRUM
             </h1>
             <p className="text-sm md:text-base text-slate-300 max-w-md font-sans mt-2">
-              Align Sol & Umbra. Balance the cosmic core. Claim absolute victory.
+              Master Core conversion, Pace timing, Expedite casts, and Primal Head-Removal.
             </p>
           </div>
 
-          {/* Central Stage: User Card Back Showcase */}
+          {/* Central Card Back Stage */}
           <div className="my-6 relative group">
             <div className="w-52 h-80 rounded-2xl overflow-hidden border-2 border-fulcrum-gold shadow-[0_0_40px_rgba(243,198,105,0.3)] transition-transform duration-500 transform group-hover:scale-105 group-hover:rotate-1">
               <img
@@ -66,7 +66,6 @@ export const App: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            {/* Metallic Glow Ring */}
             <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-cyan-500/20 blur-xl pointer-events-none -z-10 group-hover:opacity-100 opacity-60 transition" />
           </div>
 
