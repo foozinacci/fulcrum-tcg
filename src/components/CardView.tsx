@@ -72,12 +72,30 @@ export const CardView: React.FC<CardViewProps> = ({
   };
 
   const sizeClasses = {
-    sm: 'w-28 h-40 text-xs',
-    md: 'w-40 h-60 text-xs',
-    lg: 'w-56 h-84 text-sm',
+    sm: 'w-28 h-[168px] text-xs',
+    md: 'w-40 h-[240px] text-xs',
+    lg: 'w-56 h-[336px] text-sm',
   }[size];
 
   const getCardBorder = () => {
+    if (card.pact === 'Voidhallow' || (card.colors?.includes('purple') && card.colors?.includes('amber'))) {
+      return 'border-purple-400 shadow-[0_0_18px_rgba(168,85,247,0.5),0_0_18px_rgba(245,158,11,0.4)] bg-gradient-to-b from-[#2e1065] via-[#120826] to-[#451a03]';
+    }
+    if (card.pact === 'Rotwatch' || (card.colors?.includes('purple') && card.colors?.includes('green'))) {
+      return 'border-emerald-400 shadow-[0_0_18px_rgba(168,85,247,0.5),0_0_18px_rgba(16,185,129,0.4)] bg-gradient-to-b from-[#2e1065] via-[#0b1f14] to-[#064e3b]';
+    }
+    if (card.pact === 'Charmbrand' || (card.colors?.includes('purple') && card.colors?.includes('red'))) {
+      return 'border-red-500 shadow-[0_0_18px_rgba(168,85,247,0.5),0_0_18px_rgba(239,68,68,0.4)] bg-gradient-to-b from-[#2e1065] via-[#240a16] to-[#450a0a]';
+    }
+    if (card.pact === 'Corefeast' || (card.colors?.includes('amber') && card.colors?.includes('green'))) {
+      return 'border-amber-400 shadow-[0_0_18px_rgba(245,158,11,0.5),0_0_18px_rgba(16,185,129,0.4)] bg-gradient-to-b from-[#451a03] via-[#1a240c] to-[#064e3b]';
+    }
+    if (card.pact === 'Ironbound' || (card.colors?.includes('amber') && card.colors?.includes('red'))) {
+      return 'border-amber-500 shadow-[0_0_18px_rgba(245,158,11,0.5),0_0_18px_rgba(239,68,68,0.4)] bg-gradient-to-b from-[#451a03] via-[#281308] to-[#450a0a]';
+    }
+    if (card.pact === 'Runescale' || (card.colors?.includes('green') && card.colors?.includes('red'))) {
+      return 'border-emerald-400 shadow-[0_0_18px_rgba(16,185,129,0.5),0_0_18px_rgba(239,68,68,0.4)] bg-gradient-to-b from-[#064e3b] via-[#1f190c] to-[#450a0a]';
+    }
     if (card.isPrimal) return 'border-fulcrum-gold shadow-[0_0_20px_rgba(243,198,105,0.6)] bg-gradient-to-b from-[#3d2a06] to-[#140b02]';
     return 'border-fulcrum-gold/70 shadow-[0_0_12px_rgba(243,198,105,0.2)] bg-gradient-to-b from-[#21183b] to-[#0c0817]';
   };
@@ -122,7 +140,7 @@ export const CardView: React.FC<CardViewProps> = ({
           className={`w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden relative shadow-xl ${getCardBorder()}`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between gap-1 z-10">
+          <div className="flex items-center justify-between gap-1 z-10 flex-shrink-0">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-200 flex items-center justify-center font-bold font-serif text-slate-950 text-xs shadow-md">
               {card.load}
             </div>
@@ -137,10 +155,10 @@ export const CardView: React.FC<CardViewProps> = ({
             </div>
           </div>
 
-          {/* Art: Image or SVG */}
-          <div className="my-1 flex-1 relative rounded border border-white/10 overflow-hidden bg-black/40">
+          {/* Art: Image or SVG (Fixed 48% ratio height so all cards crop identically like Grothmaw) */}
+          <div className="my-1 h-[48%] relative rounded border border-white/10 overflow-hidden bg-black/40 flex-shrink-0">
             {card.imageArtUrl ? (
-              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover" />
+              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover object-center" />
             ) : (
               <CardSvgArt artId={card.svgArtId} />
             )}
@@ -161,11 +179,6 @@ export const CardView: React.FC<CardViewProps> = ({
                   <Crown className="w-2.5 h-2.5 text-amber-400" /> PRIMAL
                 </span>
               )}
-              {card.pact && (
-                <span className="px-1 py-0.2 rounded bg-purple-950/90 border border-purple-400/60 text-[8px] font-bold text-purple-200 flex items-center gap-0.5 uppercase tracking-wide">
-                  {card.pact}
-                </span>
-              )}
             </div>
 
             {isDormant && (
@@ -176,13 +189,13 @@ export const CardView: React.FC<CardViewProps> = ({
           </div>
 
           {/* Description */}
-          <div className="bg-black/60 rounded border border-white/10 p-1 text-[9.5px] leading-tight text-slate-200 font-sans min-h-[44px] flex items-center justify-center text-center">
+          <div className="flex-1 bg-black/60 rounded border border-white/10 p-1 text-[9.5px] leading-tight text-slate-200 font-sans flex items-center justify-center text-center overflow-hidden">
             {card.description}
           </div>
 
           {/* Stats Bar */}
           {(card.type === 'being' || card.type === 'primal_avatar') && (
-            <div className="flex justify-between items-center px-1 mt-1 z-10">
+            <div className="flex justify-between items-center px-1 mt-1 z-10 flex-shrink-0">
               <div className="flex items-center gap-0.5 bg-amber-950/90 border border-amber-500/80 text-amber-300 font-bold px-1.5 py-0.5 rounded-full text-xs shadow-md">
                 <Swords className="w-3 h-3 text-amber-400" />
                 <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
@@ -211,16 +224,11 @@ export const CardView: React.FC<CardViewProps> = ({
 
           <div className="my-2 flex-1 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner">
             {card.imageArtUrl ? (
-              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover" />
+              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover object-center" />
             ) : (
               <CardSvgArt artId={card.svgArtId} />
             )}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
-              {card.pact && (
-                <span className="px-2 py-0.5 rounded-md bg-purple-950/95 border border-purple-400 text-xs font-bold text-purple-200 uppercase tracking-widest shadow-md">
-                  Pact: {card.pact}
-                </span>
-              )}
               {card.isPrimal && (
                 <span className="px-2 py-0.5 rounded-md bg-amber-950/95 border border-amber-400 text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1 shadow-md">
                   <Crown className="w-3 h-3 text-amber-400" /> PRIMAL AVATAR
