@@ -150,6 +150,11 @@ export const CardView: React.FC<CardViewProps> = ({
                   <Crown className="w-2.5 h-2.5 text-amber-400" /> PRIMAL
                 </span>
               )}
+              {card.pact && (
+                <span className="px-1 py-0.2 rounded bg-purple-950/90 border border-purple-400/60 text-[8px] font-bold text-purple-200 flex items-center gap-0.5 uppercase tracking-wide">
+                  {card.pact}
+                </span>
+              )}
             </div>
 
             {isDormant && (

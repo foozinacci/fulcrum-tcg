@@ -2,6 +2,10 @@ export type CardType = 'being' | 'charm' | 'relic' | 'attachment' | 'rune' | 'pr
 
 export type AttachmentType = 'weapon' | 'armor';
 
+export type CardColor = 'purple' | 'amber' | 'green' | 'red';
+
+export type PactName = 'Voidhallow' | 'Rotwatch' | 'Charmbrand' | 'Corefeast' | 'Ironbound' | 'Runescale';
+
 export interface HandCard {
   card: Card;
   drawnThisTurn: boolean; // Conversion into Core is only legal the turn it is drawn!
@@ -28,6 +32,8 @@ export interface Card {
   pace: number;           // Earliest legal turn to cast at standard Load
   type: CardType;
   attachmentType?: AttachmentType; // Weapon (Edge) or Armor (Grit)
+  colors?: CardColor[];   // Color affiliation (Purple, Amber, Green, Red)
+  pact?: PactName;        // Dual-color Pact alignment
   isPrimal?: boolean;     // Primal supertype (max 1 copy)
   isGuard?: boolean;      // Protects Life & non-guard allies
   edge?: number;          // Offense (Attack power)

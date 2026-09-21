@@ -1,5 +1,5 @@
 import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase } from '../types/game';
-import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, NYSSARA_HALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, KHARV_ROTWATCH, PRIMAL_AVATARS_LIST } from '../data/cards';
+import { STARTER_DECK_A, GLUTTRIX_COREFEASTER, VORRATH_IRONBOUND, NYSSARA_VOIDHALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, KHARV_ROTWATCH, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
 function shuffleDeck(deck: Card[]): Card[] {
@@ -163,7 +163,7 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
   }
 
   // Nyssara Ability 1: Whenever an opponent converts a card for core, siphon 2 core from that player.
-  if (opp.primalAvatar.id === NYSSARA_HALLOWER.id) {
+  if (opp.primalAvatar.id === NYSSARA_VOIDHALLOWER.id) {
     const siphoned = Math.min(2, p.corePool);
     p.corePool -= siphoned;
     opp.corePool += siphoned;
@@ -235,7 +235,7 @@ export function startTurn(state: GameState): GameState {
 
   // Gluttrix Ability 1: Each player draws an additional card at turn start!
   activePlayer = drawCard(activePlayer, logs);
-  if (activePlayer.primalAvatar.id === GLUTTRIX_CORESEEKER.id) {
+  if (activePlayer.primalAvatar.id === GLUTTRIX_COREFEASTER.id) {
     activePlayer = drawCard(activePlayer, logs);
     logs.unshift({
       id: Math.random().toString(),
@@ -639,7 +639,7 @@ export function activatePrimalAvatarAbility2(state: GameState): GameState {
   const p = { ...state[playerKey] };
   const logs = [...state.logs];
 
-  if (p.primalAvatar.id === GLUTTRIX_CORESEEKER.id) {
+  if (p.primalAvatar.id === GLUTTRIX_COREFEASTER.id) {
     if (p.corePool < 3) {
       logs.unshift({
         id: Math.random().toString(),
@@ -714,7 +714,7 @@ export function activatePrimalAvatarAbility2(state: GameState): GameState {
     }
     soundFx.playSpellCastSound();
     return { ...state, [playerKey]: p, logs };
-  } else if (p.primalAvatar.id === NYSSARA_HALLOWER.id) {
+  } else if (p.primalAvatar.id === NYSSARA_VOIDHALLOWER.id) {
     if (p.corePool < 3) {
       logs.unshift({
         id: Math.random().toString(),
