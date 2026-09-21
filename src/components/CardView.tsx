@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../types/game';
 import { CardSvgArt } from './CardSvgArt';
 import { Shield, Swords, Crown, CircleDollarSign, Clock, Flame } from 'lucide-react';
+import { soundFx } from '../utils/soundFx';
 
 interface CardViewProps {
   card: Card;
@@ -39,6 +40,8 @@ export const CardView: React.FC<CardViewProps> = ({
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isFlippingAnim, setIsFlippingAnim] = useState(false);
+  const [showBackDuringAnim, setShowBackDuringAnim] = useState(false);
 
   const handleMouseEnter = () => {
     if (!isFlipped && !isDragging) {
@@ -47,7 +50,7 @@ export const CardView: React.FC<CardViewProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isFlipped || isDragging) return;
+    if (isFlipped || isDragging || isFlippingAnim) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
@@ -69,6 +72,30 @@ export const CardView: React.FC<CardViewProps> = ({
   const handleDragEndInternal = (e: React.DragEvent<HTMLDivElement>) => {
     setIsDragging(false);
     if (onDragEnd) onDragEnd(e);
+  };
+
+  const handleClickInternal = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (onClick) onClick();
+
+    if (!isFlippingAnim) {
+      soundFx.playCardDrawSound();
+      setIsFlippingAnim(true);
+
+      // At 200ms (approx 90deg turn), swap visible face to card back
+      setTimeout(() => {
+        setShowBackDuringAnim(true);
+      }, 200);
+
+      // At 500ms (approx 270deg turn), swap face back to card front
+      setTimeout(() => {
+        setShowBackDuringAnim(false);
+      }, 500);
+
+      // At 720ms, complete the 360-degree rotation
+      setTimeout(() => {
+        setIsFlippingAnim(false);
+      }, 720);
+    }
   };
 
   const sizeClasses = {
@@ -102,10 +129,11 @@ export const CardView: React.FC<CardViewProps> = ({
 
   const currentEdge = customEdge !== undefined ? customEdge : card.edge || 0;
   const currentGrit = customGrit !== undefined ? customGrit : card.grit || 0;
+  const isCurrentlyBack = isFlipped ? !showBackDuringAnim : showBackDuringAnim;
 
   return (
     <div
-      onClick={onClick}
+      onClick={handleClickInternal}
       draggable={draggable}
       onMouseEnter={handleMouseEnter}
       onDragStart={handleDragStartInternal}
@@ -113,8 +141,14 @@ export const CardView: React.FC<CardViewProps> = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-        transition: isDragging ? 'none' : 'transform 0.15s ease-out, box-shadow 0.2s ease',
+        transform: isFlippingAnim
+          ? `perspective(1000px) rotateY(360deg)`
+          : `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+        transition: isFlippingAnim
+          ? 'transform 0.72s cubic-bezier(0.4, 0, 0.2, 1)'
+          : isDragging
+          ? 'none'
+          : 'transform 0.15s ease-out, box-shadow 0.2s ease',
       }}
       className={`relative select-none rounded-xl transition-all duration-300 ${sizeClasses} ${
         draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
@@ -125,8 +159,8 @@ export const CardView: React.FC<CardViewProps> = ({
       } ${className}`}
     >
       {/* CARD BACK */}
-      {isFlipped ? (
-        <div className="w-full h-full rounded-xl overflow-hidden border-2 border-fulcrum-gold/80 shadow-2xl relative bg-[#0a0814]">
+      {isCurrentlyBack ? (
+        <div className={`w-full h-full rounded-xl overflow-hidden border-2 border-fulcrum-gold/80 shadow-2xl relative bg-[#0a0814] ${isFlippingAnim ? '[transform:rotateY(180deg)]' : ''}`}>
           <img
             src="/assets/card-back.jpg"
             alt="FULCRUM Card Back"
