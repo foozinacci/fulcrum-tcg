@@ -16,6 +16,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
   const [state, setState] = useState<GameState>(initialState);
   const [showLogs, setShowLogs] = useState(false);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
+  const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
 
   useEffect(() => {
     if (state.turnOwner === 'opponent' && !state.winner) {
@@ -30,6 +31,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
     setIsMuted(soundFx.toggleMute());
   };
 
+  // Hand Card Click Fallback
   const handleHandCardClick = (card: Card) => {
     if (state.turnOwner !== 'player' || state.winner) return;
     soundFx.playButtonClickSound();
@@ -47,8 +49,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
     }
   };
 
-  const handleConvertCard = (card: Card, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleConvertCard = (card: Card, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (state.turnOwner !== 'player' || state.winner) return;
     soundFx.playButtonClickSound();
     setState((prev) => convertHandCardToCore(prev, card.id));
@@ -93,6 +95,42 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
     } else if (state.selectedHandCardId) {
       setState((prev) => playHandCard(prev, prev.selectedHandCardId!, 'nexus'));
     }
+  };
+
+  // --- DRAG AND DROP HANDLERS ---
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDropOnField = (e: React.DragEvent) => {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+    if (!cardId || state.turnOwner !== 'player' || state.winner) return;
+
+    soundFx.playButtonClickSound();
+    setState((prev) => playHandCard(prev, cardId));
+    setDraggedCardId(null);
+  };
+
+  const handleDropOnConvertZone = (e: React.DragEvent) => {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+    if (!cardId || state.turnOwner !== 'player' || state.winner) return;
+
+    soundFx.playButtonClickSound();
+    setState((prev) => convertHandCardToCore(prev, cardId));
+    setDraggedCardId(null);
+  };
+
+  const handleDropOnTargetUnit = (e: React.DragEvent, perm: BoardPermanent) => {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+    if (!cardId || state.turnOwner !== 'player' || state.winner) return;
+
+    soundFx.playButtonClickSound();
+    setState((prev) => playHandCard(prev, cardId, perm.instanceId));
+    setDraggedCardId(null);
   };
 
   const isAttackerSelected = !!state.selectedBoardInstanceId;
@@ -141,6 +179,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
         <div className="flex flex-col items-center gap-2">
           <div
             onClick={handleOpponentNexusClick}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDropOnTargetUnit(e, { instanceId: 'nexus' } as unknown as BoardPermanent)}
             className={`w-full max-w-xl bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-amber-500/40 rounded-xl p-2.5 flex items-center justify-between shadow-2xl transition ${
               isAttackerSelected || isSpellSelected ? 'hover:border-red-500 cursor-pointer hover:shadow-[0_0_20px_#ef4444]' : ''
             }`}
@@ -184,7 +224,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
 
           {/* Opponent Field */}
           <div className="w-full max-w-4xl min-h-[140px] bg-slate-950/40 border border-slate-800 rounded-2xl p-2 flex justify-center items-center gap-3">
-            {/* Primal Avatar */}
             <div className="relative">
               <CardView
                 card={state.opponent.primalAvatar}
@@ -197,16 +236,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
             </div>
 
             {state.opponent.field.map((perm) => (
-              <CardView
+              <div
                 key={perm.instanceId}
-                card={perm.card}
-                customEdge={perm.currentEdge}
-                customGrit={perm.currentGrit}
-                isDormant={perm.state === 'dormant'}
-                size="md"
-                isTargetable={isAttackerSelected || isSpellSelected}
-                onClick={() => handleOpponentUnitClick(perm)}
-              />
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDropOnTargetUnit(e, perm)}
+              >
+                <CardView
+                  card={perm.card}
+                  customEdge={perm.currentEdge}
+                  customGrit={perm.currentGrit}
+                  isDormant={perm.state === 'dormant'}
+                  size="md"
+                  isTargetable={isAttackerSelected || isSpellSelected}
+                  onClick={() => handleOpponentUnitClick(perm)}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -241,10 +285,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
           </div>
         </div>
 
-        {/* PLAYER ZONE */}
+        {/* PLAYER ZONE (PLAY FIELD DROP TARGET) */}
         <div className="flex flex-col items-center gap-2">
-          {/* Player Field */}
-          <div className="w-full max-w-4xl min-h-[140px] bg-slate-950/40 border border-slate-800 rounded-2xl p-2 flex justify-center items-center gap-3">
+          {/* Player Field (Drop Target for playing cards!) */}
+          <div
+            onDragOver={handleDragOver}
+            onDrop={handleDropOnField}
+            className={`w-full max-w-4xl min-h-[140px] border rounded-2xl p-2 flex justify-center items-center gap-3 transition ${
+              draggedCardId
+                ? 'bg-amber-950/30 border-amber-400/80 shadow-[0_0_20px_rgba(243,198,105,0.3)]'
+                : 'bg-slate-950/40 border-slate-800'
+            }`}
+          >
             {/* Player Primal Avatar */}
             <div className="relative">
               <CardView
@@ -284,7 +336,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
             ))}
           </div>
 
-          {/* Player Hand */}
+          {/* Player Hand (Click-Hold-Drag Enabled Cards!) */}
           <div className="flex justify-center -space-x-3 hover:space-x-1 transition-all py-1">
             {state.player.hand.map((hc) => {
               const card = hc.card;
@@ -295,15 +347,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                     card={card}
                     size="md"
                     isSelected={isSelected}
+                    draggable={state.turnOwner === 'player' && !state.winner}
+                    onDragStart={() => setDraggedCardId(card.id)}
+                    onDragEnd={() => setDraggedCardId(null)}
                     onClick={() => handleHandCardClick(card)}
                     className="hover:-translate-y-4 hover:z-30 transition-transform"
                   />
-                  {/* Convert to Core button */}
+                  {/* Convert to Core button / Drop zone */}
                   {hc.drawnThisTurn && state.phase === 'conversion' && (
                     <button
                       onClick={(e) => handleConvertCard(card, e)}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDropOnConvertZone}
                       className="mt-1 transition px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-[9px] font-bold text-emerald-300 flex items-center gap-1 shadow-lg"
-                      title="Convert card into Core pool (Legal during Conversion Decision Phase!)"
+                      title="Convert card into Core pool (Click or Drag card here!)"
                     >
                       <CircleDollarSign className="w-3 h-3 text-emerald-400" />
                       <span>Convert +{card.coreValue}</span>
@@ -314,8 +371,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
             })}
           </div>
 
-          {/* Player Stat Bar */}
-          <div className="w-full max-w-xl bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-amber-500/40 rounded-xl p-2.5 flex items-center justify-between shadow-2xl">
+          {/* Player Stat Bar (Core Drop Target for Conversion!) */}
+          <div
+            onDragOver={handleDragOver}
+            onDrop={handleDropOnConvertZone}
+            className={`w-full max-w-xl border rounded-xl p-2.5 flex items-center justify-between shadow-2xl transition ${
+              draggedCardId && state.phase === 'conversion'
+                ? 'bg-emerald-950/80 border-emerald-400/80 shadow-[0_0_20px_#10b981]'
+                : 'bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border-amber-500/40'
+            }`}
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-amber-400 flex items-center justify-center font-bold text-lg text-amber-200">
                 YOU
@@ -339,6 +404,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                 </span>
               </div>
 
+              {/* Core Pool Counter Zone */}
               <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500/60 px-2.5 py-1 rounded-lg text-xs font-bold text-emerald-300">
                 <CircleDollarSign className="w-3.5 h-3.5 text-emerald-400" />
                 <span>{state.player.corePool} Core</span>
