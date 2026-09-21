@@ -47,6 +47,7 @@ export interface Card {
   ability2?: CardAbility;
   svgArtId: string;
   imageArtUrl?: string;   // High-res custom card artwork image URL
+  imageObjectPosition?: string; // CSS object-position class (e.g. object-top, object-[center_10%])
   castableFromGraveyardThisTurn?: boolean; // Grothmaw Ability 1 flag
 }
 

@@ -158,7 +158,11 @@ export const CardView: React.FC<CardViewProps> = ({
           {/* Art: Image or SVG (Fixed 48% ratio height so all cards crop identically like Grothmaw) */}
           <div className="my-1 h-[48%] relative rounded border border-white/10 overflow-hidden bg-black/40 flex-shrink-0">
             {card.imageArtUrl ? (
-              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover object-center" />
+              <img
+                src={card.imageArtUrl}
+                alt={card.name}
+                className={`w-full h-full object-cover ${card.imageObjectPosition || 'object-top'}`}
+              />
             ) : (
               <CardSvgArt artId={card.svgArtId} />
             )}
@@ -224,7 +228,11 @@ export const CardView: React.FC<CardViewProps> = ({
 
           <div className="my-2 flex-1 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner">
             {card.imageArtUrl ? (
-              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover object-center" />
+              <img
+                src={card.imageArtUrl}
+                alt={card.name}
+                className={`w-full h-full object-cover ${card.imageObjectPosition || 'object-top'}`}
+              />
             ) : (
               <CardSvgArt artId={card.svgArtId} />
             )}
