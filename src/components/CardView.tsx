@@ -170,47 +170,47 @@ export const CardView: React.FC<CardViewProps> = ({
             <div className="text-[8.5px] font-bold tracking-wider text-amber-400/90 uppercase border-b border-white/10 pb-0.5 mb-0.5 w-full text-center">
               {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
             </div>
-            <div className="flex-1 flex items-center justify-center text-center text-[9px] leading-tight text-slate-200 font-sans px-0.5">
+            <div className="flex-1 flex flex-col justify-center text-center text-[8.5px] leading-tight text-slate-200 font-sans px-0.5 whitespace-pre-line space-y-0.5">
               {card.description}
             </div>
           </div>
 
           {/* Bottom Stats Bar: PACE - LOAD - CORE - EDGE - GRIT */}
           <div className="flex justify-between items-center gap-0.5 mt-1 z-10 flex-shrink-0 text-[8.5px] font-bold">
-            {/* 1. PACE */}
-            <div className="flex items-center justify-center gap-0.5 bg-slate-900/90 border border-slate-600 px-1 py-0.5 rounded text-slate-300 shadow-sm min-w-[26px]">
-              <Clock className="w-2.5 h-2.5 text-cyan-400" />
+            {/* 1. PACE (Lime Green) */}
+            <div className="flex items-center justify-center gap-0.5 bg-lime-950/90 border border-lime-500/80 px-1 py-0.5 rounded text-lime-300 shadow-sm min-w-[26px]">
+              <Clock className="w-2.5 h-2.5 text-lime-400" />
               <span>P{card.pace}</span>
             </div>
 
-            {/* 2. LOAD */}
-            <div className="flex items-center justify-center gap-0.5 bg-amber-950/90 border border-amber-500/80 px-1 py-0.5 rounded text-amber-300 shadow-sm min-w-[22px]">
-              <span className="font-serif font-black text-amber-300 text-[9.5px]">{card.load}</span>
+            {/* 2. LOAD (Neon Pink) */}
+            <div className="flex items-center justify-center gap-0.5 bg-pink-950/90 border border-pink-500/80 px-1 py-0.5 rounded text-pink-300 shadow-sm min-w-[22px]">
+              <span className="font-serif font-black text-pink-300 text-[9.5px]">L{card.load}</span>
             </div>
 
-            {/* 3. CORE (Blank space for Avatars) */}
+            {/* 3. CORE (Neon Yellow - Blank space for Avatars) */}
             {card.coreValue !== undefined && !card.isPrimal ? (
-              <div className="flex items-center justify-center gap-0.5 bg-emerald-950/90 border border-emerald-500/80 px-1 py-0.5 rounded text-emerald-300 shadow-sm min-w-[26px]">
-                <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" />
+              <div className="flex items-center justify-center gap-0.5 bg-yellow-950/90 border border-yellow-400/80 px-1 py-0.5 rounded text-yellow-300 shadow-sm min-w-[26px]">
+                <CircleDollarSign className="w-2.5 h-2.5 text-yellow-400" />
                 <span>+{card.coreValue}</span>
               </div>
             ) : (
               <div className="min-w-[26px] h-4" />
             )}
 
-            {/* 4. EDGE */}
+            {/* 4. EDGE (Cyan) */}
             {card.type === 'being' || card.type === 'primal_avatar' ? (
-              <div className="flex items-center justify-center gap-0.5 bg-amber-950/90 border border-amber-500/80 px-1 py-0.5 rounded text-amber-300 shadow-sm min-w-[22px]">
-                <Swords className="w-2.5 h-2.5 text-amber-400" />
+              <div className="flex items-center justify-center gap-0.5 bg-cyan-950/90 border border-cyan-400/80 px-1 py-0.5 rounded text-cyan-300 shadow-sm min-w-[22px]">
+                <Swords className="w-2.5 h-2.5 text-cyan-400" />
                 <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
               </div>
             ) : (
               <div className="min-w-[22px] h-4" />
             )}
 
-            {/* 5. GRIT */}
+            {/* 5. GRIT (Neon Blue) */}
             {card.type === 'being' || card.type === 'primal_avatar' ? (
-              <div className="flex items-center justify-center gap-0.5 bg-blue-950/90 border border-blue-500/80 px-1 py-0.5 rounded text-blue-300 shadow-sm min-w-[22px]">
+              <div className="flex items-center justify-center gap-0.5 bg-blue-950/90 border border-blue-400/80 px-1 py-0.5 rounded text-blue-300 shadow-sm min-w-[22px]">
                 <Shield className="w-2.5 h-2.5 text-blue-400" />
                 <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
               </div>
@@ -244,22 +244,22 @@ export const CardView: React.FC<CardViewProps> = ({
             <div className="text-xs font-bold tracking-wider text-amber-400/90 uppercase border-b border-white/10 pb-1 mb-1.5 w-full text-center">
               {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
             </div>
-            <div className="font-semibold text-center">{card.description}</div>
+            <div className="font-semibold text-center whitespace-pre-line space-y-1">{card.description}</div>
             {card.flavorText && <div className="text-[11px] text-slate-400 italic font-serif mt-1 text-center">{card.flavorText}</div>}
           </div>
 
           {/* Hover Preview Stats Row: PACE - LOAD - CORE - EDGE - GRIT */}
           <div className="flex justify-between items-center px-2 mt-2 font-bold text-xs">
-            <div className="flex items-center gap-1 bg-slate-900 border border-slate-600 text-slate-300 px-2 py-1 rounded-md">
-              <Clock className="w-3 h-3 text-cyan-400" />
+            <div className="flex items-center gap-1 bg-lime-950 border border-lime-500 text-lime-300 px-2 py-1 rounded-md">
+              <Clock className="w-3 h-3 text-lime-400" />
               <span>P{card.pace}</span>
             </div>
-            <div className="flex items-center gap-1 bg-amber-950 border border-amber-500 text-amber-300 px-2 py-1 rounded-md">
+            <div className="flex items-center gap-1 bg-pink-950 border border-pink-500 text-pink-300 px-2 py-1 rounded-md">
               <span>L{card.load}</span>
             </div>
             {card.coreValue !== undefined && !card.isPrimal ? (
-              <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500 text-emerald-300 px-2 py-1 rounded-md">
-                <CircleDollarSign className="w-3 h-3 text-emerald-400" />
+              <div className="flex items-center gap-1 bg-yellow-950 border border-yellow-400 text-yellow-300 px-2 py-1 rounded-md">
+                <CircleDollarSign className="w-3 h-3 text-yellow-400" />
                 <span>+{card.coreValue}</span>
               </div>
             ) : (
@@ -267,12 +267,12 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
             {(card.type === 'being' || card.type === 'primal_avatar') && (
               <>
-                <div className="flex items-center gap-1 bg-amber-950 border border-amber-500 text-amber-300 px-2 py-1 rounded-md">
-                  <Swords className="w-3 h-3 text-amber-400" />
+                <div className="flex items-center gap-1 bg-cyan-950 border border-cyan-400 text-cyan-300 px-2 py-1 rounded-md">
+                  <Swords className="w-3.5 h-3.5 text-cyan-400" />
                   <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
                 </div>
-                <div className="flex items-center gap-1 bg-blue-950 border border-blue-500 text-blue-300 px-2 py-1 rounded-md">
-                  <Shield className="w-3 h-3 text-blue-400" />
+                <div className="flex items-center gap-1 bg-blue-950 border border-blue-400 text-blue-300 px-2 py-1 rounded-md">
+                  <Shield className="w-3.5 h-3.5 text-blue-400" />
                   <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
                 </div>
               </>
