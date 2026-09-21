@@ -457,14 +457,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                 </div>
 
                 {/* Bottom Card Stats */}
-                <div className="flex justify-between items-center px-1 mt-1.5 text-[10px] font-bold border-t border-white/10 pt-1">
-                  <span className="text-lime-400">Pace: {hoveredCard.pace}</span>
-                  <span className="text-pink-400">Load: {hoveredCard.load}</span>
-                  {hoveredCard.coreValue !== undefined && !hoveredCard.isPrimal && (
-                    <span className="text-yellow-400">Core: +{hoveredCard.coreValue}</span>
+                <div className="grid grid-cols-5 gap-1 items-center px-1 mt-1.5 text-[10px] font-bold border-t border-white/10 pt-1 w-full text-center">
+                  <span className="text-lime-400">P{hoveredCard.pace}</span>
+                  <span className="text-pink-400">L{hoveredCard.load}</span>
+                  {hoveredCard.coreValue !== undefined && !hoveredCard.isPrimal ? (
+                    <span className="text-yellow-400">+{hoveredCard.coreValue}</span>
+                  ) : (
+                    <span />
                   )}
-                  {hoveredCard.edge !== undefined && <span className="text-cyan-400">Edge: {hoveredCard.edge}</span>}
-                  {hoveredCard.grit !== undefined && <span className="text-blue-400">Grit: {hoveredCard.grit}</span>}
+                  {hoveredCard.edge !== undefined && (hoveredCard.type === 'being' || hoveredCard.type === 'primal_avatar') ? (
+                    <span className="text-cyan-400">E{hoveredCard.edge}</span>
+                  ) : (
+                    <span />
+                  )}
+                  {hoveredCard.grit !== undefined && (hoveredCard.type === 'being' || hoveredCard.type === 'primal_avatar') ? (
+                    <span className="text-blue-400">G{hoveredCard.grit}</span>
+                  ) : (
+                    <span />
+                  )}
                 </div>
               </div>
             ) : (
