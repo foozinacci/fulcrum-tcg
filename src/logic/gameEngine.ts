@@ -1,5 +1,5 @@
 import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase } from '../types/game';
-import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, NYSSARA_HALLOWER, GROTHMAW_CHARMBRANDED, PRIMAL_AVATARS_LIST } from '../data/cards';
+import { STARTER_DECK_A, GLUTTRIX_CORESEEKER, VORRATH_IRONBOUND, NYSSARA_HALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
 function shuffleDeck(deck: Card[]): Card[] {
@@ -255,6 +255,23 @@ export function startTurn(state: GameState): GameState {
         type: 'conversion',
         timestamp: new Date().toLocaleTimeString(),
       });
+
+      // Kazrith Ability 2: Whenever a Rune is exhausted for Core, Beings get +1 Edge & +1 Grit until end of turn
+      if (activePlayer.primalAvatar.id === KAZRITH_RUNESCALE.id) {
+        activePlayer.field.forEach((b) => {
+          if (b.card.type === 'being') {
+            b.currentEdge += 1;
+            b.currentGrit += 1;
+            b.maxGrit += 1;
+          }
+        });
+        logs.unshift({
+          id: Math.random().toString(),
+          text: `Kazrith Ability 2 Triggered! All your Beings gained +1 Edge & +1 Grit until end of turn!`,
+          type: 'primal',
+          timestamp: new Date().toLocaleTimeString(),
+        });
+      }
     }
   });
 
@@ -323,13 +340,16 @@ export function playHandCard(
   player.hand.splice(cardIndex, 1);
 
   if (card.type === 'being') {
+    const isKazrithAlert = player.primalAvatar.id === KAZRITH_RUNESCALE.id;
+    const initialState = isExpediteRequired || isKazrithAlert ? 'alert' : 'dormant';
+
     const newBeing: BoardPermanent = {
       instanceId: Math.random().toString(),
       card,
       currentEdge: card.edge || 1,
       currentGrit: card.grit || 1,
       maxGrit: card.grit || 1,
-      state: isExpediteRequired ? 'alert' : 'dormant',
+      state: initialState,
       bankedCore: 0,
       attachments: [],
       isGuard: card.isGuard || false,
@@ -338,7 +358,7 @@ export function playHandCard(
     player.field.push(newBeing);
     logs.unshift({
       id: Math.random().toString(),
-      text: `${player.name} ${isExpediteRequired ? 'EXPEDITED' : 'cast'} Being: ${card.name} (Load: ${requiredLoadCost}) - Enters ${newBeing.state.toUpperCase()}.`,
+      text: `${player.name} ${isExpediteRequired ? 'EXPEDITED' : 'cast'} Being: ${card.name} (Load: ${requiredLoadCost}) - Enters ${newBeing.state.toUpperCase()}${isKazrithAlert && !isExpediteRequired ? ' (Kazrith Ability 1)' : ''}.`,
       type: 'summon',
       timestamp: new Date().toLocaleTimeString(),
     });

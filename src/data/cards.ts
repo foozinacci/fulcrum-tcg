@@ -104,11 +104,37 @@ export const GROTHMAW_CHARMBRANDED: Card = {
   },
 };
 
+export const KAZRITH_RUNESCALE: Card = {
+  id: 'primal_kazrith_05',
+  name: 'Kazrith, Runescale',
+  load: 1,
+  expediteLoad: 4,
+  pace: 2,
+  type: 'primal_avatar',
+  isPrimal: true,
+  edge: 2,
+  grit: 2,
+  coreAttackRatio: 1.5,
+  description: 'Pace 2. Ability 1: Other Beings enter play Alert instead of Dormant. Ability 2: Whenever a Rune is exhausted for Core, your Beings gain +1 Edge & +1 Grit until end of turn.',
+  flavorText: 'A swift draconic predator whose scales resonate with every exhausted Rune.',
+  imageArtUrl: '/assets/kazrith.jpg',
+  svgArtId: 'sol_herald',
+  ability: {
+    trigger: 'onSummon',
+    description: 'Other Beings enter play Alert instead of Dormant.',
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Exhausting a Rune grants +1 Edge and +1 Grit to your Beings until end of turn.',
+  },
+};
+
 export const PRIMAL_AVATARS_LIST: Card[] = [
   GLUTTRIX_CORESEEKER,
   VORRATH_IRONBOUND,
   NYSSARA_HALLOWER,
   GROTHMAW_CHARMBRANDED,
+  KAZRITH_RUNESCALE,
 ];
 
 export const CARD_DATABASE: Card[] = [
