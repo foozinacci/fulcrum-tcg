@@ -41,7 +41,6 @@ export const CardView: React.FC<CardViewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFlippingAnim, setIsFlippingAnim] = useState(false);
-  const [showBackDuringAnim, setShowBackDuringAnim] = useState(false);
 
   const handleMouseEnter = () => {
     if (!isFlipped && !isDragging) {
@@ -81,17 +80,6 @@ export const CardView: React.FC<CardViewProps> = ({
       soundFx.playCardDrawSound();
       setIsFlippingAnim(true);
 
-      // At 200ms (approx 90deg turn), swap visible face to card back
-      setTimeout(() => {
-        setShowBackDuringAnim(true);
-      }, 200);
-
-      // At 500ms (approx 270deg turn), swap face back to card front
-      setTimeout(() => {
-        setShowBackDuringAnim(false);
-      }, 500);
-
-      // At 720ms, complete the 360-degree rotation
       setTimeout(() => {
         setIsFlippingAnim(false);
       }, 720);
@@ -129,7 +117,6 @@ export const CardView: React.FC<CardViewProps> = ({
 
   const currentEdge = customEdge !== undefined ? customEdge : card.edge || 0;
   const currentGrit = customGrit !== undefined ? customGrit : card.grit || 0;
-  const isCurrentlyBack = isFlipped ? !showBackDuringAnim : showBackDuringAnim;
 
   return (
     <div
@@ -140,17 +127,7 @@ export const CardView: React.FC<CardViewProps> = ({
       onDragEnd={handleDragEndInternal}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{
-        transform: isFlippingAnim
-          ? `perspective(1000px) rotateY(360deg)`
-          : `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-        transition: isFlippingAnim
-          ? 'transform 0.72s cubic-bezier(0.4, 0, 0.2, 1)'
-          : isDragging
-          ? 'none'
-          : 'transform 0.15s ease-out, box-shadow 0.2s ease',
-      }}
-      className={`relative select-none rounded-xl transition-all duration-300 ${sizeClasses} ${
+      className={`relative select-none perspective-1000 rounded-xl transition-all duration-300 ${sizeClasses} ${
         draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
       } ${isSelected ? 'ring-4 ring-fulcrum-gold scale-105 z-20 shadow-[0_0_25px_#f3c669]' : ''} ${
         isTargetable ? 'ring-4 ring-red-500 animate-pulse scale-105 z-20' : ''
@@ -158,24 +135,30 @@ export const CardView: React.FC<CardViewProps> = ({
         isDragging ? 'opacity-40 scale-95 ring-2 ring-fulcrum-gold' : ''
       } ${className}`}
     >
-      {/* CARD BACK */}
-      {isCurrentlyBack ? (
+      <div
+        className={`w-full h-full relative transform-style-3d ${
+          isFlippingAnim
+            ? isFlipped
+              ? 'animate-card-flip-flipped'
+              : 'animate-card-flip'
+            : ''
+        }`}
+        style={{
+          transform: isFlippingAnim
+            ? undefined
+            : isFlipped
+            ? `rotateX(${rotation.x}deg) rotateY(${180 + rotation.y}deg)`
+            : `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+          transition: isFlippingAnim
+            ? 'none'
+            : isDragging
+            ? 'none'
+            : 'transform 0.15s ease-out',
+        }}
+      >
+        {/* CARD FRONT FACE */}
         <div
-          style={{ transform: showBackDuringAnim ? 'scaleX(-1)' : 'none' }}
-          className="w-full h-full rounded-xl overflow-hidden border-2 border-fulcrum-gold/80 shadow-2xl relative bg-[#0a0814]"
-        >
-          <img
-            src="/assets/card-back.jpg"
-            alt="FULCRUM Card Back"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
-        </div>
-      ) : (
-        /* CARD FRONT */
-        <div
-          style={{ transform: showBackDuringAnim ? 'scaleX(-1)' : 'none' }}
-          className={`w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden relative shadow-xl ${getCardBorder()}`}
+          className={`absolute inset-0 w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden shadow-xl backface-hidden ${getCardBorder()}`}
         >
           {/* Header: Full width Card Name (No truncating) */}
           <div className="flex items-center justify-center z-10 flex-shrink-0 py-0.5 px-0.5">
@@ -257,7 +240,17 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
           </div>
         </div>
-      )}
+
+        {/* CARD BACK FACE */}
+        <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden border-2 border-fulcrum-gold/80 shadow-2xl bg-[#0a0814] backface-hidden rotate-y-180">
+          <img
+            src="/assets/card-back.jpg"
+            alt="FULCRUM Card Back"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
+        </div>
+      </div>
 
       {/* FLOATING HOVER CARD PREVIEW */}
       {isHovered && !disableHoverPreview && !isFlipped && size !== 'lg' && (
