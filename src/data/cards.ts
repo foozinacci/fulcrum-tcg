@@ -176,7 +176,10 @@ export const PRIMAL_AVATARS_LIST: Card[] = [
 ];
 
 export const CARD_DATABASE: Card[] = [
-  // --- PACE 1 CARDS ---
+  ...PRIMAL_AVATARS_LIST,
+];
+
+export const PLAYABLE_SPELLS: Card[] = [
   {
     id: 'f_01',
     name: 'Core Scout',
@@ -240,37 +243,36 @@ export const CARD_DATABASE: Card[] = [
     },
     svgArtId: 'neutral_golem',
   },
-
-  // --- PACE 2 CARDS ---
   {
     id: 'f_05',
     name: 'Line Sentinel',
-    load: 3,
-    expediteLoad: 5,
-    coreValue: 2,
-    pace: 2,
-    type: 'being',
-    edge: 2,
-    grit: 4,
-    coreAttackRatio: 1.0,
-    description: 'Pace 2 Being. High Grit wall.',
-    flavorText: 'Holding the line against aggressive pushes.',
-    svgArtId: 'sol_sentinel',
-  },
-  {
-    id: 'f_06',
-    name: 'Pace-2 Disruption Counter',
-    load: 3,
+    load: 2,
     expediteLoad: 4,
     coreValue: 2,
     pace: 2,
+    type: 'being',
+    isGuard: true,
+    edge: 2,
+    grit: 4,
+    coreAttackRatio: 1.0,
+    description: 'Pace 2 Being (GUARD). Protects non-guard allies.',
+    svgArtId: 'umbra_weaver',
+  },
+  {
+    id: 'f_06',
+    name: 'Pace-2 Siphon Counter',
+    load: 3,
+    expediteLoad: 4,
+    coreValue: 1,
+    pace: 2,
     type: 'charm',
-    description: 'Pace 2 CHARM (Expedite 4). Counter target Charm or force opponent to discard a card.',
+    description: 'Pace 2 CHARM (Expedite 4). Counter spell and gain +2 Core.',
     ability: {
       trigger: 'counterspell',
-      description: 'Counter Charm or Discard',
+      description: 'Counter & gain +2 Core',
+      produceCore: 2,
     },
-    svgArtId: 'umbra_spell',
+    svgArtId: 'sol_spell',
   },
   {
     id: 'f_07',
@@ -287,7 +289,7 @@ export const CARD_DATABASE: Card[] = [
       description: 'Buff +3 Edge',
       buffEdge: 3,
     },
-    svgArtId: 'sol_hero',
+    svgArtId: 'sol_herald',
   },
   {
     id: 'f_08',
@@ -297,16 +299,9 @@ export const CARD_DATABASE: Card[] = [
     coreValue: 2,
     pace: 2,
     type: 'relic',
-    description: 'Pace 2 RELIC. On Summon: Draw 2 cards.',
-    ability: {
-      trigger: 'onSummon',
-      description: 'Draw 2 cards',
-      drawCards: 2,
-    },
+    description: 'Pace 2 RELIC. Persistent relic object.',
     svgArtId: 'neutral_relic',
   },
-
-  // --- PACE 3 CARDS ---
   {
     id: 'f_09',
     name: 'Heavy Juggernaut',
@@ -321,59 +316,26 @@ export const CARD_DATABASE: Card[] = [
     description: 'Pace 3 Being. Heavy frontline bruiser.',
     svgArtId: 'umbra_weaver',
   },
-  {
-    id: 'f_10',
-    name: 'Pace-3 Absorb Counter',
-    load: 4,
-    expediteLoad: 5,
-    coreValue: 2,
-    pace: 3,
-    type: 'charm',
-    description: 'Pace 3 CHARM (Expedite 5). Counter target cast and gain +3 Core.',
-    ability: {
-      trigger: 'counterspell',
-      description: 'Counter cast & gain +3 Core',
-      produceCore: 3,
-    },
-    svgArtId: 'sol_spell',
-  },
-  {
-    id: 'f_11',
-    name: 'Rune of Amplification',
-    load: 4,
-    expediteLoad: 6,
-    coreValue: 2,
-    pace: 3,
-    type: 'rune',
-    description: 'Pace 3 RUNE. Turn Start: Produces +3 Core while Alert.',
-    ability: {
-      trigger: 'onTurnStart',
-      description: 'Produce +3 Core',
-      produceCore: 3,
-    },
-    svgArtId: 'sol_prism',
-  },
 ];
 
 export const STARTER_DECK_A: Card[] = [
-  CARD_DATABASE[0], CARD_DATABASE[0], CARD_DATABASE[0], // Core Scout x3
-  CARD_DATABASE[1], CARD_DATABASE[1],                   // Pace 1 Counter x2
-  CARD_DATABASE[2], CARD_DATABASE[2],                   // Iron Armor x2
-  CARD_DATABASE[3], CARD_DATABASE[3], CARD_DATABASE[3], // Rune of Extraction x3
-  CARD_DATABASE[4], CARD_DATABASE[4],                   // Line Sentinel x2
-  CARD_DATABASE[5], CARD_DATABASE[5],                   // Pace 2 Counter x2
-  CARD_DATABASE[6], CARD_DATABASE[6],                   // Plasma Blade x2
-  CARD_DATABASE[7], CARD_DATABASE[7],                   // Core Siphon Relic x2
-  CARD_DATABASE[8], CARD_DATABASE[8],                   // Heavy Juggernaut x2
+  PLAYABLE_SPELLS[0], PLAYABLE_SPELLS[0], PLAYABLE_SPELLS[0], // Core Scout x3
+  PLAYABLE_SPELLS[1], PLAYABLE_SPELLS[1],                   // Pace 1 Counter x2
+  PLAYABLE_SPELLS[2], PLAYABLE_SPELLS[2],                   // Iron Armor x2
+  PLAYABLE_SPELLS[3], PLAYABLE_SPELLS[3], PLAYABLE_SPELLS[3], // Rune of Extraction x3
+  PLAYABLE_SPELLS[4], PLAYABLE_SPELLS[4],                   // Line Sentinel x2
+  PLAYABLE_SPELLS[5], PLAYABLE_SPELLS[5],                   // Pace 2 Counter x2
+  PLAYABLE_SPELLS[6], PLAYABLE_SPELLS[6],                   // Plasma Blade x2
+  PLAYABLE_SPELLS[7], PLAYABLE_SPELLS[7],                   // Core Siphon Relic x2
+  PLAYABLE_SPELLS[8], PLAYABLE_SPELLS[8],                   // Heavy Juggernaut x2
 ];
 
 export const STARTER_DECK_B: Card[] = [
-  CARD_DATABASE[0], CARD_DATABASE[0],
-  CARD_DATABASE[2], CARD_DATABASE[2], CARD_DATABASE[2],
-  CARD_DATABASE[3], CARD_DATABASE[3],
-  CARD_DATABASE[4], CARD_DATABASE[4], CARD_DATABASE[4],
-  CARD_DATABASE[6], CARD_DATABASE[6], CARD_DATABASE[6],
-  CARD_DATABASE[7], CARD_DATABASE[7],
-  CARD_DATABASE[8], CARD_DATABASE[8], CARD_DATABASE[8],
-  CARD_DATABASE[9], CARD_DATABASE[9],
+  PLAYABLE_SPELLS[0], PLAYABLE_SPELLS[0],
+  PLAYABLE_SPELLS[2], PLAYABLE_SPELLS[2], PLAYABLE_SPELLS[2],
+  PLAYABLE_SPELLS[3], PLAYABLE_SPELLS[3],
+  PLAYABLE_SPELLS[4], PLAYABLE_SPELLS[4], PLAYABLE_SPELLS[4],
+  PLAYABLE_SPELLS[6], PLAYABLE_SPELLS[6], PLAYABLE_SPELLS[6],
+  PLAYABLE_SPELLS[7], PLAYABLE_SPELLS[7],
+  PLAYABLE_SPELLS[8], PLAYABLE_SPELLS[8], PLAYABLE_SPELLS[8],
 ];

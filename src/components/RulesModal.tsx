@@ -26,7 +26,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
           <div className="space-y-1 bg-black/40 border border-white/10 rounded-xl p-3">
             <h3 className="font-serif font-bold text-amber-300 flex items-center gap-1.5 text-base">
               <CircleDollarSign className="w-4 h-4 text-emerald-400" />
-              1. Resource System: Core Pool (No Mana)
+              1. Resource System: Core Pool
             </h3>
             <ul className="list-disc list-inside text-xs text-slate-300 space-y-1">
               <li><strong>Hands are fully revealed</strong> to all players.</li>

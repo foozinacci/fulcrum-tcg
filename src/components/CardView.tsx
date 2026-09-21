@@ -17,6 +17,7 @@ interface CardViewProps {
   className?: string;
   customEdge?: number;
   customGrit?: number;
+  disableHoverPreview?: boolean;
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -33,9 +34,17 @@ export const CardView: React.FC<CardViewProps> = ({
   className = '',
   customEdge,
   customGrit,
+  disableHoverPreview = false,
 }) => {
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = () => {
+    if (!isFlipped && !isDragging) {
+      setIsHovered(true);
+    }
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isFlipped || isDragging) return;
@@ -47,6 +56,7 @@ export const CardView: React.FC<CardViewProps> = ({
 
   const handleMouseLeave = () => {
     setRotation({ x: 0, y: 0 });
+    setIsHovered(false);
   };
 
   const handleDragStartInternal = (e: React.DragEvent<HTMLDivElement>) => {
@@ -79,6 +89,7 @@ export const CardView: React.FC<CardViewProps> = ({
     <div
       onClick={onClick}
       draggable={draggable}
+      onMouseEnter={handleMouseEnter}
       onDragStart={handleDragStartInternal}
       onDragEnd={handleDragEndInternal}
       onMouseMove={handleMouseMove}
@@ -179,6 +190,59 @@ export const CardView: React.FC<CardViewProps> = ({
               <div className="flex items-center gap-0.5 bg-blue-950/90 border border-blue-500/80 text-blue-300 font-bold px-1.5 py-0.5 rounded-full text-xs shadow-md">
                 <Shield className="w-3 h-3 text-blue-400" />
                 <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* FLOATING HOVER CARD PREVIEW */}
+      {isHovered && !disableHoverPreview && !isFlipped && size !== 'lg' && (
+        <div className="fixed bottom-6 right-6 z-50 w-72 h-[420px] pointer-events-none rounded-2xl border-2 border-fulcrum-gold bg-[#0f0a1c] p-3 shadow-[0_0_40px_rgba(243,198,105,0.5)] flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-serif font-black flex items-center justify-center text-sm shadow-md">
+              {card.load}
+            </div>
+            <div className="font-serif font-bold text-slate-100 text-sm truncate px-1">{card.name}</div>
+            <div className="text-xs bg-slate-900 px-2 py-0.5 rounded border border-slate-600 font-bold text-cyan-400">
+              Pace {card.pace}
+            </div>
+          </div>
+
+          <div className="my-2 flex-1 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner">
+            {card.imageArtUrl ? (
+              <img src={card.imageArtUrl} alt={card.name} className="w-full h-full object-cover" />
+            ) : (
+              <CardSvgArt artId={card.svgArtId} />
+            )}
+            <div className="absolute top-2 left-2 flex flex-col gap-1">
+              {card.pact && (
+                <span className="px-2 py-0.5 rounded-md bg-purple-950/95 border border-purple-400 text-xs font-bold text-purple-200 uppercase tracking-widest shadow-md">
+                  Pact: {card.pact}
+                </span>
+              )}
+              {card.isPrimal && (
+                <span className="px-2 py-0.5 rounded-md bg-amber-950/95 border border-amber-400 text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1 shadow-md">
+                  <Crown className="w-3 h-3 text-amber-400" /> PRIMAL AVATAR
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-black/70 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 space-y-1 text-center font-sans">
+            <div className="font-semibold">{card.description}</div>
+            {card.flavorText && <div className="text-[11px] text-slate-400 italic font-serif mt-1">{card.flavorText}</div>}
+          </div>
+
+          {(card.type === 'being' || card.type === 'primal_avatar') && (
+            <div className="flex justify-between items-center px-2 mt-2">
+              <div className="flex items-center gap-1 bg-amber-950 border border-amber-500 text-amber-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
+                <Swords className="w-3.5 h-3.5 text-amber-400" />
+                <span>Edge: {card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
+              </div>
+              <div className="flex items-center gap-1 bg-blue-950 border border-blue-500 text-blue-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
+                <Shield className="w-3.5 h-3.5 text-blue-400" />
+                <span>Grit: {card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
               </div>
             </div>
           )}
