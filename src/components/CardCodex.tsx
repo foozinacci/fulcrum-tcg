@@ -8,23 +8,44 @@ interface CardCodexProps {
   onBack: () => void;
 }
 
-const PACTS = [
-  { id: 'all', name: 'ALL' },
-  { id: 'Corefeast', name: 'COREFEAST' },
-  { id: 'Voidhallow', name: 'VOIDHALLOW' },
-  { id: 'Runescale', name: 'RUNESCALE' },
-  { id: 'Charmbrand', name: 'CHARMBRAND' },
-  { id: 'Rotwatch', name: 'ROTWATCH' },
-  { id: 'Ironbound', name: 'IRONBOUND' },
+const PACT_OPTIONS = [
+  { id: 'all', name: 'All Pacts' },
+  { id: 'Corefeast', name: 'Corefeast' },
+  { id: 'Voidhallow', name: 'Voidhallow' },
+  { id: 'Runescale', name: 'Runescale' },
+  { id: 'Charmbrand', name: 'Charmbrand' },
+  { id: 'Rotwatch', name: 'Rotwatch' },
+  { id: 'Ironbound', name: 'Ironbound' },
+];
+
+const CARD_TYPE_OPTIONS = [
+  { id: 'all', name: 'All Card Types' },
+  { id: 'attachment', name: 'Attachments' },
+  { id: 'primal_avatar', name: 'Avatars' },
+  { id: 'being', name: 'Beings' },
+  { id: 'charm', name: 'Charms' },
+  { id: 'relic', name: 'Relics' },
+  { id: 'rune', name: 'Runes' },
 ];
 
 export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [pactFilter, setPactFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   const filteredCards = CARD_DATABASE.filter((card) => {
-    if (pactFilter !== 'all' && card.pact?.toLowerCase() !== pactFilter.toLowerCase()) return false;
+    if (pactFilter !== 'all' && card.pact?.toLowerCase() !== pactFilter.toLowerCase()) {
+      return false;
+    }
+    if (typeFilter !== 'all') {
+      if (typeFilter === 'primal_avatar' && !(card.isPrimal || card.type === 'primal_avatar')) {
+        return false;
+      }
+      if (typeFilter !== 'primal_avatar' && card.type !== typeFilter) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -33,12 +54,12 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
 
   const handleNext = () => {
     soundFx.playButtonClickSound();
-    setSelectedIndex((prev) => (prev + 1) % filteredCards.length);
+    setSelectedIndex((prev) => (prev + 1) % Math.max(1, filteredCards.length));
   };
 
   const handlePrev = () => {
     soundFx.playButtonClickSound();
-    setSelectedIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length);
+    setSelectedIndex((prev) => (prev - 1 + Math.max(1, filteredCards.length)) % Math.max(1, filteredCards.length));
   };
 
   return (
@@ -70,26 +91,47 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
         </button>
       </div>
 
-      {/* Pact Filter Bar */}
-      <div className="flex flex-wrap items-center justify-center gap-2 bg-fulcrum-panel/80 border border-fulcrum-border rounded-2xl p-3 shadow-lg">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2">Filter Pact:</span>
-        {PACTS.map((pact) => (
-          <button
-            key={pact.id}
-            onClick={() => {
+      {/* Dual Dropdown Filter Bar */}
+      <div className="flex flex-wrap items-center justify-center gap-6 bg-fulcrum-panel/80 border border-fulcrum-border rounded-2xl p-3.5 shadow-lg">
+        {/* Dropdown 1: Pact */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-300 font-bold uppercase tracking-wider">Pact:</label>
+          <select
+            value={pactFilter}
+            onChange={(e) => {
               soundFx.playButtonClickSound();
-              setPactFilter(pact.id);
+              setPactFilter(e.target.value);
               setSelectedIndex(0);
             }}
-            className={`px-3 py-1 rounded-full uppercase font-bold text-xs tracking-wider transition border ${
-              pactFilter === pact.id
-                ? 'bg-fulcrum-gold text-slate-950 border-fulcrum-gold shadow-[0_0_12px_#f3c669]'
-                : 'bg-slate-900/80 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'
-            }`}
+            className="bg-slate-900 border border-fulcrum-border hover:border-fulcrum-gold text-amber-300 text-xs font-bold rounded-xl px-3.5 py-1.5 focus:outline-none transition shadow-md"
           >
-            {pact.name}
-          </button>
-        ))}
+            {PACT_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id} className="bg-slate-900 text-slate-100">
+                {opt.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Dropdown 2: Card Type */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-slate-300 font-bold uppercase tracking-wider">Type:</label>
+          <select
+            value={typeFilter}
+            onChange={(e) => {
+              soundFx.playButtonClickSound();
+              setTypeFilter(e.target.value);
+              setSelectedIndex(0);
+            }}
+            className="bg-slate-900 border border-fulcrum-border hover:border-fulcrum-gold text-cyan-300 text-xs font-bold rounded-xl px-3.5 py-1.5 focus:outline-none transition shadow-md"
+          >
+            {CARD_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id} className="bg-slate-900 text-slate-100">
+                {opt.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Card Inspector Stage */}

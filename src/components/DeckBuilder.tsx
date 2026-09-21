@@ -10,20 +10,31 @@ interface DeckBuilderProps {
   onSaveDeck: (customDeck: Card[], primalAvatar?: Card) => void;
 }
 
-const PACTS = [
-  { id: 'all', name: 'ALL' },
-  { id: 'Corefeast', name: 'COREFEAST' },
-  { id: 'Voidhallow', name: 'VOIDHALLOW' },
-  { id: 'Runescale', name: 'RUNESCALE' },
-  { id: 'Charmbrand', name: 'CHARMBRAND' },
-  { id: 'Rotwatch', name: 'ROTWATCH' },
-  { id: 'Ironbound', name: 'IRONBOUND' },
+const PACT_OPTIONS = [
+  { id: 'all', name: 'All Pacts' },
+  { id: 'Corefeast', name: 'Corefeast' },
+  { id: 'Voidhallow', name: 'Voidhallow' },
+  { id: 'Runescale', name: 'Runescale' },
+  { id: 'Charmbrand', name: 'Charmbrand' },
+  { id: 'Rotwatch', name: 'Rotwatch' },
+  { id: 'Ironbound', name: 'Ironbound' },
+];
+
+const CARD_TYPE_OPTIONS = [
+  { id: 'all', name: 'All Card Types' },
+  { id: 'attachment', name: 'Attachments' },
+  { id: 'primal_avatar', name: 'Avatars' },
+  { id: 'being', name: 'Beings' },
+  { id: 'charm', name: 'Charms' },
+  { id: 'relic', name: 'Relics' },
+  { id: 'rune', name: 'Runes' },
 ];
 
 export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) => {
   const [currentDeck, setCurrentDeck] = useState<Card[]>([]);
   const [selectedPrimalAvatar, setSelectedPrimalAvatar] = useState<Card>(PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0]);
   const [pactFilter, setPactFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [deckName, setDeckName] = useState('Custom Fulcrum Deck');
 
   useEffect(() => {
@@ -71,7 +82,17 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
   };
 
   const filteredPool = CARD_DATABASE.filter((card) => {
-    if (pactFilter !== 'all' && card.pact?.toLowerCase() !== pactFilter.toLowerCase()) return false;
+    if (pactFilter !== 'all' && card.pact?.toLowerCase() !== pactFilter.toLowerCase()) {
+      return false;
+    }
+    if (typeFilter !== 'all') {
+      if (typeFilter === 'primal_avatar' && !(card.isPrimal || card.type === 'primal_avatar')) {
+        return false;
+      }
+      if (typeFilter !== 'primal_avatar' && card.type !== typeFilter) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -124,27 +145,50 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
         {/* Left 2 Columns: Card Browser */}
         <div className="lg:col-span-2 bg-fulcrum-panel/70 border border-fulcrum-border rounded-2xl p-4 flex flex-col gap-4 shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-fulcrum-border pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-fulcrum-border pb-3">
             <span className="font-serif font-bold text-sm text-slate-300 flex items-center gap-1.5">
               <Filter className="w-4 h-4 text-fulcrum-gold" />
-              <span>Pacts & Cards ({filteredPool.length})</span>
+              <span>Cards Pool ({filteredPool.length})</span>
             </span>
 
-            {/* 6 Pact Filters */}
-            <div className="flex flex-wrap gap-1.5 text-xs">
-              {PACTS.map((pact) => (
-                <button
-                  key={pact.id}
-                  onClick={() => setPactFilter(pact.id)}
-                  className={`px-2.5 py-1 rounded-full uppercase font-bold text-[10px] tracking-wider transition border ${
-                    pactFilter === pact.id
-                      ? 'bg-fulcrum-gold text-slate-950 border-fulcrum-gold shadow-[0_0_10px_#f3c669]'
-                      : 'bg-slate-900/80 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'
-                  }`}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Dropdown 1: Pact */}
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-slate-400 font-semibold">Pact:</label>
+                <select
+                  value={pactFilter}
+                  onChange={(e) => {
+                    soundFx.playButtonClickSound();
+                    setPactFilter(e.target.value);
+                  }}
+                  className="bg-slate-900 border border-fulcrum-border hover:border-fulcrum-gold text-amber-300 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none transition shadow-md"
                 >
-                  {pact.name}
-                </button>
-              ))}
+                  {PACT_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id} className="bg-slate-900 text-slate-100">
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Dropdown 2: Card Type */}
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs text-slate-400 font-semibold">Type:</label>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    soundFx.playButtonClickSound();
+                    setTypeFilter(e.target.value);
+                  }}
+                  className="bg-slate-900 border border-fulcrum-border hover:border-fulcrum-gold text-cyan-300 text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none transition shadow-md"
+                >
+                  {CARD_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id} className="bg-slate-900 text-slate-100">
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
