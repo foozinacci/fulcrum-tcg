@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardType } from '../types/game';
-import { CARD_DATABASE, PRIMAL_AVATARS_LIST, STARTER_DECK_A, STARTER_DECK_B } from '../data/cards';
+import { Card } from '../types/game';
+import { CARD_DATABASE, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { CardView } from './CardView';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, Filter } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface DeckBuilderProps {
@@ -10,10 +10,20 @@ interface DeckBuilderProps {
   onSaveDeck: (customDeck: Card[], primalAvatar?: Card) => void;
 }
 
+const PACTS = [
+  { id: 'all', name: 'ALL' },
+  { id: 'Corefeast', name: 'COREFEAST' },
+  { id: 'Voidhallow', name: 'VOIDHALLOW' },
+  { id: 'Runescale', name: 'RUNESCALE' },
+  { id: 'Charmbrand', name: 'CHARMBRAND' },
+  { id: 'Rotwatch', name: 'ROTWATCH' },
+  { id: 'Ironbound', name: 'IRONBOUND' },
+];
+
 export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) => {
-  const [currentDeck, setCurrentDeck] = useState<Card[]>(STARTER_DECK_A);
+  const [currentDeck, setCurrentDeck] = useState<Card[]>([]);
   const [selectedPrimalAvatar, setSelectedPrimalAvatar] = useState<Card>(PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0]);
-  const [typeFilter, setTypeFilter] = useState<'all' | CardType>('all');
+  const [pactFilter, setPactFilter] = useState<string>('all');
   const [deckName, setDeckName] = useState('Custom Fulcrum Deck');
 
   useEffect(() => {
@@ -25,7 +35,15 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
   }, []);
 
   const addCardToDeck = (card: Card) => {
-    if (currentDeck.length >= 30) return;
+    // Avatars sit in the dedicated 61st Command Slot, not in the main deck
+    if (card.isPrimal || card.type === 'primal_avatar') {
+      setSelectedPrimalAvatar(card);
+      localStorage.setItem('fulcrum_primal_avatar_id', card.id);
+      soundFx.playButtonClickSound();
+      return;
+    }
+
+    if (currentDeck.length >= 60) return;
     const copies = currentDeck.filter((c) => c.id === card.id).length;
     if (copies >= 3) return;
 
@@ -40,15 +58,9 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
     setCurrentDeck(next);
   };
 
-  const loadPreset = (preset: 'A' | 'B') => {
+  const handleClearDeck = () => {
     soundFx.playButtonClickSound();
-    if (preset === 'A') {
-      setCurrentDeck(STARTER_DECK_A);
-      setDeckName('Starter Deck A');
-    } else {
-      setCurrentDeck(STARTER_DECK_B);
-      setDeckName('Starter Deck B');
-    }
+    setCurrentDeck([]);
   };
 
   const handleSave = () => {
@@ -59,7 +71,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
   };
 
   const filteredPool = CARD_DATABASE.filter((card) => {
-    if (typeFilter !== 'all' && card.type !== typeFilter) return false;
+    if (pactFilter !== 'all' && card.pact?.toLowerCase() !== pactFilter.toLowerCase()) return false;
     return true;
   });
 
@@ -86,27 +98,21 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
           >
             ← Back to Menu
           </button>
-          <h2 className="font-serif font-black text-xl text-gold-gradient tracking-wide">
-            FULCRUM DECK FORGE (60-Card Deck + 61st Primal Avatar)
+          <h2 className="font-serif font-black text-2xl text-gold-gradient tracking-widest uppercase">
+            FORGE
           </h2>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => loadPreset('A')}
-            className="px-3 py-1.5 rounded-lg bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 text-amber-300 text-xs font-bold"
+            onClick={handleClearDeck}
+            className="px-3 py-1.5 rounded-lg bg-red-950/70 hover:bg-red-900/80 border border-red-500/50 text-red-300 text-xs font-bold transition"
           >
-            Load Starter A
-          </button>
-          <button
-            onClick={() => loadPreset('B')}
-            className="px-3 py-1.5 rounded-lg bg-slate-950/80 hover:bg-slate-900 border border-slate-500/50 text-slate-300 text-xs font-bold"
-          >
-            Load Starter B
+            Clear Deck
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-fulcrum-gold to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-serif font-bold text-xs shadow-lg"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-fulcrum-gold to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-serif font-bold text-xs shadow-lg transition transform hover:scale-105"
           >
             <Save className="w-4 h-4" />
             <span>Save & Play</span>
@@ -116,25 +122,27 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
-        {/* Left 2 Columns */}
+        {/* Left 2 Columns: Card Browser */}
         <div className="lg:col-span-2 bg-fulcrum-panel/70 border border-fulcrum-border rounded-2xl p-4 flex flex-col gap-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-fulcrum-border pb-3">
-            <span className="font-serif font-bold text-sm text-slate-300">
-              Card Codex ({filteredPool.length} Cards)
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-fulcrum-border pb-3">
+            <span className="font-serif font-bold text-sm text-slate-300 flex items-center gap-1.5">
+              <Filter className="w-4 h-4 text-fulcrum-gold" />
+              <span>Pacts & Cards ({filteredPool.length})</span>
             </span>
 
-            <div className="flex gap-2 text-xs">
-              {(['all', 'being', 'charm', 'relic', 'attachment', 'rune'] as const).map((t) => (
+            {/* 6 Pact Filters */}
+            <div className="flex flex-wrap gap-1.5 text-xs">
+              {PACTS.map((pact) => (
                 <button
-                  key={t}
-                  onClick={() => setTypeFilter(t)}
-                  className={`px-3 py-1 rounded-full uppercase font-bold text-[10px] tracking-wider transition ${
-                    typeFilter === t
-                      ? 'bg-fulcrum-gold text-slate-950 shadow-[0_0_10px_#f3c669]'
-                      : 'bg-slate-900 text-slate-400 border border-slate-700 hover:text-white'
+                  key={pact.id}
+                  onClick={() => setPactFilter(pact.id)}
+                  className={`px-2.5 py-1 rounded-full uppercase font-bold text-[10px] tracking-wider transition border ${
+                    pactFilter === pact.id
+                      ? 'bg-fulcrum-gold text-slate-950 border-fulcrum-gold shadow-[0_0_10px_#f3c669]'
+                      : 'bg-slate-900/80 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'
                   }`}
                 >
-                  {t}
+                  {pact.name}
                 </button>
               ))}
             </div>
@@ -142,21 +150,41 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto max-h-[70vh] p-1">
             {filteredPool.map((card) => {
+              const isAvatar = card.isPrimal || card.type === 'primal_avatar';
               const copies = currentDeck.filter((c) => c.id === card.id).length;
+              const isCurrentAvatar = selectedPrimalAvatar.id === card.id;
+
               return (
                 <div key={card.id} className="relative group flex flex-col items-center">
                   <CardView card={card} size="sm" onClick={() => addCardToDeck(card)} />
-                  <div className="mt-1 flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-black/60 px-2 py-0.5 rounded-full border border-white/10">
-                    <span>{copies}/3 Copies</span>
-                    <Plus className="w-3 h-3 text-emerald-400" />
-                  </div>
+                  {isAvatar ? (
+                    <button
+                      onClick={() => {
+                        setSelectedPrimalAvatar(card);
+                        localStorage.setItem('fulcrum_primal_avatar_id', card.id);
+                        soundFx.playButtonClickSound();
+                      }}
+                      className={`mt-1.5 flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition ${
+                        isCurrentAvatar
+                          ? 'bg-amber-950/90 text-amber-300 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                          : 'bg-black/60 text-slate-300 border-white/20 hover:border-amber-400'
+                      }`}
+                    >
+                      <span>{isCurrentAvatar ? '★ Active Avatar' : 'Select Avatar'}</span>
+                    </button>
+                  ) : (
+                    <div className="mt-1.5 flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-black/60 px-2 py-0.5 rounded-full border border-white/10">
+                      <span>{copies}/3 Copies</span>
+                      <Plus className="w-3 h-3 text-emerald-400" />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Right Column */}
+        {/* Right Column: Custom Deck Panel */}
         <div className="bg-fulcrum-panel/90 border border-fulcrum-border rounded-2xl p-4 flex flex-col justify-between shadow-xl">
           <div>
             <div className="flex justify-between items-center border-b border-fulcrum-border pb-3 mb-3">
@@ -175,6 +203,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
               <button
                 onClick={() => setCurrentDeck([])}
                 className="p-1.5 text-red-400 hover:bg-red-950 rounded border border-red-900/50"
+                title="Clear Main Deck"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -183,8 +212,8 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
             {/* 61st Slot Primal Avatar Selector */}
             <div className="bg-amber-950/40 border border-amber-500/50 rounded-xl p-3 mb-3">
               <div className="text-[10px] font-bold text-amber-300 uppercase tracking-widest mb-1.5 flex items-center justify-between">
-                <span>61st Slot Primal Avatar</span>
-                <span className="text-slate-400 font-normal">Command Slot</span>
+                <span>Primal Avatar</span>
+                <span className="text-amber-400/90 font-normal">Command Slot</span>
               </div>
               <select
                 value={selectedPrimalAvatar.id}
@@ -199,7 +228,7 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
               >
                 {PRIMAL_AVATARS_LIST.map((avatar) => (
                   <option key={avatar.id} value={avatar.id}>
-                    {avatar.name} (Pace {avatar.pace})
+                    {avatar.name} ({avatar.pact} • Pace {avatar.pace})
                   </option>
                 ))}
               </select>
@@ -234,7 +263,9 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
 
             <div className="space-y-1.5 max-h-[42vh] overflow-y-auto pr-1">
               {currentDeck.length === 0 ? (
-                <div className="text-slate-500 text-xs text-center py-8">Deck is empty. Click cards on left to add!</div>
+                <div className="text-slate-500 text-xs text-center py-8">
+                  Main deck is empty. Select your Primal Avatar above!
+                </div>
               ) : (
                 currentDeck.map((card, idx) => (
                   <div

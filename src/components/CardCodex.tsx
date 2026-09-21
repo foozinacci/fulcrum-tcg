@@ -8,20 +8,37 @@ interface CardCodexProps {
   onBack: () => void;
 }
 
+const PACTS = [
+  { id: 'all', name: 'ALL' },
+  { id: 'Corefeast', name: 'COREFEAST' },
+  { id: 'Voidhallow', name: 'VOIDHALLOW' },
+  { id: 'Runescale', name: 'RUNESCALE' },
+  { id: 'Charmbrand', name: 'CHARMBRAND' },
+  { id: 'Rotwatch', name: 'ROTWATCH' },
+  { id: 'Ironbound', name: 'IRONBOUND' },
+];
+
 export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [pactFilter, setPactFilter] = useState('all');
 
-  const selectedCard = CARD_DATABASE[selectedIndex];
+  const filteredCards = CARD_DATABASE.filter((card) => {
+    if (pactFilter !== 'all' && card.pact?.toLowerCase() !== pactFilter.toLowerCase()) return false;
+    return true;
+  });
+
+  const safeIndex = selectedIndex >= filteredCards.length ? 0 : selectedIndex;
+  const selectedCard = filteredCards[safeIndex] || CARD_DATABASE[0];
 
   const handleNext = () => {
     soundFx.playButtonClickSound();
-    setSelectedIndex((prev) => (prev + 1) % CARD_DATABASE.length);
+    setSelectedIndex((prev) => (prev + 1) % filteredCards.length);
   };
 
   const handlePrev = () => {
     soundFx.playButtonClickSound();
-    setSelectedIndex((prev) => (prev - 1 + CARD_DATABASE.length) % CARD_DATABASE.length);
+    setSelectedIndex((prev) => (prev - 1 + filteredCards.length) % filteredCards.length);
   };
 
   return (
@@ -53,6 +70,28 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
         </button>
       </div>
 
+      {/* Pact Filter Bar */}
+      <div className="flex flex-wrap items-center justify-center gap-2 bg-fulcrum-panel/80 border border-fulcrum-border rounded-2xl p-3 shadow-lg">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2">Filter Pact:</span>
+        {PACTS.map((pact) => (
+          <button
+            key={pact.id}
+            onClick={() => {
+              soundFx.playButtonClickSound();
+              setPactFilter(pact.id);
+              setSelectedIndex(0);
+            }}
+            className={`px-3 py-1 rounded-full uppercase font-bold text-xs tracking-wider transition border ${
+              pactFilter === pact.id
+                ? 'bg-fulcrum-gold text-slate-950 border-fulcrum-gold shadow-[0_0_12px_#f3c669]'
+                : 'bg-slate-900/80 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'
+            }`}
+          >
+            {pact.name}
+          </button>
+        ))}
+      </div>
+
       {/* Card Inspector Stage */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-fulcrum-panel/60 border border-fulcrum-border rounded-3xl p-8 shadow-2xl backdrop-blur-md">
         {/* Left Stage */}
@@ -67,7 +106,7 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
               ← Previous
             </button>
             <span className="text-xs font-mono text-slate-400">
-              {selectedIndex + 1} / {CARD_DATABASE.length}
+              {safeIndex + 1} / {filteredCards.length}
             </span>
             <button
               onClick={handleNext}

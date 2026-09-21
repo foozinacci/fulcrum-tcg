@@ -92,7 +92,7 @@ export const App: React.FC = () => {
                 className="py-3 rounded-xl bg-fulcrum-panel/90 border border-fulcrum-border hover:border-fulcrum-gold text-slate-200 font-serif font-bold text-sm flex items-center justify-center gap-2 transition hover:bg-slate-800"
               >
                 <Layers className="w-4 h-4 text-fulcrum-gold" />
-                <span>DECK FORGE</span>
+                <span>FORGE</span>
               </button>
 
               <button
