@@ -19,6 +19,7 @@ interface CardViewProps {
   customEdge?: number;
   customGrit?: number;
   disableHoverPreview?: boolean;
+  disableClickFlip?: boolean;
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -36,6 +37,7 @@ export const CardView: React.FC<CardViewProps> = ({
   customEdge,
   customGrit,
   disableHoverPreview = false,
+  disableClickFlip = false,
 }) => {
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -76,7 +78,7 @@ export const CardView: React.FC<CardViewProps> = ({
   const handleClickInternal = (e: React.MouseEvent<HTMLDivElement>) => {
     if (onClick) onClick();
 
-    if (!isFlippingAnim) {
+    if (!disableClickFlip && !isFlippingAnim) {
       soundFx.playCardDrawSound();
       setIsFlippingAnim(true);
 
