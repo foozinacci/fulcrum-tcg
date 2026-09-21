@@ -97,6 +97,7 @@ export const GROTHMAW_CHARMBRANDED: Card = {
   description: 'Ability 1: Converting a Charm lets you cast it from graveyard that turn, then exile it. Ability 2: Casting a Charm after Grothmaw deals combat damage to a player copies that Charm.',
   flavorText: 'A runic behemoth branded with ancient Charms, amplifying cast sorceries.',
   imageArtUrl: '/assets/grothmaw.jpg',
+  imageObjectPosition: 'object-[center_15%]',
   svgArtId: 'neutral_golem',
   ability: {
     trigger: 'activated',
@@ -123,6 +124,7 @@ export const KAZRITH_RUNESCALE: Card = {
   description: 'Ability 1: Other Beings enter play Alert instead of Dormant. Ability 2: Whenever a Rune is exhausted for Core, your Beings gain +1 Edge & +1 Grit until end of turn.',
   flavorText: 'A swift draconic predator whose scales resonate with every exhausted Rune.',
   imageArtUrl: '/assets/kazrith.jpg',
+  imageObjectPosition: 'object-[center_15%]',
   svgArtId: 'sol_herald',
   ability: {
     trigger: 'onSummon',
