@@ -190,10 +190,10 @@ export const CardView: React.FC<CardViewProps> = ({
 
           {/* Textbox / Description Box (Supertype centered above abilities) */}
           <div className="flex-1 bg-black/60 rounded border border-white/10 p-1 flex flex-col items-center overflow-hidden">
-            <div className="text-[8.5px] font-bold tracking-wider text-amber-400/90 uppercase border-b border-white/10 pb-0.5 mb-0.5 w-full text-center">
+            <div className="text-[8.5px] font-bold tracking-wider text-amber-400/90 uppercase border-b border-white/10 pb-0.5 mb-0.5 w-full text-center flex-shrink-0">
               {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
             </div>
-            <div className="flex-1 flex flex-col justify-center text-center text-[8.5px] leading-tight text-slate-200 font-sans px-0.5 whitespace-pre-line space-y-0.5">
+            <div className="flex-1 overflow-y-auto text-center text-[8px] sm:text-[8.5px] leading-tight text-slate-200 font-sans px-0.5 whitespace-pre-line my-auto">
               {card.description}
             </div>
           </div>
@@ -256,12 +256,12 @@ export const CardView: React.FC<CardViewProps> = ({
 
       {/* FLOATING HOVER CARD PREVIEW */}
       {isHovered && !disableHoverPreview && !isFlipped && size !== 'lg' && (
-        <div className="fixed bottom-6 right-6 z-50 w-72 h-[420px] pointer-events-none rounded-2xl border-2 border-fulcrum-gold bg-[#0f0a1c] p-3 shadow-[0_0_40px_rgba(243,198,105,0.5)] flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-center border-b border-white/10 pb-1.5">
-            <div className="font-serif font-bold text-slate-100 text-base text-center px-1">{card.name}</div>
+        <div className="fixed bottom-6 right-6 z-50 w-80 max-h-[85vh] pointer-events-none rounded-2xl border-2 border-fulcrum-gold bg-[#0f0a1c] p-3 shadow-[0_0_40px_rgba(243,198,105,0.5)] flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-center border-b border-white/10 pb-1.5 flex-shrink-0">
+            <div className="font-serif font-bold text-slate-100 text-base text-center px-1 truncate">{card.name}</div>
           </div>
 
-          <div className="my-2 flex-1 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner">
+          <div className="my-1.5 h-40 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner flex-shrink-0">
             {card.imageArtUrl ? (
               <img
                 src={card.imageArtUrl}
@@ -273,16 +273,22 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
           </div>
 
-          <div className="bg-black/70 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 flex flex-col items-center font-sans">
-            <div className="text-xs font-bold tracking-wider text-amber-400/90 uppercase border-b border-white/10 pb-1 mb-1.5 w-full text-center">
+          <div className="bg-black/70 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 flex flex-col items-center font-sans overflow-y-auto max-h-48">
+            <div className="text-[10px] font-bold tracking-wider text-amber-400 uppercase border-b border-white/10 pb-0.5 mb-1 w-full text-center flex-shrink-0">
               {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
             </div>
-            <div className="font-semibold text-center whitespace-pre-line space-y-1">{card.description}</div>
-            {card.flavorText && <div className="text-[11px] text-slate-400 italic font-serif mt-1 text-center">{card.flavorText}</div>}
+            <div className="font-sans text-center whitespace-pre-line leading-relaxed text-[11px] text-slate-200 w-full">
+              {card.description}
+            </div>
+            {card.flavorText && (
+              <div className="text-[10px] text-slate-400 italic font-serif mt-1.5 border-t border-white/10 pt-1 text-center w-full">
+                "{card.flavorText}"
+              </div>
+            )}
           </div>
 
           {/* Hover Preview Stats Row: PACE - LOAD - CORE - EDGE - GRIT */}
-          <div className="flex justify-between items-center px-2 mt-2 font-bold text-xs">
+          <div className="flex justify-between items-center px-1 mt-2 font-bold text-xs flex-shrink-0">
             <div className="flex items-center gap-1 bg-lime-950 border border-lime-500 text-lime-300 px-2 py-1 rounded-md">
               <Clock className="w-3 h-3 text-lime-400" />
               <span>P{card.pace}</span>

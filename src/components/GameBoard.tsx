@@ -440,15 +440,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                   )}
                 </div>
 
-                <div className="bg-slate-950/80 border border-white/10 rounded-lg p-2 text-[11px] text-slate-200 flex-1 flex flex-col justify-between overflow-y-auto">
-                  <div className="text-[9.5px] font-bold text-amber-400 uppercase tracking-widest text-center border-b border-white/10 pb-0.5 mb-1">
+                <div className="bg-slate-950/80 border border-white/10 rounded-lg p-2 text-[11px] text-slate-200 flex-1 flex flex-col justify-between overflow-y-auto min-h-0">
+                  <div className="text-[9.5px] font-bold text-amber-400 uppercase tracking-widest text-center border-b border-white/10 pb-0.5 mb-1 flex-shrink-0">
                     {hoveredCard.isPrimal || hoveredCard.type === 'primal_avatar' ? 'Primal Avatar' : hoveredCard.type.toUpperCase()}
                   </div>
-                  <div className="whitespace-pre-line leading-tight text-slate-300 text-center font-sans text-[10.5px]">
+                  <div className="whitespace-pre-line leading-relaxed text-slate-200 text-center font-sans text-[11px] my-auto">
                     {hoveredCard.description}
                   </div>
                   {hoveredCard.flavorText && (
-                    <div className="mt-1 pt-1 border-t border-white/10 italic text-[9.5px] text-slate-400 text-center font-serif">
+                    <div className="mt-1 pt-1 border-t border-white/10 italic text-[9.5px] text-slate-400 text-center font-serif flex-shrink-0">
                       "{hoveredCard.flavorText}"
                     </div>
                   )}
