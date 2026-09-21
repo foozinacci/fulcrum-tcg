@@ -82,7 +82,7 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
         <div className="flex flex-col gap-4">
           <div>
             <span className="text-xs uppercase font-bold tracking-widest px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300">
-              Type: {selectedCard.type.toUpperCase()}
+              Type: {(selectedCard.isPrimal || selectedCard.type === 'primal_avatar' ? 'Primal Avatar' : selectedCard.type).replace('_', ' ').toUpperCase()}
             </span>
             <h1 className="font-serif font-black text-3xl text-gold-gradient mt-3">
               {selectedCard.name}
@@ -93,13 +93,15 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
             <div>
               <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Official FULCRUM Stats</div>
               <div className="flex flex-wrap gap-4 mt-1 text-sm font-semibold">
-                <span className="text-amber-300">
+                <span className="text-lime-400">Pace: {selectedCard.pace}</span>
+                <span className="text-pink-400">
                   Load: {selectedCard.load}{selectedCard.expediteLoad !== undefined ? ` (Expedite: ${selectedCard.expediteLoad})` : ''}
                 </span>
-                <span className="text-emerald-300">Core Value: {selectedCard.coreValue !== undefined && !selectedCard.isPrimal ? `+${selectedCard.coreValue}` : 'N/A'}</span>
-                <span className="text-cyan-300">Pace: {selectedCard.pace}</span>
+                {selectedCard.coreValue !== undefined && !selectedCard.isPrimal && (
+                  <span className="text-yellow-400">Core Value: +{selectedCard.coreValue}</span>
+                )}
                 {selectedCard.edge !== undefined && (
-                  <span className="text-amber-400">Edge: {selectedCard.isDynamicStats ? '*' : selectedCard.edge}</span>
+                  <span className="text-cyan-400">Edge: {selectedCard.isDynamicStats ? '*' : selectedCard.edge}</span>
                 )}
                 {selectedCard.grit !== undefined && (
                   <span className="text-blue-400">Grit: {selectedCard.isDynamicStats ? '*' : selectedCard.grit}</span>
@@ -109,7 +111,7 @@ export const CardCodex: React.FC<CardCodexProps> = ({ onBack }) => {
 
             <div>
               <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Ability & Timing</div>
-              <p className="text-sm text-slate-200 mt-1">{selectedCard.description}</p>
+              <p className="text-sm text-slate-200 mt-1 whitespace-pre-line leading-relaxed">{selectedCard.description}</p>
             </div>
 
             {selectedCard.flavorText && (
