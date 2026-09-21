@@ -139,24 +139,15 @@ export const CardView: React.FC<CardViewProps> = ({
         <div
           className={`w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden relative shadow-xl ${getCardBorder()}`}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between gap-1 z-10 flex-shrink-0">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-200 flex items-center justify-center font-bold font-serif text-slate-950 text-xs shadow-md">
-              {card.load}
-            </div>
-
-            <div className="flex-1 text-center font-serif font-bold text-slate-100 truncate px-0.5 tracking-tight text-[11px]">
+          {/* Header: Full width Card Name (No truncating) */}
+          <div className="flex items-center justify-center z-10 flex-shrink-0 py-0.5 px-0.5">
+            <div className="font-serif font-bold text-slate-100 text-center tracking-tight text-[11px] sm:text-xs truncate w-full">
               {card.name}
-            </div>
-
-            <div className="flex items-center gap-0.5 bg-slate-900/90 border border-slate-600 px-1 py-0.5 rounded text-[9px] font-bold text-slate-300">
-              <Clock className="w-2.5 h-2.5 text-cyan-400" />
-              <span>P{card.pace}</span>
             </div>
           </div>
 
-          {/* Art: Image or SVG (Fixed 48% ratio height so all cards crop identically like Grothmaw) */}
-          <div className="my-1 h-[48%] relative rounded border border-white/10 overflow-hidden bg-black/40 flex-shrink-0">
+          {/* Art: Image or SVG (Clean art view, no badges overlaying image) */}
+          <div className="my-1 h-[46%] relative rounded border border-white/10 overflow-hidden bg-black/40 flex-shrink-0">
             {card.imageArtUrl ? (
               <img
                 src={card.imageArtUrl}
@@ -167,24 +158,6 @@ export const CardView: React.FC<CardViewProps> = ({
               <CardSvgArt artId={card.svgArtId} />
             )}
 
-            <div className="absolute top-1 left-1 flex flex-col gap-0.5">
-              {card.coreValue !== undefined && !card.isPrimal && (
-                <span className="px-1 py-0.2 rounded bg-emerald-950/90 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 flex items-center gap-0.5">
-                  <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" /> +{card.coreValue} Core
-                </span>
-              )}
-              {card.expediteLoad && (
-                <span className="px-1 py-0.2 rounded bg-amber-950/90 border border-amber-500/50 text-[8px] font-bold text-amber-300 flex items-center gap-0.5">
-                  <Flame className="w-2.5 h-2.5 text-amber-400" /> Expedite: {card.expediteLoad}
-                </span>
-              )}
-              {card.isPrimal && (
-                <span className="px-1 py-0.2 rounded bg-amber-950/90 border border-amber-400/60 text-[8px] font-bold text-amber-300 flex items-center gap-0.5">
-                  <Crown className="w-2.5 h-2.5 text-amber-400" /> PRIMAL
-                </span>
-              )}
-            </div>
-
             {isDormant && (
               <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center text-[10px] font-bold text-slate-400 tracking-wider">
                 DORMANT
@@ -192,38 +165,67 @@ export const CardView: React.FC<CardViewProps> = ({
             )}
           </div>
 
-          {/* Description */}
-          <div className="flex-1 bg-black/60 rounded border border-white/10 p-1 text-[9.5px] leading-tight text-slate-200 font-sans flex items-center justify-center text-center overflow-hidden">
-            {card.description}
+          {/* Textbox / Description Box (Supertype centered above abilities) */}
+          <div className="flex-1 bg-black/60 rounded border border-white/10 p-1 flex flex-col items-center overflow-hidden">
+            <div className="text-[8.5px] font-bold tracking-wider text-amber-400/90 uppercase border-b border-white/10 pb-0.5 mb-0.5 w-full text-center">
+              {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
+            </div>
+            <div className="flex-1 flex items-center justify-center text-center text-[9px] leading-tight text-slate-200 font-sans px-0.5">
+              {card.description}
+            </div>
           </div>
 
-          {/* Stats Bar */}
-          {(card.type === 'being' || card.type === 'primal_avatar') && (
-            <div className="flex justify-between items-center px-1 mt-1 z-10 flex-shrink-0">
-              <div className="flex items-center gap-0.5 bg-amber-950/90 border border-amber-500/80 text-amber-300 font-bold px-1.5 py-0.5 rounded-full text-xs shadow-md">
-                <Swords className="w-3 h-3 text-amber-400" />
+          {/* Bottom Stats Bar: PACE - LOAD - CORE - EDGE - GRIT */}
+          <div className="flex justify-between items-center gap-0.5 mt-1 z-10 flex-shrink-0 text-[8.5px] font-bold">
+            {/* 1. PACE */}
+            <div className="flex items-center justify-center gap-0.5 bg-slate-900/90 border border-slate-600 px-1 py-0.5 rounded text-slate-300 shadow-sm min-w-[26px]">
+              <Clock className="w-2.5 h-2.5 text-cyan-400" />
+              <span>P{card.pace}</span>
+            </div>
+
+            {/* 2. LOAD */}
+            <div className="flex items-center justify-center gap-0.5 bg-amber-950/90 border border-amber-500/80 px-1 py-0.5 rounded text-amber-300 shadow-sm min-w-[22px]">
+              <span className="font-serif font-black text-amber-300 text-[9.5px]">{card.load}</span>
+            </div>
+
+            {/* 3. CORE (Blank space for Avatars) */}
+            {card.coreValue !== undefined && !card.isPrimal ? (
+              <div className="flex items-center justify-center gap-0.5 bg-emerald-950/90 border border-emerald-500/80 px-1 py-0.5 rounded text-emerald-300 shadow-sm min-w-[26px]">
+                <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" />
+                <span>+{card.coreValue}</span>
+              </div>
+            ) : (
+              <div className="min-w-[26px] h-4" />
+            )}
+
+            {/* 4. EDGE */}
+            {card.type === 'being' || card.type === 'primal_avatar' ? (
+              <div className="flex items-center justify-center gap-0.5 bg-amber-950/90 border border-amber-500/80 px-1 py-0.5 rounded text-amber-300 shadow-sm min-w-[22px]">
+                <Swords className="w-2.5 h-2.5 text-amber-400" />
                 <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
               </div>
-              <div className="flex items-center gap-0.5 bg-blue-950/90 border border-blue-500/80 text-blue-300 font-bold px-1.5 py-0.5 rounded-full text-xs shadow-md">
-                <Shield className="w-3 h-3 text-blue-400" />
+            ) : (
+              <div className="min-w-[22px] h-4" />
+            )}
+
+            {/* 5. GRIT */}
+            {card.type === 'being' || card.type === 'primal_avatar' ? (
+              <div className="flex items-center justify-center gap-0.5 bg-blue-950/90 border border-blue-500/80 px-1 py-0.5 rounded text-blue-300 shadow-sm min-w-[22px]">
+                <Shield className="w-2.5 h-2.5 text-blue-400" />
                 <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="min-w-[22px] h-4" />
+            )}
+          </div>
         </div>
       )}
 
       {/* FLOATING HOVER CARD PREVIEW */}
       {isHovered && !disableHoverPreview && !isFlipped && size !== 'lg' && (
         <div className="fixed bottom-6 right-6 z-50 w-72 h-[420px] pointer-events-none rounded-2xl border-2 border-fulcrum-gold bg-[#0f0a1c] p-3 shadow-[0_0_40px_rgba(243,198,105,0.5)] flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-serif font-black flex items-center justify-center text-sm shadow-md">
-              {card.load}
-            </div>
-            <div className="font-serif font-bold text-slate-100 text-sm truncate px-1">{card.name}</div>
-            <div className="text-xs bg-slate-900 px-2 py-0.5 rounded border border-slate-600 font-bold text-cyan-400">
-              Pace {card.pace}
-            </div>
+          <div className="flex items-center justify-center border-b border-white/10 pb-1.5">
+            <div className="font-serif font-bold text-slate-100 text-base text-center px-1">{card.name}</div>
           </div>
 
           <div className="my-2 flex-1 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner">
@@ -236,32 +238,46 @@ export const CardView: React.FC<CardViewProps> = ({
             ) : (
               <CardSvgArt artId={card.svgArtId} />
             )}
-            <div className="absolute top-2 left-2 flex flex-col gap-1">
-              {card.isPrimal && (
-                <span className="px-2 py-0.5 rounded-md bg-amber-950/95 border border-amber-400 text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1 shadow-md">
-                  <Crown className="w-3 h-3 text-amber-400" /> PRIMAL AVATAR
-                </span>
-              )}
-            </div>
           </div>
 
-          <div className="bg-black/70 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 space-y-1 text-center font-sans">
-            <div className="font-semibold">{card.description}</div>
-            {card.flavorText && <div className="text-[11px] text-slate-400 italic font-serif mt-1">{card.flavorText}</div>}
+          <div className="bg-black/70 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 flex flex-col items-center font-sans">
+            <div className="text-xs font-bold tracking-wider text-amber-400/90 uppercase border-b border-white/10 pb-1 mb-1.5 w-full text-center">
+              {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
+            </div>
+            <div className="font-semibold text-center">{card.description}</div>
+            {card.flavorText && <div className="text-[11px] text-slate-400 italic font-serif mt-1 text-center">{card.flavorText}</div>}
           </div>
 
-          {(card.type === 'being' || card.type === 'primal_avatar') && (
-            <div className="flex justify-between items-center px-2 mt-2">
-              <div className="flex items-center gap-1 bg-amber-950 border border-amber-500 text-amber-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
-                <Swords className="w-3.5 h-3.5 text-amber-400" />
-                <span>Edge: {card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
-              </div>
-              <div className="flex items-center gap-1 bg-blue-950 border border-blue-500 text-blue-300 font-bold px-3 py-1 rounded-full text-xs shadow-md">
-                <Shield className="w-3.5 h-3.5 text-blue-400" />
-                <span>Grit: {card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
-              </div>
+          {/* Hover Preview Stats Row: PACE - LOAD - CORE - EDGE - GRIT */}
+          <div className="flex justify-between items-center px-2 mt-2 font-bold text-xs">
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-600 text-slate-300 px-2 py-1 rounded-md">
+              <Clock className="w-3 h-3 text-cyan-400" />
+              <span>P{card.pace}</span>
             </div>
-          )}
+            <div className="flex items-center gap-1 bg-amber-950 border border-amber-500 text-amber-300 px-2 py-1 rounded-md">
+              <span>L{card.load}</span>
+            </div>
+            {card.coreValue !== undefined && !card.isPrimal ? (
+              <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500 text-emerald-300 px-2 py-1 rounded-md">
+                <CircleDollarSign className="w-3 h-3 text-emerald-400" />
+                <span>+{card.coreValue}</span>
+              </div>
+            ) : (
+              <div className="w-8" />
+            )}
+            {(card.type === 'being' || card.type === 'primal_avatar') && (
+              <>
+                <div className="flex items-center gap-1 bg-amber-950 border border-amber-500 text-amber-300 px-2 py-1 rounded-md">
+                  <Swords className="w-3 h-3 text-amber-400" />
+                  <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
+                </div>
+                <div className="flex items-center gap-1 bg-blue-950 border border-blue-500 text-blue-300 px-2 py-1 rounded-md">
+                  <Shield className="w-3 h-3 text-blue-400" />
+                  <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
