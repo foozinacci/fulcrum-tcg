@@ -129,12 +129,38 @@ export const KAZRITH_RUNESCALE: Card = {
   },
 };
 
+export const KHARV_ROTWATCH: Card = {
+  id: 'primal_kharv_06',
+  name: 'Kharv, Rotwatch',
+  load: 1,
+  expediteLoad: 3,
+  pace: 1,
+  type: 'primal_avatar',
+  isPrimal: true,
+  edge: 1,
+  grit: 1,
+  coreAttackRatio: 1.5,
+  description: 'Pace 1. Ability 1: Convert any card from hand into Core (bypasses turn-drawn rule). Ability 2: Pay X Core (X = Load) to cast any card from graveyard (exiled on resolution or death).',
+  flavorText: 'An ancient multi-eyed watcher watching over the cycle of rot and rebirth.',
+  imageArtUrl: '/assets/kharv.jpg',
+  svgArtId: 'umbra_weaver',
+  ability: {
+    trigger: 'activated',
+    description: 'Convert any hand card into Core anytime during conversion phase.',
+  },
+  ability2: {
+    trigger: 'activated',
+    description: 'Pay X Core (X = Load) to cast any card from graveyard (exiled on death or resolution).',
+  },
+};
+
 export const PRIMAL_AVATARS_LIST: Card[] = [
   GLUTTRIX_CORESEEKER,
   VORRATH_IRONBOUND,
   NYSSARA_HALLOWER,
   GROTHMAW_CHARMBRANDED,
   KAZRITH_RUNESCALE,
+  KHARV_ROTWATCH,
 ];
 
 export const CARD_DATABASE: Card[] = [
