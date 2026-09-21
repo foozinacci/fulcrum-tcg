@@ -14,7 +14,6 @@ interface CardViewProps {
   className?: string;
   customEdge?: number;
   customGrit?: number;
-  showExpedite?: boolean;
 }
 
 export const CardView: React.FC<CardViewProps> = ({
@@ -28,7 +27,6 @@ export const CardView: React.FC<CardViewProps> = ({
   className = '',
   customEdge,
   customGrit,
-  showExpedite = false,
 }) => {
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
 
@@ -88,11 +86,11 @@ export const CardView: React.FC<CardViewProps> = ({
         <div
           className={`w-full h-full rounded-xl border-2 p-1.5 flex flex-col justify-between overflow-hidden relative shadow-xl ${getCardBorder()}`}
         >
-          {/* Header: Load Cost & Pace Badge */}
+          {/* Header: Standard Load Cost & Pace Badge */}
           <div className="flex items-center justify-between gap-1 z-10">
-            {/* Load Cost Orb */}
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-200 flex items-center justify-center font-bold font-serif text-slate-950 text-xs shadow-md">
-              {showExpedite ? card.expediteLoad || card.load + 2 : card.load}
+            {/* Standard Load Cost Orb */}
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-200 flex items-center justify-center font-bold font-serif text-slate-950 text-xs shadow-md" title={`Standard Load Cost: ${card.load}`}>
+              {card.load}
             </div>
 
             {/* Card Name */}
@@ -111,11 +109,16 @@ export const CardView: React.FC<CardViewProps> = ({
           <div className="my-1 flex-1 relative rounded border border-white/10 overflow-hidden bg-black/40">
             <CardSvgArt artId={card.svgArtId} />
 
-            {/* Core Value & Primal Badges */}
+            {/* Core Value & Expedite Badges */}
             <div className="absolute top-1 left-1 flex flex-col gap-0.5">
               <span className="px-1 py-0.2 rounded bg-emerald-950/90 border border-emerald-500/50 text-[8px] font-bold text-emerald-300 flex items-center gap-0.5">
                 <CircleDollarSign className="w-2.5 h-2.5 text-emerald-400" /> +{card.coreValue} Core
               </span>
+              {card.expediteLoad && (
+                <span className="px-1 py-0.2 rounded bg-amber-950/90 border border-amber-500/50 text-[8px] font-bold text-amber-300 flex items-center gap-0.5" title="Expedite Load Cost (Ignore Pace restriction)">
+                  <Flame className="w-2.5 h-2.5 text-amber-400" /> Expedite: {card.expediteLoad}
+                </span>
+              )}
               {card.isPrimal && (
                 <span className="px-1 py-0.2 rounded bg-amber-950/90 border border-amber-400/60 text-[8px] font-bold text-amber-300 flex items-center gap-0.5">
                   <Crown className="w-2.5 h-2.5 text-amber-400" /> PRIMAL

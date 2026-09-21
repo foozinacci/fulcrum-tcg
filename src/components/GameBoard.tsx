@@ -4,7 +4,7 @@ import { playHandCard, executeCombat, convertHandCardToCore, endTurn } from '../
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
-import { Shield, ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, Flame } from 'lucide-react';
+import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface GameBoardProps {
@@ -15,7 +15,6 @@ interface GameBoardProps {
 export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart }) => {
   const [state, setState] = useState<GameState>(initialState);
   const [showLogs, setShowLogs] = useState(false);
-  const [isExpediteMode, setIsExpediteMode] = useState(false);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
         validTargetType: 'any',
       }));
     } else {
-      setState((prev) => playHandCard(prev, card.id, isExpediteMode));
+      setState((prev) => playHandCard(prev, card.id));
     }
   };
 
@@ -81,7 +80,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
     if (state.selectedBoardInstanceId) {
       setState((prev) => executeCombat(prev, prev.selectedBoardInstanceId!, perm.instanceId));
     } else if (state.selectedHandCardId) {
-      setState((prev) => playHandCard(prev, prev.selectedHandCardId!, isExpediteMode, perm.instanceId));
+      setState((prev) => playHandCard(prev, prev.selectedHandCardId!, perm.instanceId));
     }
   };
 
@@ -92,7 +91,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
     if (state.selectedBoardInstanceId) {
       setState((prev) => executeCombat(prev, prev.selectedBoardInstanceId!, 'nexus'));
     } else if (state.selectedHandCardId) {
-      setState((prev) => playHandCard(prev, prev.selectedHandCardId!, isExpediteMode, 'nexus'));
+      setState((prev) => playHandCard(prev, prev.selectedHandCardId!, 'nexus'));
     }
   };
 
@@ -113,20 +112,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Expedite Mode Toggle */}
-          <button
-            onClick={() => setIsExpediteMode(!isExpediteMode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-              isExpediteMode
-                ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-[0_0_15px_#f3c669]'
-                : 'bg-slate-800 text-slate-300 border-slate-600 hover:text-white'
-            }`}
-            title="Expedite Mode: Ignore Pace restriction for higher Load cost"
-          >
-            <Flame className="w-4 h-4 text-amber-400" />
-            <span>EXPEDITE MODE: {isExpediteMode ? 'ON' : 'OFF'}</span>
-          </button>
-
           <button
             onClick={toggleSound}
             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600"
@@ -304,11 +289,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                     card={card}
                     size="md"
                     isSelected={isSelected}
-                    showExpedite={isExpediteMode}
                     onClick={() => handleHandCardClick(card)}
                     className="hover:-translate-y-4 hover:z-30 transition-transform"
                   />
-                  {/* Convert to Core button (Legal only turn drawn!) */}
+                  {/* Convert to Core button */}
                   {hc.drawnThisTurn && (
                     <button
                       onClick={(e) => handleConvertCard(card, e)}

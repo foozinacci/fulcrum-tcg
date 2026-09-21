@@ -60,7 +60,7 @@ export function createInitialGameState(
   const initialLogs: GameLogEntry[] = [
     {
       id: Math.random().toString(),
-      text: 'Official FULCRUM Match Started! Hands revealed. Opening hand total seeded Core pools.',
+      text: 'Official FULCRUM Match Started! Opening hand total seeded Core pools.',
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     },
@@ -76,7 +76,6 @@ export function createInitialGameState(
     logs: initialLogs,
     selectedHandCardId: null,
     selectedBoardInstanceId: null,
-    isExpediteMode: false,
     isTargeting: false,
     validTargetType: null,
   };
@@ -201,7 +200,6 @@ export function startTurn(state: GameState): GameState {
 export function playHandCard(
   state: GameState,
   cardId: string,
-  isExpedite: boolean = false,
   targetInstanceId?: string | 'nexus'
 ): GameState {
   const isPlayer = state.turnOwner === 'player';
@@ -217,28 +215,36 @@ export function playHandCard(
 
   const card = player.hand[cardIndex].card;
 
-  if (!isExpedite && state.turnNumber < card.pace) {
+  // Determine if Expedite is required (current turn < Pace)
+  const isExpediteRequired = state.turnNumber < card.pace;
+  let requiredLoadCost = card.load;
+
+  if (isExpediteRequired) {
+    if (!card.expediteLoad) {
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `Cannot play ${card.name}! Requires Pace ${card.pace} and has no Expedite option.`,
+        type: 'info',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      return { ...state, logs };
+    }
+    requiredLoadCost = card.expediteLoad;
+  }
+
+  // Load cost check
+  if (player.corePool < requiredLoadCost) {
     logs.unshift({
       id: Math.random().toString(),
-      text: `Cannot play ${card.name}! Requires Pace ${card.pace} (Current Turn: ${state.turnNumber}). Enable Expedite to bypass!`,
+      text: `Not enough Core pool to cast ${card.name}! ${isExpediteRequired ? 'Expedite Cost' : 'Cost'}: ${requiredLoadCost}, Core: ${player.corePool}.`,
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     });
     return { ...state, logs };
   }
 
-  const cost = isExpedite ? card.expediteLoad || card.load + 2 : card.load;
-  if (player.corePool < cost) {
-    logs.unshift({
-      id: Math.random().toString(),
-      text: `Not enough Core pool to cast ${card.name}! Cost: ${cost}, Core: ${player.corePool}.`,
-      type: 'info',
-      timestamp: new Date().toLocaleTimeString(),
-    });
-    return { ...state, logs };
-  }
-
-  player.corePool -= cost;
+  // Deduct Load from Core pool & remove from hand
+  player.corePool -= requiredLoadCost;
   player.hand.splice(cardIndex, 1);
 
   if (card.type === 'being') {
@@ -248,7 +254,7 @@ export function playHandCard(
       currentEdge: card.edge || 1,
       currentGrit: card.grit || 1,
       maxGrit: card.grit || 1,
-      state: isExpedite ? 'alert' : 'dormant',
+      state: isExpediteRequired ? 'alert' : 'dormant', // Expedited cast enters Alert!
       bankedCore: 0,
       attachments: [],
       isGuard: card.isGuard || false,
@@ -257,7 +263,7 @@ export function playHandCard(
     player.field.push(newBeing);
     logs.unshift({
       id: Math.random().toString(),
-      text: `${player.name} summoned Being: ${card.name} (Edge ${newBeing.currentEdge} / Grit ${newBeing.currentGrit}) - Enters ${newBeing.state.toUpperCase()}.`,
+      text: `${player.name} ${isExpediteRequired ? 'EXPEDITED' : 'cast'} Being: ${card.name} (Load: ${requiredLoadCost}) - Enters ${newBeing.state.toUpperCase()}.`,
       type: 'summon',
       timestamp: new Date().toLocaleTimeString(),
     });
@@ -292,7 +298,7 @@ export function playHandCard(
 
     logs.unshift({
       id: Math.random().toString(),
-      text: `${player.name} cast Charm: ${card.name}.`,
+      text: `${player.name} ${isExpediteRequired ? 'EXPEDITED' : 'cast'} Charm: ${card.name}.`,
       type: 'charm',
       timestamp: new Date().toLocaleTimeString(),
     });

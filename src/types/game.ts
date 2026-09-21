@@ -21,10 +21,10 @@ export interface CardAbility {
 export interface Card {
   id: string;
   name: string;
-  load: number;           // Cost to cast
-  expediteLoad?: number;  // Higher Load cost to ignore Pace restriction
+  load: number;           // Standard Load cost (used when turn >= pace)
+  expediteLoad?: number;  // Expedite mechanic: Alternative higher Load cost to cast before Pace turn!
   coreValue: number;      // Value if converted into Core pool
-  pace: number;           // Earliest legal turn (1, 2, 3, etc.)
+  pace: number;           // Earliest legal turn to cast at standard Load
   type: CardType;
   attachmentType?: AttachmentType; // Weapon (Edge) or Armor (Grit)
   isPrimal?: boolean;     // Primal supertype (max 1 copy)
@@ -86,7 +86,6 @@ export interface GameState {
   // Interactive state
   selectedHandCardId: string | null;
   selectedBoardInstanceId: string | null;
-  isExpediteMode: boolean;
   isTargeting: boolean;
   validTargetType: 'being' | 'nexus' | 'any' | null;
 }

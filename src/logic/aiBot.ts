@@ -7,14 +7,23 @@ export function runAiTurnStep(state: GameState): GameState {
   const ai = state.opponent;
   const player = state.player;
 
-  // 1. Conversion Phase: Convert extra card if Core is low
+  // 1. Conversion Phase: Convert extra card if Core pool is low
   if (ai.corePool < 2 && ai.hand.length > 3) {
     const cardToConvert = ai.hand[0].card;
     return convertHandCardToCore(state, cardToConvert.id);
   }
 
-  // 2. Play Hand Cards
-  const playableHandCards = ai.hand.filter((hc) => hc.card.load <= ai.corePool && state.turnNumber >= hc.card.pace);
+  // 2. Play Hand Cards (Evaluating standard Load vs Expedite Load)
+  const playableHandCards = ai.hand.filter((hc) => {
+    const card = hc.card;
+    if (state.turnNumber >= card.pace) {
+      return card.load <= ai.corePool;
+    } else if (card.expediteLoad) {
+      return card.expediteLoad <= ai.corePool;
+    }
+    return false;
+  });
+
   if (playableHandCards.length > 0 && ai.field.length < 5) {
     playableHandCards.sort((a, b) => b.card.load - a.card.load);
     const cardToPlay = playableHandCards[0].card;
@@ -28,7 +37,7 @@ export function runAiTurnStep(state: GameState): GameState {
       }
     }
 
-    return playHandCard(state, cardToPlay.id, false, target);
+    return playHandCard(state, cardToPlay.id, target);
   }
 
   // 3. Attack with Alert Beings
