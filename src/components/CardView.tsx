@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { Card } from '../types/game';
 import { CardSvgArt } from './CardSvgArt';
 import { Shield, Swords, Crown, CircleDollarSign, Clock, Flame } from 'lucide-react';
@@ -43,10 +44,38 @@ export const CardView: React.FC<CardViewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFlippingAnim, setIsFlippingAnim] = useState(false);
+  const [hoverPos, setHoverPos] = useState<{ top: number; left: number } | null>(null);
 
-  const handleMouseEnter = () => {
+  const calculateHoverPos = (rect: DOMRect) => {
+    const popupWidth = 320; // 20rem = 320px
+    const popupHeight = 440; // Max estimated popup height
+
+    // Vertical placement: align with card top, but clamp between 16px and (viewport height - popupHeight - 16px)
+    let top = rect.top;
+    if (top + popupHeight > window.innerHeight - 16) {
+      top = Math.max(16, window.innerHeight - popupHeight - 16);
+    }
+    if (top < 16) {
+      top = 16;
+    }
+
+    // Horizontal placement: place to right of card if space allows, else left of card
+    let left = rect.right + 16;
+    if (left + popupWidth > window.innerWidth - 16) {
+      left = rect.left - popupWidth - 16;
+    }
+    if (left < 16) {
+      left = Math.max(16, window.innerWidth - popupWidth - 16);
+    }
+
+    return { top, left };
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isFlipped && !isDragging) {
       setIsHovered(true);
+      const rect = e.currentTarget.getBoundingClientRect();
+      setHoverPos(calculateHoverPos(rect));
     }
   };
 
@@ -56,11 +85,16 @@ export const CardView: React.FC<CardViewProps> = ({
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
     setRotation({ x: -(y / 8), y: x / 8 });
+
+    if (!hoverPos) {
+      setHoverPos(calculateHoverPos(rect));
+    }
   };
 
   const handleMouseLeave = () => {
     setRotation({ x: 0, y: 0 });
     setIsHovered(false);
+    setHoverPos(null);
   };
 
   const handleDragStartInternal = (e: React.DragEvent<HTMLDivElement>) => {
@@ -255,70 +289,80 @@ export const CardView: React.FC<CardViewProps> = ({
       </div>
 
       {/* FLOATING HOVER CARD PREVIEW */}
-      {isHovered && !disableHoverPreview && !isFlipped && size !== 'lg' && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 max-h-[85vh] pointer-events-none rounded-2xl border-2 border-fulcrum-gold bg-[#0f0a1c] p-3 shadow-[0_0_40px_rgba(243,198,105,0.5)] flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-center border-b border-white/10 pb-1.5 flex-shrink-0">
-            <div className="font-serif font-bold text-slate-100 text-base text-center px-1 truncate">{card.name}</div>
-          </div>
-
-          <div className="my-1.5 h-40 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner flex-shrink-0">
-            {card.imageArtUrl ? (
-              <img
-                src={card.imageArtUrl}
-                alt={card.name}
-                className={`w-full h-full object-cover ${card.imageObjectPosition || 'object-top'}`}
-              />
-            ) : (
-              <CardSvgArt artId={card.svgArtId} />
-            )}
-          </div>
-
-          <div className="bg-black/70 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 flex flex-col items-center font-sans overflow-y-auto max-h-48">
-            <div className="text-[10px] font-bold tracking-wider text-amber-400 uppercase border-b border-white/10 pb-0.5 mb-1 w-full text-center flex-shrink-0">
-              {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
+      {isHovered && !disableHoverPreview && !isFlipped && size !== 'lg' && hoverPos &&
+        ReactDOM.createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              top: `${hoverPos.top}px`,
+              left: `${hoverPos.left}px`,
+              zIndex: 99999,
+            }}
+            className="w-80 max-h-[85vh] pointer-events-none rounded-2xl border-2 border-fulcrum-gold bg-[#0f0a1c] p-3 shadow-[0_0_40px_rgba(243,198,105,0.6)] flex flex-col justify-between animate-in fade-in zoom-in-95 duration-150"
+          >
+            <div className="flex items-center justify-center border-b border-white/10 pb-1.5 flex-shrink-0">
+              <div className="font-serif font-bold text-slate-100 text-base text-center px-1 truncate">{card.name}</div>
             </div>
-            <div className="font-sans text-center whitespace-pre-line leading-relaxed text-[11px] text-slate-200 w-full">
-              {card.description}
+
+            <div className="my-1.5 h-40 rounded-xl overflow-hidden border border-white/10 bg-black relative shadow-inner flex-shrink-0">
+              {card.imageArtUrl ? (
+                <img
+                  src={card.imageArtUrl}
+                  alt={card.name}
+                  className={`w-full h-full object-cover ${card.imageObjectPosition || 'object-top'}`}
+                />
+              ) : (
+                <CardSvgArt artId={card.svgArtId} />
+              )}
             </div>
-            {card.flavorText && (
-              <div className="text-[10px] text-slate-400 italic font-serif mt-1.5 border-t border-white/10 pt-1 text-center w-full">
-                "{card.flavorText}"
+
+            <div className="bg-black/70 border border-white/10 rounded-xl p-2.5 text-xs text-slate-200 flex flex-col items-center font-sans overflow-y-auto max-h-48">
+              <div className="text-[10px] font-bold tracking-wider text-amber-400 uppercase border-b border-white/10 pb-0.5 mb-1 w-full text-center flex-shrink-0">
+                {card.isPrimal || card.type === 'primal_avatar' ? 'Primal Avatar' : card.type.toUpperCase()}
               </div>
-            )}
-          </div>
-
-          {/* Hover Preview Stats Row: PACE - LOAD - CORE - EDGE - GRIT */}
-          <div className="flex justify-between items-center px-1 mt-2 font-bold text-xs flex-shrink-0">
-            <div className="flex items-center gap-1 bg-lime-950 border border-lime-500 text-lime-300 px-2 py-1 rounded-md">
-              <Clock className="w-3 h-3 text-lime-400" />
-              <span>P{card.pace}</span>
-            </div>
-            <div className="flex items-center gap-1 bg-pink-950 border border-pink-500 text-pink-300 px-2 py-1 rounded-md">
-              <span>L{card.load}</span>
-            </div>
-            {card.coreValue !== undefined && !card.isPrimal ? (
-              <div className="flex items-center gap-1 bg-yellow-950 border border-yellow-400 text-yellow-300 px-2 py-1 rounded-md">
-                <CircleDollarSign className="w-3 h-3 text-yellow-400" />
-                <span>+{card.coreValue}</span>
+              <div className="font-sans text-center whitespace-pre-line leading-relaxed text-[11px] text-slate-200 w-full">
+                {card.description}
               </div>
-            ) : (
-              <div className="w-8" />
-            )}
-            {(card.type === 'being' || card.type === 'primal_avatar') && (
-              <>
-                <div className="flex items-center gap-1 bg-cyan-950 border border-cyan-400 text-cyan-300 px-2 py-1 rounded-md">
-                  <Swords className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
+              {card.flavorText && (
+                <div className="text-[10px] text-slate-400 italic font-serif mt-1.5 border-t border-white/10 pt-1 text-center w-full">
+                  "{card.flavorText}"
                 </div>
-                <div className="flex items-center gap-1 bg-blue-950 border border-blue-400 text-blue-300 px-2 py-1 rounded-md">
-                  <Shield className="w-3.5 h-3.5 text-blue-400" />
-                  <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+              )}
+            </div>
+
+            {/* Hover Preview Stats Row: PACE - LOAD - CORE - EDGE - GRIT */}
+            <div className="flex justify-between items-center px-1 mt-2 font-bold text-xs flex-shrink-0">
+              <div className="flex items-center gap-1 bg-lime-950 border border-lime-500 text-lime-300 px-2 py-1 rounded-md">
+                <Clock className="w-3 h-3 text-lime-400" />
+                <span>P{card.pace}</span>
+              </div>
+              <div className="flex items-center gap-1 bg-pink-950 border border-pink-500 text-pink-300 px-2 py-1 rounded-md">
+                <span>L{card.load}</span>
+              </div>
+              {card.coreValue !== undefined && !card.isPrimal ? (
+                <div className="flex items-center gap-1 bg-yellow-950 border border-yellow-400 text-yellow-300 px-2 py-1 rounded-md">
+                  <CircleDollarSign className="w-3 h-3 text-yellow-400" />
+                  <span>+{card.coreValue}</span>
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+              ) : (
+                <div className="w-8" />
+              )}
+              {(card.type === 'being' || card.type === 'primal_avatar') && (
+                <>
+                  <div className="flex items-center gap-1 bg-cyan-950 border border-cyan-400 text-cyan-300 px-2 py-1 rounded-md">
+                    <Swords className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>{card.isDynamicStats && customEdge === undefined ? '*' : currentEdge}</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-blue-950 border border-blue-400 text-blue-300 px-2 py-1 rounded-md">
+                    <Shield className="w-3.5 h-3.5 text-blue-400" />
+                    <span>{card.isDynamicStats && customGrit === undefined ? '*' : currentGrit}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
