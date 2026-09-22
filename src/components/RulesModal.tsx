@@ -131,7 +131,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                 <h3>Formats & Dynamic Life Totals</h3>
               </div>
               <p className="text-xs text-slate-300">
-                Starting life pools and Primal Elimination thresholds scale dynamically based on the total number of players in the table setup (<strong>10 HP per total player</strong>, forming a unified <strong>Team Shared Life Pool</strong> for team formats, with individual Primal Elimination thresholds equal to <strong>50% of Team Life Pool</strong>):
+                Starting life pools and Primal Elimination thresholds scale dynamically based on the total number of players and table balance (Symmetric Teams, Outnumbered Boss Battles, or Free-For-All). In all formats, deck sizes remain strictly invariant (60 main + 1 Primal Avatar), while Primal Damage Elimination threshold is always <strong>50% of the target's starting life pool</strong>:
               </p>
 
               {/* Formats Table */}
@@ -139,6 +139,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                 <table className="w-full text-left text-xs font-sans">
                   <thead className="bg-slate-900/90 text-amber-300 uppercase tracking-wider text-[10px]">
                     <tr>
+                      <th className="p-2.5">Category</th>
                       <th className="p-2.5">Format Type</th>
                       <th className="p-2.5">Table Setup</th>
                       <th className="p-2.5">Life Calculation Formula</th>
@@ -147,33 +148,74 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10 bg-black/30 text-slate-300">
+                    {/* Symmetric */}
                     <tr>
-                      <td className="p-2.5 font-bold text-amber-200">1v1 Duel</td>
+                      <td className="p-2.5 font-bold text-amber-400">Symmetric</td>
+                      <td className="p-2.5 font-semibold text-slate-200">1v1 Duel</td>
                       <td className="p-2.5">2 Players (1 vs 1)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 2 players = 20 HP</td>
                       <td className="p-2.5 font-bold text-emerald-400">20 HP per player</td>
                       <td className="p-2.5 font-bold text-red-400">10 Primal Damage</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-bold text-amber-200">2v2 Team</td>
+                      <td className="p-2.5 font-bold text-amber-400">Symmetric</td>
+                      <td className="p-2.5 font-semibold text-slate-200">2v2 Team</td>
                       <td className="p-2.5">4 Players (2 vs 2)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 4 players = 40 HP</td>
                       <td className="p-2.5 font-bold text-emerald-400">40 HP Team Pool</td>
                       <td className="p-2.5 font-bold text-red-400">20 Primal Damage</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-bold text-amber-200">3v3 Team</td>
+                      <td className="p-2.5 font-bold text-amber-400">Symmetric</td>
+                      <td className="p-2.5 font-semibold text-slate-200">3v3 Team</td>
                       <td className="p-2.5">6 Players (3 vs 3)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 6 players = 60 HP</td>
                       <td className="p-2.5 font-bold text-emerald-400">60 HP Team Pool</td>
                       <td className="p-2.5 font-bold text-red-400">30 Primal Damage</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-bold text-amber-200">4v4 Team</td>
+                      <td className="p-2.5 font-bold text-amber-400">Symmetric</td>
+                      <td className="p-2.5 font-semibold text-slate-200">4v4 Team</td>
                       <td className="p-2.5">8 Players (4 vs 4)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 8 players = 80 HP</td>
                       <td className="p-2.5 font-bold text-emerald-400">80 HP Team Pool</td>
                       <td className="p-2.5 font-bold text-red-400">40 Primal Damage</td>
+                    </tr>
+
+                    {/* Asymmetric / Outnumbered */}
+                    <tr>
+                      <td className="p-2.5 font-bold text-purple-400">Asymmetric</td>
+                      <td className="p-2.5 font-semibold text-slate-200">1v2 Outnumbered</td>
+                      <td className="p-2.5">Solo vs 2 Teammates</td>
+                      <td className="p-2.5 text-slate-400 font-mono">Team = 10*(2+1) = 30 HP | Solo = 2*Team = 60 HP</td>
+                      <td className="p-2.5 font-bold text-emerald-400">Solo: 60 HP | Team: 30 HP Pool</td>
+                      <td className="p-2.5 font-bold text-red-400">Solo: 30 | Teammate: 15</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-bold text-purple-400">Asymmetric</td>
+                      <td className="p-2.5 font-semibold text-slate-200">1v3 Outnumbered</td>
+                      <td className="p-2.5">Solo vs 3 Teammates</td>
+                      <td className="p-2.5 text-slate-400 font-mono">Team = 10*(3+1) = 40 HP | Solo = 2*Team = 80 HP</td>
+                      <td className="p-2.5 font-bold text-emerald-400">Solo: 80 HP | Team: 40 HP Pool</td>
+                      <td className="p-2.5 font-bold text-red-400">Solo: 40 | Teammate: 20</td>
+                    </tr>
+
+                    {/* Free-For-All */}
+                    <tr>
+                      <td className="p-2.5 font-bold text-cyan-400">Free-For-All</td>
+                      <td className="p-2.5 font-semibold text-slate-200">3-Player FFA (1v1v1)</td>
+                      <td className="p-2.5">3 Players (No Teams)</td>
+                      <td className="p-2.5 text-slate-400 font-mono">10 * 3 players = 30 HP</td>
+                      <td className="p-2.5 font-bold text-emerald-400">30 HP each</td>
+                      <td className="p-2.5 font-bold text-red-400">15 Primal Damage</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-bold text-cyan-400">Free-For-All</td>
+                      <td className="p-2.5 font-semibold text-slate-200">4-Player FFA (1v1v1v1)</td>
+                      <td className="p-2.5">4 Players (No Teams)</td>
+                      <td className="p-2.5 text-slate-400 font-mono">10 * 4 players = 40 HP</td>
+                      <td className="p-2.5 font-bold text-emerald-400">40 HP each</td>
+                      <td className="p-2.5 font-bold text-red-400">20 Primal Damage</td>
                     </tr>
                   </tbody>
                 </table>

@@ -3,10 +3,19 @@ import { STARTER_DECK_A, GLUTTRIX_COREFEASTER, VORRATH_IRONBOUND, NYSSARA_VOIDHA
 import { soundFx } from '../utils/soundFx';
 
 export const GAME_FORMATS: Record<GameFormat, GameFormatConfig> = {
-  '1v1': { format: '1v1', label: '1v1 Duel (2 Players)', totalPlayers: 2, startingLife: 20, primalThreshold: 10 },
-  '2v2': { format: '2v2', label: '2v2 Team (4 Players)', totalPlayers: 4, startingLife: 40, primalThreshold: 20 },
-  '3v3': { format: '3v3', label: '3v3 Team (6 Players)', totalPlayers: 6, startingLife: 60, primalThreshold: 30 },
-  '4v4': { format: '4v4', label: '4v4 Team (8 Players)', totalPlayers: 8, startingLife: 80, primalThreshold: 40 },
+  // Symmetric Formats
+  '1v1': { format: '1v1', label: '1v1 Duel (2 Players)', category: 'Symmetric', totalPlayers: 2, startingLife: 20, primalThreshold: 10 },
+  '2v2': { format: '2v2', label: '2v2 Team (4 Players)', category: 'Symmetric', totalPlayers: 4, startingLife: 40, teamLifePool: 40, primalThreshold: 20 },
+  '3v3': { format: '3v3', label: '3v3 Team (6 Players)', category: 'Symmetric', totalPlayers: 6, startingLife: 60, teamLifePool: 60, primalThreshold: 30 },
+  '4v4': { format: '4v4', label: '4v4 Team (8 Players)', category: 'Symmetric', totalPlayers: 8, startingLife: 80, teamLifePool: 80, primalThreshold: 40 },
+
+  // Asymmetric / Outnumbered Formats
+  '1v2': { format: '1v2', label: '1v2 Outnumbered (Solo vs 2 Teammates)', category: 'Asymmetric', totalPlayers: 3, startingLife: 60, teamLifePool: 30, primalThreshold: 30 },
+  '1v3': { format: '1v3', label: '1v3 Outnumbered (Solo vs 3 Teammates)', category: 'Asymmetric', totalPlayers: 4, startingLife: 80, teamLifePool: 40, primalThreshold: 40 },
+
+  // Free-For-All Formats
+  '1v1v1': { format: '1v1v1', label: '3-Player Free-For-All (1v1v1)', category: 'Free-For-All', totalPlayers: 3, startingLife: 30, primalThreshold: 15 },
+  '1v1v1v1': { format: '1v1v1v1', label: '4-Player Free-For-All (1v1v1v1)', category: 'Free-For-All', totalPlayers: 4, startingLife: 40, primalThreshold: 20 },
 };
 
 function shuffleDeck(deck: Card[]): Card[] {

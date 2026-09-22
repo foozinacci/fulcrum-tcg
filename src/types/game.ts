@@ -89,13 +89,15 @@ export interface GameLogEntry {
   timestamp: string;
 }
 
-export type GameFormat = '1v1' | '2v2' | '3v3' | '4v4';
+export type GameFormat = '1v1' | '2v2' | '3v3' | '4v4' | '1v2' | '1v3' | '1v1v1' | '1v1v1v1';
 
 export interface GameFormatConfig {
   format: GameFormat;
   label: string;
+  category: 'Symmetric' | 'Asymmetric' | 'Free-For-All';
   totalPlayers: number;
   startingLife: number;
+  teamLifePool?: number;
   primalThreshold: number;
 }
 
