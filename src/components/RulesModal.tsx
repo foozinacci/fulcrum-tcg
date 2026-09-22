@@ -131,7 +131,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                 <h3>Formats & Dynamic Life Totals</h3>
               </div>
               <p className="text-xs text-slate-300">
-                Starting life and Primal Elimination thresholds scale dynamically based on the total number of players in the format (<strong>10 HP per player</strong>, with Primal Elimination threshold equal to <strong>50% of starting life</strong>):
+                Starting life pools and Primal Elimination thresholds scale dynamically based on the total number of players in the table setup (<strong>10 HP per total player</strong>, forming a unified <strong>Team Shared Life Pool</strong> for team formats, with individual Primal Elimination thresholds equal to <strong>50% of Team Life Pool</strong>):
               </p>
 
               {/* Formats Table */}
@@ -142,7 +142,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                       <th className="p-2.5">Format Type</th>
                       <th className="p-2.5">Table Setup</th>
                       <th className="p-2.5">Life Calculation Formula</th>
-                      <th className="p-2.5">Starting Life</th>
+                      <th className="p-2.5">Starting Life Pool</th>
                       <th className="p-2.5">Primal Elim. Threshold</th>
                     </tr>
                   </thead>
@@ -151,28 +151,28 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                       <td className="p-2.5 font-bold text-amber-200">1v1 Duel</td>
                       <td className="p-2.5">2 Players (1 vs 1)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 2 players = 20 HP</td>
-                      <td className="p-2.5 font-bold text-emerald-400">20 HP each</td>
+                      <td className="p-2.5 font-bold text-emerald-400">20 HP per player</td>
                       <td className="p-2.5 font-bold text-red-400">10 Primal Damage</td>
                     </tr>
                     <tr>
                       <td className="p-2.5 font-bold text-amber-200">2v2 Team</td>
                       <td className="p-2.5">4 Players (2 vs 2)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 4 players = 40 HP</td>
-                      <td className="p-2.5 font-bold text-emerald-400">40 HP each</td>
+                      <td className="p-2.5 font-bold text-emerald-400">40 HP Team Pool</td>
                       <td className="p-2.5 font-bold text-red-400">20 Primal Damage</td>
                     </tr>
                     <tr>
                       <td className="p-2.5 font-bold text-amber-200">3v3 Team</td>
                       <td className="p-2.5">6 Players (3 vs 3)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 6 players = 60 HP</td>
-                      <td className="p-2.5 font-bold text-emerald-400">60 HP each</td>
+                      <td className="p-2.5 font-bold text-emerald-400">60 HP Team Pool</td>
                       <td className="p-2.5 font-bold text-red-400">30 Primal Damage</td>
                     </tr>
                     <tr>
                       <td className="p-2.5 font-bold text-amber-200">4v4 Team</td>
                       <td className="p-2.5">8 Players (4 vs 4)</td>
                       <td className="p-2.5 text-slate-400 font-mono">10 * 8 players = 80 HP</td>
-                      <td className="p-2.5 font-bold text-emerald-400">80 HP each</td>
+                      <td className="p-2.5 font-bold text-emerald-400">80 HP Team Pool</td>
                       <td className="p-2.5 font-bold text-red-400">40 Primal Damage</td>
                     </tr>
                   </tbody>
