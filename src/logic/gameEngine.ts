@@ -1,6 +1,13 @@
-import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase } from '../types/game';
+import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase, GameFormat, GameFormatConfig } from '../types/game';
 import { STARTER_DECK_A, GLUTTRIX_COREFEASTER, VORRATH_IRONBOUND, NYSSARA_VOIDHALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, KHARV_ROTWATCH, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
+
+export const GAME_FORMATS: Record<GameFormat, GameFormatConfig> = {
+  '1v1': { format: '1v1', label: '1v1 Duel (2 Players)', totalPlayers: 2, startingLife: 20, primalThreshold: 10 },
+  '2v2': { format: '2v2', label: '2v2 Team (4 Players)', totalPlayers: 4, startingLife: 40, primalThreshold: 20 },
+  '3v3': { format: '3v3', label: '3v3 Team (6 Players)', totalPlayers: 6, startingLife: 60, primalThreshold: 30 },
+  '4v4': { format: '4v4', label: '4v4 Team (8 Players)', totalPlayers: 8, startingLife: 80, primalThreshold: 40 },
+};
 
 function shuffleDeck(deck: Card[]): Card[] {
   const newDeck = [...deck];
@@ -15,7 +22,8 @@ export function createInitialGameState(
   customPlayerDeck?: Card[],
   customOpponentDeck?: Card[],
   playerAvatar?: Card,
-  opponentAvatar?: Card
+  opponentAvatar?: Card,
+  startingLife: number = 20
 ): GameState {
   const pAvatar = playerAvatar || PRIMAL_AVATARS_LIST[0];
   const oAvatar = opponentAvatar || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
@@ -36,8 +44,8 @@ export function createInitialGameState(
     id: 'player',
     name: 'Player 1',
     isAi: false,
-    lifeTotal: 10,
-    startingLife: 10,
+    lifeTotal: startingLife,
+    startingLife: startingLife,
     primalDamageTaken: {},
     corePool: pCoreSeed,
     hand: pHand,
@@ -51,8 +59,8 @@ export function createInitialGameState(
     id: 'opponent',
     name: 'Opponent (AI)',
     isAi: true,
-    lifeTotal: 10,
-    startingLife: 10,
+    lifeTotal: startingLife,
+    startingLife: startingLife,
     primalDamageTaken: {},
     corePool: oCoreSeed,
     hand: oHand,
@@ -62,10 +70,12 @@ export function createInitialGameState(
     field: [],
   };
 
+  const primalThreshold = startingLife / 2;
+
   const initialLogs: GameLogEntry[] = [
     {
       id: Math.random().toString(),
-      text: `Official FULCRUM Match Started! ${pAvatar.name} deployed in 61st Slot.`,
+      text: `Official FULCRUM Match Started! (${startingLife} HP • Primal Elimination Threshold: ${primalThreshold}). ${pAvatar.name} deployed in 61st Slot.`,
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     },

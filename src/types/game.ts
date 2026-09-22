@@ -89,6 +89,16 @@ export interface GameLogEntry {
   timestamp: string;
 }
 
+export type GameFormat = '1v1' | '2v2' | '3v3' | '4v4';
+
+export interface GameFormatConfig {
+  format: GameFormat;
+  label: string;
+  totalPlayers: number;
+  startingLife: number;
+  primalThreshold: number;
+}
+
 export interface GameState {
   player: PlayerState;
   opponent: PlayerState;
