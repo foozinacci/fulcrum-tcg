@@ -1,22 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { GameState, Card } from './types/game';
+import { GameState, Card, UserEconomy } from './types/game';
 import { createInitialGameState } from './logic/gameEngine';
 import { PRIMAL_AVATARS_LIST } from './data/cards';
 import { GameBoard } from './components/GameBoard';
 import { DeckBuilder } from './components/DeckBuilder';
 import { CardCodex } from './components/CardCodex';
+import { VaultStore } from './components/VaultStore';
 import { RulesModal } from './components/RulesModal';
 import { ParticleCanvas } from './components/ParticleCanvas';
-import { Play, Shield, BookOpen, Layers, Sparkles } from 'lucide-react';
+import { Play, Shield, BookOpen, Layers, Sparkles, ShoppingBag } from 'lucide-react';
 import { soundFx } from './utils/soundFx';
 
-type ViewMode = 'menu' | 'game' | 'deckbuilder' | 'codex';
+type ViewMode = 'menu' | 'game' | 'deckbuilder' | 'codex' | 'store';
 
 export const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('menu');
   const [showRules, setShowRules] = useState(false);
   const [customDeck, setCustomDeck] = useState<Card[] | undefined>(undefined);
   const [gameState, setGameState] = useState<GameState | null>(null);
+
+  const [economy, setEconomy] = useState<UserEconomy>(() => {
+    const saved = localStorage.getItem('fulcrum_economy');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return {
+      shards: 1500,
+      bones: 200,
+      collection: {},
+    };
+  });
+
+  const handleUpdateEconomy = (newEconomy: UserEconomy) => {
+    setEconomy(newEconomy);
+    localStorage.setItem('fulcrum_economy', JSON.stringify(newEconomy));
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('fulcrum_custom_deck');
@@ -83,6 +105,20 @@ export const App: React.FC = () => {
               <span>PLAY VS AI BOT</span>
             </button>
 
+            <button
+              onClick={() => {
+                soundFx.playButtonClickSound();
+                setViewMode('store');
+              }}
+              className="py-3.5 rounded-2xl bg-gradient-to-r from-cyan-950 via-slate-900 to-amber-950 border border-cyan-500/50 hover:border-fulcrum-gold text-amber-300 font-serif font-bold text-sm flex items-center justify-center gap-2 transition hover:scale-[1.01] shadow-lg"
+            >
+              <ShoppingBag className="w-4 h-4 text-cyan-300" />
+              <span>VAULT & STORE</span>
+              <span className="ml-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-400 text-cyan-200">
+                {economy.shards.toLocaleString()} Shards
+              </span>
+            </button>
+
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => {
@@ -129,6 +165,15 @@ export const App: React.FC = () => {
             const fresh = createInitialGameState(customDeck);
             setGameState(fresh);
           }}
+        />
+      )}
+
+      {/* Store & Vault View */}
+      {viewMode === 'store' && (
+        <VaultStore
+          onBack={() => setViewMode('menu')}
+          economy={economy}
+          onUpdateEconomy={handleUpdateEconomy}
         />
       )}
 

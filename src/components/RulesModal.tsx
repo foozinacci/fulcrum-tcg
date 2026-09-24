@@ -6,7 +6,7 @@ interface RulesModalProps {
 }
 
 export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'all' | 'pillars' | 'formats' | 'resources' | 'pace' | 'primal' | 'archetypes'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'pillars' | 'formats' | 'resources' | 'pace' | 'primal' | 'archetypes' | 'economy'>('all');
 
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-3 md:p-6 select-none animate-in fade-in duration-200">
@@ -73,6 +73,12 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             className={`px-3 py-1.5 rounded-lg border transition ${activeTab === 'archetypes' ? 'bg-amber-950/90 border-amber-400 text-amber-300' : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'}`}
           >
             6 Archetypes
+          </button>
+          <button
+            onClick={() => setActiveTab('economy')}
+            className={`px-3 py-1.5 rounded-lg border transition ${activeTab === 'economy' ? 'bg-cyan-950/90 border-cyan-400 text-cyan-300' : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'}`}
+          >
+            Economy & Progression
           </button>
         </div>
 
@@ -362,6 +368,97 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                   <p className="text-[11px] text-slate-300 mt-1">
                     Single-threat Attachment deck. Stats scale off unused Core (*/*) and sacrifices Attachments to tutor bigger Equipment directly onto Vorrath.
                   </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SECTION 7: ECONOMY, PROGRESSION & CRAFTING */}
+          {(activeTab === 'all' || activeTab === 'economy') && (
+            <div className="space-y-3 bg-black/40 border border-white/10 rounded-2xl p-5 shadow-inner">
+              <div className="flex items-center gap-2 text-base font-serif font-black text-cyan-300 border-b border-white/10 pb-2">
+                <CircleDollarSign className="w-5 h-5 text-cyan-400" />
+                <h3>Economy, Progression, Packs & Crafting Engine</h3>
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-300">
+                <p>
+                  Fulcrum features a dual-currency ecosystem balancing free-to-play progression accessibility with premium cosmetic chase support.
+                </p>
+
+                {/* Dual Currencies Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-cyan-950/40 border border-cyan-500/40 rounded-xl p-3 space-y-1">
+                    <span className="font-serif font-bold text-cyan-300 text-xs uppercase tracking-wider">Shards (Earned F2P Currency)</span>
+                    <p className="text-[11px] text-slate-300">
+                      Earned via daily challenges, weekly objectives, match wins, first-win bonuses, and format milestones. Spent on 15-card packs, 60-card precons, and card crafting.
+                    </p>
+                  </div>
+
+                  <div className="bg-amber-950/40 border border-amber-500/40 rounded-xl p-3 space-y-1">
+                    <span className="font-serif font-bold text-amber-300 text-xs uppercase tracking-wider">Bones (Premium Store Currency)</span>
+                    <p className="text-[11px] text-slate-300">
+                      Store-bought currency used for Primal Showcase collector packs (exclusive Primal Avatars & alt-art), cosmetics, and currency conversion.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Rarity & Pack Slot Breakdowns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-3 space-y-1.5">
+                    <span className="font-bold text-fulcrum-gold uppercase tracking-wider text-[10px]">15-Card Pack Rarity Breakdown</span>
+                    <ul className="list-disc list-inside space-y-0.5 text-slate-300 text-[11px] font-mono">
+                      <li>8 Common Card Slots</li>
+                      <li>4 Uncommon Card Slots</li>
+                      <li>2 Rare Card Slots</li>
+                      <li>1 Wildcard / Showcase Slot</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-3 space-y-1.5">
+                    <span className="font-bold text-fulcrum-gold uppercase tracking-wider text-[10px]">60-Card Precon Slot Breakdown</span>
+                    <ul className="list-disc list-inside space-y-0.5 text-slate-300 text-[11px] font-mono">
+                      <li>24 Common Slots</li>
+                      <li>20 Uncommon Slots</li>
+                      <li>12 Rare Slots</li>
+                      <li>4 Signature / Top-Tier Slots</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Crafting & Disenchant Engine Table */}
+                <div className="overflow-x-auto rounded-xl border border-white/10 mt-2">
+                  <table className="w-full text-left text-xs font-sans">
+                    <thead className="bg-slate-900/90 text-cyan-300 uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="p-2">Card Rarity Tier</th>
+                        <th className="p-2">Craft Cost (Shards)</th>
+                        <th className="p-2">Disenchant Yield (Shards)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10 bg-black/30 text-slate-300 font-mono text-[11px]">
+                      <tr>
+                        <td className="p-2 font-bold text-slate-300">Common</td>
+                        <td className="p-2 text-cyan-300 font-bold">50 Shards</td>
+                        <td className="p-2 text-emerald-400 font-bold">+10 Shards</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2 font-bold text-emerald-400">Uncommon</td>
+                        <td className="p-2 text-cyan-300 font-bold">150 Shards</td>
+                        <td className="p-2 text-emerald-400 font-bold">+25 Shards</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2 font-bold text-purple-400">Rare</td>
+                        <td className="p-2 text-cyan-300 font-bold">500 Shards</td>
+                        <td className="p-2 text-emerald-400 font-bold">+100 Shards</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2 font-bold text-amber-400">Primal Supertype</td>
+                        <td className="p-2 text-cyan-300 font-bold">1,200 Shards</td>
+                        <td className="p-2 text-emerald-400 font-bold">+250 Shards</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

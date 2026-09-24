@@ -1,5 +1,7 @@
 export type CardType = 'being' | 'charm' | 'relic' | 'attachment' | 'rune' | 'primal_avatar';
 
+export type CardRarity = 'common' | 'uncommon' | 'rare' | 'primal';
+
 export type AttachmentType = 'weapon' | 'armor';
 
 export type CardColor = 'purple' | 'amber' | 'green' | 'red';
@@ -31,6 +33,7 @@ export interface Card {
   coreValue?: number;     // Fixed Core value when converted (N/A for Primal Avatars)
   pace: number;           // Earliest legal turn to cast at standard Load
   type: CardType;
+  rarity?: CardRarity;    // Common, Uncommon, Rare, or Primal
   attachmentType?: AttachmentType; // Weapon (Edge) or Armor (Grit)
   colors?: CardColor[];   // Color affiliation (Purple, Amber, Green, Red)
   pact?: PactName;        // Dual-color Pact alignment
@@ -49,6 +52,24 @@ export interface Card {
   imageArtUrl?: string;   // High-res custom card artwork image URL
   imageObjectPosition?: string; // CSS object-position class (e.g. object-top, object-[center_10%])
   castableFromGraveyardThisTurn?: boolean; // Grothmaw Ability 1 flag
+}
+
+export interface UserEconomy {
+  shards: number; // Earned free-to-play currency
+  bones: number;  // Premium store-bought currency
+  collection: Record<string, number>; // cardId -> count
+  unlockedCardBacks: string[];
+  activeCardBack: string;
+}
+
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  rewardShards: number;
+  progress: number;
+  maxProgress: number;
+  completed: boolean;
 }
 
 export interface BoardPermanent {
