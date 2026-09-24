@@ -225,3 +225,31 @@ export interface TutorialStep {
   highlightElement?: string; // CSS selector or identifier
   expectedAction?: 'convert_core' | 'cast_being' | 'attack' | 'end_turn' | 'any';
 }
+
+// Server Authority & Network Protocol Types
+export interface DeckCommitment {
+  matchId: string;
+  playerHash: string;
+  opponentHash: string;
+  rngSeedHash: string;
+  committedAt: string;
+  isValidated: boolean;
+}
+
+export interface ClientActionIntent {
+  actionId: string;
+  matchId: string;
+  playerId: string;
+  type: 'CONVERT_CORE' | 'PLAY_CARD' | 'ATTACK_NEXUS' | 'ATTACK_UNIT' | 'END_TURN';
+  cardId?: string;
+  targetInstanceId?: string;
+  clientTimestamp: number;
+}
+
+export interface ServerValidationResult {
+  valid: boolean;
+  errorCode?: string;
+  message: string;
+  sanitizedState?: GameState;
+  auditReplayStep?: ReplayStep;
+}

@@ -5,6 +5,7 @@ import { PRIMAL_AVATARS_LIST, STARTER_DECK_A } from './data/cards';
 
 // Core Components
 import { GameBoard } from './components/GameBoard';
+import { Playmat3DBoard } from './components/Playmat3DBoard';
 import { DeckBuilder } from './components/DeckBuilder';
 import { CardCodex } from './components/CardCodex';
 import { VaultStore } from './components/VaultStore';
@@ -22,10 +23,10 @@ import { BattlePassModal } from './components/BattlePassModal';
 import { SocialFriendsModal } from './components/SocialFriendsModal';
 import { UserProfileModal } from './components/UserProfileModal';
 
-import { Play, Shield, BookOpen, Layers, Sparkles, ShoppingBag, Trophy, Users, User, Clock, GraduationCap, Swords, Package, Search } from 'lucide-react';
+import { Play, Shield, BookOpen, Layers, Sparkles, ShoppingBag, Trophy, Users, User, Clock, GraduationCap, Swords, Package, Search, Cpu } from 'lucide-react';
 import { soundFx } from './utils/soundFx';
 
-type ViewMode = 'menu' | 'game' | 'deckbuilder' | 'codex' | 'store' | 'binder' | 'draft';
+type ViewMode = 'menu' | 'game' | 'deckbuilder' | 'codex' | 'store' | 'binder' | 'draft' | 'stage3d';
 
 const INITIAL_PROFILE: UserProfile = {
   displayName: 'FulcrumCommander',
@@ -246,7 +247,15 @@ export const App: React.FC = () => {
             </div>
 
             {/* Row 3: Forge, Codex, Replay & Rules */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-2">
+              <button
+                onClick={() => { soundFx.playButtonClickSound(); setViewMode('stage3d'); }}
+                className="py-2.5 rounded-xl bg-purple-950/80 border border-purple-500 hover:border-purple-400 text-purple-200 font-serif font-bold text-xs flex items-center justify-center gap-1 transition"
+              >
+                <Cpu className="w-3.5 h-3.5 text-purple-400" />
+                <span>3D Stage</span>
+              </button>
+
               <button
                 onClick={() => { soundFx.playButtonClickSound(); setViewMode('deckbuilder'); }}
                 className="py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-slate-500 text-slate-300 font-serif font-bold text-xs flex items-center justify-center gap-1.5 transition"
@@ -291,6 +300,14 @@ export const App: React.FC = () => {
             const fresh = createInitialGameState(customDeck);
             setGameState(fresh);
           }}
+        />
+      )}
+
+      {/* Server-Authoritative 3D Stage View */}
+      {viewMode === 'stage3d' && (
+        <Playmat3DBoard
+          initialState={createInitialGameState(customDeck)}
+          onRestart={() => setViewMode('menu')}
         />
       )}
 
