@@ -611,7 +611,10 @@ export function endTurn(state: GameState): GameState {
   if (state.winner) return state;
 
   const nextOwner = state.turnOwner === 'player' ? 'opponent' : 'player';
-  const nextTurnNumber = state.turnNumber + 1;
+  // Orbit Rule: An Orbit completes ONLY after each player takes 1 turn.
+  // In 1v1, Orbit increments when passing back from opponent to player.
+  const isOrbitCompleting = state.turnOwner === 'opponent';
+  const nextTurnNumber = isOrbitCompleting ? state.turnNumber + 1 : state.turnNumber;
   const logs = [...state.logs];
 
   const player = { ...state.player };
@@ -632,7 +635,9 @@ export function endTurn(state: GameState): GameState {
 
   logs.unshift({
     id: Math.random().toString(),
-    text: `End Step: Grit damage reset to max. Permanents become Alert.`,
+    text: isOrbitCompleting
+      ? `--- Orbit ${nextTurnNumber} Begins! (${nextOwner === 'player' ? player.name : opponent.name}'s Turn) ---`
+      : `--- Orbit ${state.turnNumber}: Passed to ${nextOwner === 'player' ? player.name : opponent.name}'s Turn ---`,
     type: 'turn',
     timestamp: new Date().toLocaleTimeString(),
   });

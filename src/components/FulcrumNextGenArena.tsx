@@ -317,7 +317,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
             <div className="w-full py-1.5 px-4 bg-gradient-to-r from-amber-950/60 via-slate-950 to-cyan-950/60 border-y border-fulcrum-gold/40 flex items-center justify-between shadow-lg">
               <div className="flex items-center gap-2 text-xs font-serif font-bold text-amber-300">
                 <Sparkles className="w-4 h-4 text-fulcrum-gold animate-pulse" />
-                <span>TURN {state.turnNumber} — {state.turnOwner === 'player' ? 'YOUR PRIORITY TURN' : 'OPPONENT THINKING...'}</span>
+                <span>ORBIT {state.turnNumber} — {state.turnOwner === 'player' ? 'YOUR PRIORITY TURN' : 'OPPONENT THINKING...'}</span>
               </div>
 
               <TurnPhaseBar

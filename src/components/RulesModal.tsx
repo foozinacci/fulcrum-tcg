@@ -268,17 +268,17 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             <div className="space-y-3 bg-black/40 border border-white/10 rounded-2xl p-5 shadow-inner">
               <div className="flex items-center gap-2 text-base font-serif font-black text-lime-300 border-b border-white/10 pb-2">
                 <Clock className="w-5 h-5 text-lime-400" />
-                <h3>Pace & Expedite Timing</h3>
+                <h3>Pace & Orbit Scaling Rules</h3>
               </div>
               <div className="space-y-2 text-xs text-slate-300">
                 <p>
-                  <strong>Pace</strong> is a second gating stat alongside Load. A card with <code>Pace: N</code> cannot be played before turn N, regardless of how much Core you have.
+                  <strong>Pace</strong> is a second gating stat alongside Load. A card with <code>Pace: N</code> cannot be played standard before <strong>Orbit N</strong>, regardless of banked Core.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                   <div className="bg-lime-950/30 border border-lime-500/30 rounded-xl p-3 space-y-1">
-                    <span className="font-bold text-lime-300 uppercase tracking-wider text-[10px]">Pace Gating</span>
+                    <span className="font-bold text-lime-300 uppercase tracking-wider text-[10px]">Orbit Rule (Pace Scaling)</span>
                     <p className="text-[11px] text-slate-300">
-                      Pace values are whole numbers applying to all cards. Higher Pace does not mean pure power — it represents scale and role. Pace 1 cards are tightly balanced as immediate opening options.
+                      An <strong>Orbit</strong> completes ONLY after <em>every player at the table has taken 1 individual turn</em>. The Orbit counter does NOT increase when passing priority to an opponent — it increments only when Orbit N is finished by all players. Pace gating scales strictly off Orbit progression.
                     </p>
                   </div>
 

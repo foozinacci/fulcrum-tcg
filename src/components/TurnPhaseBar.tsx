@@ -32,7 +32,7 @@ export const TurnPhaseBar: React.FC<TurnPhaseBarProps> = ({
       <div className="flex items-center justify-between w-full mb-2 px-1">
         <div className="flex items-center gap-1.5 text-xs font-serif font-bold text-amber-300">
           <Clock className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Turn {turnNumber} (Pace Legal: {turnNumber})</span>
+          <span>Orbit {turnNumber} (Pace Legal: {turnNumber})</span>
         </div>
 
         <div className="flex items-center gap-1 bg-emerald-950 border border-emerald-500/60 px-2 py-0.5 rounded text-xs font-bold text-emerald-300">
