@@ -110,11 +110,10 @@ export function createInitialGameState(
 export function drawCard(playerState: PlayerState, logs: GameLogEntry[]): PlayerState {
   const p = { ...playerState };
   if (p.deck.length === 0) {
-    p.lifeTotal = Math.max(0, p.lifeTotal - 1);
     logs.unshift({
       id: Math.random().toString(),
-      text: `${p.name} deck empty! Suffered 1 deckout damage.`,
-      type: 'combat',
+      text: `${p.name}'s deck is empty.`,
+      type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     });
     return p;
