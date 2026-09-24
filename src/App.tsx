@@ -12,7 +12,7 @@ import { VaultStore } from './components/VaultStore';
 import { RulesModal } from './components/RulesModal';
 import { ParticleCanvas } from './components/ParticleCanvas';
 
-// 9 New Feature Systems
+// 9 Feature Systems
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { CollectionBinder } from './components/CollectionBinder';
 import { MatchmakingModal } from './components/MatchmakingModal';
@@ -28,42 +28,23 @@ import { soundFx } from './utils/soundFx';
 
 type ViewMode = 'menu' | 'game' | 'deckbuilder' | 'codex' | 'store' | 'binder' | 'draft' | 'stage3d';
 
-const INITIAL_PROFILE: UserProfile = {
-  displayName: 'FulcrumCommander',
-  tag: '#1337',
-  avatarId: 'a1',
-  title: 'Avatar of the Fulcrum',
-  activeCardBack: 'standard',
-  rankTier: 'Fulcrum Master',
-  mmr: 1450,
-  wins: 12,
-  losses: 3,
-  favoritePact: 'Corefeast',
-  soundEnabled: true,
-  musicEnabled: true,
-};
-
-const INITIAL_BATTLE_PASS: UserBattlePass = {
-  currentLevel: 4,
-  currentXp: 350,
-  hasPremiumPass: false,
-  claimedFreeLevels: [1, 2],
-  claimedPremiumLevels: [],
-};
-
-const SAMPLE_REPLAY_STEPS: ReplayStep[] = [
-  { stepIndex: 0, turnNumber: 1, turnOwner: 'player', logText: 'Match started! Player drawn Gluttrix Corefeast Avatar.', playerLife: 20, opponentLife: 20, playerCore: 2, opponentCore: 2, playerFieldCount: 0, opponentFieldCount: 0 },
-  { stepIndex: 1, turnNumber: 1, turnOwner: 'player', logText: 'Player converted Corefeast Incantation into +1 Core.', playerLife: 20, opponentLife: 20, playerCore: 3, opponentCore: 2, playerFieldCount: 0, opponentFieldCount: 0 },
-  { stepIndex: 2, turnNumber: 2, turnOwner: 'opponent', logText: 'Opponent summoned Voidhallow Cultist (Pace 1, Load 2).', playerLife: 20, opponentLife: 20, playerCore: 3, opponentCore: 0, playerFieldCount: 0, opponentFieldCount: 1 },
-  { stepIndex: 3, turnNumber: 3, turnOwner: 'player', logText: 'Player dealt 4 Primal Damage to Opponent!', playerLife: 20, opponentLife: 16, playerCore: 1, opponentCore: 0, playerFieldCount: 1, opponentFieldCount: 1 },
-];
+function calculateRankTier(mmr: number): UserProfile['rankTier'] {
+  if (mmr >= 2000) return 'Primal Master';
+  if (mmr >= 1800) return 'Fulcrum Master';
+  if (mmr >= 1600) return 'Diamond';
+  if (mmr >= 1400) return 'Platinum';
+  if (mmr >= 1200) return 'Gold';
+  if (mmr >= 1100) return 'Silver';
+  if (mmr >= 1000) return 'Bronze';
+  return 'Iron';
+}
 
 export const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('menu');
   const [customDeck, setCustomDeck] = useState<Card[] | undefined>(undefined);
   const [gameState, setGameState] = useState<GameState | null>(null);
 
-  // Economy state
+  // Economy State (Persistent)
   const [economy, setEconomy] = useState<UserEconomy>(() => {
     const saved = localStorage.getItem('fulcrum_economy');
     if (saved) {
@@ -72,12 +53,53 @@ export const App: React.FC = () => {
     return { shards: 1500, bones: 200, collection: {}, unlockedCardBacks: ['standard'], activeCardBack: 'standard' };
   });
 
-  // Profile & Battle Pass state
-  const [userProfile, setUserProfile] = useState<UserProfile>(INITIAL_PROFILE);
-  const [battlePass, setBattlePass] = useState<UserBattlePass>(INITIAL_BATTLE_PASS);
-  const [replaySteps, setReplaySteps] = useState<ReplayStep[]>(SAMPLE_REPLAY_STEPS);
+  // User Profile State (Persistent)
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('fulcrum_user_profile');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      displayName: 'Commander',
+      tag: '#' + Math.floor(1000 + Math.random() * 9000),
+      avatarId: 'a1',
+      title: 'Initiate Commander',
+      activeCardBack: 'standard',
+      rankTier: 'Bronze',
+      mmr: 1000,
+      wins: 0,
+      losses: 0,
+      favoritePact: 'Corefeast',
+      soundEnabled: true,
+      musicEnabled: true,
+    };
+  });
 
-  // Modal visibilities
+  // Battle Pass State (Persistent)
+  const [battlePass, setBattlePass] = useState<UserBattlePass>(() => {
+    const saved = localStorage.getItem('fulcrum_battle_pass');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      currentLevel: 1,
+      currentXp: 0,
+      hasPremiumPass: false,
+      claimedFreeLevels: [],
+      claimedPremiumLevels: [],
+    };
+  });
+
+  // Replays State (Persistent)
+  const [replaySteps, setReplaySteps] = useState<ReplayStep[]>(() => {
+    const saved = localStorage.getItem('fulcrum_replays');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
+
+  // Modal Visibilities
   const [showRules, setShowRules] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showMatchmaking, setShowMatchmaking] = useState(false);
@@ -90,6 +112,16 @@ export const App: React.FC = () => {
   const handleUpdateEconomy = (newEconomy: UserEconomy) => {
     setEconomy(newEconomy);
     localStorage.setItem('fulcrum_economy', JSON.stringify(newEconomy));
+  };
+
+  const handleUpdateProfile = (newProfile: UserProfile) => {
+    setUserProfile(newProfile);
+    localStorage.setItem('fulcrum_user_profile', JSON.stringify(newProfile));
+  };
+
+  const handleUpdateBattlePass = (newPass: UserBattlePass) => {
+    setBattlePass(newPass);
+    localStorage.setItem('fulcrum_battle_pass', JSON.stringify(newPass));
   };
 
   useEffect(() => {
@@ -111,6 +143,68 @@ export const App: React.FC = () => {
     if (isTutorial) setShowTutorial(true);
   };
 
+  // Real Match Conclusion Handler: Updates Profile MMR, Battle Pass XP, Economy Shards, & Records Replay
+  const handleMatchEnd = (winner: 'player' | 'opponent', logs: any[]) => {
+    const isWin = winner === 'player';
+    
+    // 1. Update Profile Stats & MMR
+    const newWins = isWin ? userProfile.wins + 1 : userProfile.wins;
+    const newLosses = isWin ? userProfile.losses : userProfile.losses + 1;
+    const mmrChange = isWin ? 25 : -15;
+    const newMmr = Math.max(500, userProfile.mmr + mmrChange);
+    const newRank = calculateRankTier(newMmr);
+
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      wins: newWins,
+      losses: newLosses,
+      mmr: newMmr,
+      rankTier: newRank,
+    };
+    handleUpdateProfile(updatedProfile);
+
+    // 2. Award Shards Currency
+    const shardReward = isWin ? 150 : 50;
+    const updatedEconomy: UserEconomy = {
+      ...economy,
+      shards: economy.shards + shardReward,
+    };
+    handleUpdateEconomy(updatedEconomy);
+
+    // 3. Award Battle Pass XP
+    const xpReward = isWin ? 250 : 100;
+    let nextXp = battlePass.currentXp + xpReward;
+    let nextLvl = battlePass.currentLevel;
+    if (nextXp >= 1000 && nextLvl < 50) {
+      nextXp -= 1000;
+      nextLvl += 1;
+    }
+    const updatedPass: UserBattlePass = {
+      ...battlePass,
+      currentLevel: nextLvl,
+      currentXp: nextXp,
+    };
+    handleUpdateBattlePass(updatedPass);
+
+    // 4. Record & Save Real Match Replay
+    if (logs && logs.length > 0) {
+      const realReplay: ReplayStep[] = logs.map((log: any, idx: number) => ({
+        stepIndex: idx,
+        turnNumber: Math.floor(idx / 2) + 1,
+        turnOwner: idx % 2 === 0 ? 'player' : 'opponent',
+        logText: log.text || 'Action executed',
+        playerLife: 20,
+        opponentLife: 20,
+        playerCore: 0,
+        opponentCore: 0,
+        playerFieldCount: 0,
+        opponentFieldCount: 0,
+      }));
+      setReplaySteps(realReplay);
+      localStorage.setItem('fulcrum_replays', JSON.stringify(realReplay));
+    }
+  };
+
   return (
     <div className="min-h-screen w-full relative overflow-x-hidden select-none bg-[#080512]">
       {/* Background Cosmic Canvas */}
@@ -126,17 +220,17 @@ export const App: React.FC = () => {
               onClick={() => { soundFx.playButtonClickSound(); setShowProfile(true); }}
               className="flex items-center gap-3 hover:opacity-90 transition text-left"
             >
-              <div className="w-10 h-10 rounded-xl bg-slate-950 border border-fulcrum-gold flex items-center justify-center font-serif font-black text-amber-300 text-sm shadow">
+              <div className="w-10 h-10 rounded-xl bg-slate-950 border border-fulcrum-gold flex items-center justify-center font-serif font-black text-amber-300 text-sm shadow font-mono">
                 {userProfile.displayName.substring(0, 2).toUpperCase()}
               </div>
               <div>
                 <div className="font-serif font-bold text-sm text-slate-100 flex items-center gap-1.5">
                   <span>{userProfile.displayName}</span>
                   <span className="text-[10px] text-amber-400 font-mono px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-500/40">
-                    {userProfile.rankTier}
+                    {userProfile.rankTier} ({userProfile.mmr} MMR)
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-400">{userProfile.title}</div>
+                <div className="text-[10px] text-slate-400">{userProfile.title} • {userProfile.wins}W / {userProfile.losses}L</div>
               </div>
             </button>
 
@@ -246,7 +340,7 @@ export const App: React.FC = () => {
               </button>
             </div>
 
-            {/* Row 3: Forge, Codex, Replay & Rules */}
+            {/* Row 3: 3D Stage, Forge, Codex, Replay & Rules */}
             <div className="grid grid-cols-5 gap-2">
               <button
                 onClick={() => { soundFx.playButtonClickSound(); setViewMode('stage3d'); }}
@@ -300,6 +394,7 @@ export const App: React.FC = () => {
             const fresh = createInitialGameState(customDeck);
             setGameState(fresh);
           }}
+          onMatchEnd={handleMatchEnd}
         />
       )}
 
@@ -380,7 +475,7 @@ export const App: React.FC = () => {
         <BattlePassModal
           onClose={() => setShowBattlePass(false)}
           battlePass={battlePass}
-          onUpdateBattlePass={setBattlePass}
+          onUpdateBattlePass={handleUpdateBattlePass}
           economy={economy}
           onUpdateEconomy={handleUpdateEconomy}
         />
@@ -400,7 +495,7 @@ export const App: React.FC = () => {
         <UserProfileModal
           onClose={() => setShowProfile(false)}
           userProfile={userProfile}
-          onUpdateProfile={setUserProfile}
+          onUpdateProfile={handleUpdateProfile}
           economy={economy}
           onUpdateEconomy={handleUpdateEconomy}
         />

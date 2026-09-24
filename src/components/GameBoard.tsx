@@ -11,15 +11,26 @@ import { soundFx } from '../utils/soundFx';
 interface GameBoardProps {
   initialState: GameState;
   onRestart: () => void;
+  onMatchEnd?: (winner: 'player' | 'opponent', logs: any[]) => void;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart, onMatchEnd }) => {
   const [state, setState] = useState<GameState>(initialState);
   const [showLogs, setShowLogs] = useState(false);
   const [showOracle, setShowOracle] = useState(false);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+  const [hasNotifiedEnd, setHasNotifiedEnd] = useState(false);
+
+  useEffect(() => {
+    if (state.winner && !hasNotifiedEnd) {
+      setHasNotifiedEnd(true);
+      if (onMatchEnd) {
+        onMatchEnd(state.winner, state.logs);
+      }
+    }
+  }, [state.winner, hasNotifiedEnd, onMatchEnd, state.logs]);
 
   useEffect(() => {
     if (state.turnOwner === 'opponent' && !state.winner) {
