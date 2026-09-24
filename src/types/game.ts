@@ -139,6 +139,59 @@ export interface GameState {
   validTargetType: 'being' | 'nexus' | 'any' | null;
 }
 
+export type ZoneType = 'deck' | 'hand' | 'field' | 'graveyard' | 'primal_slot' | 'exile';
+
+export type CombatStep = 'none' | 'declare_attackers' | 'declare_blockers' | 'assign_damage' | 'combat_resolution';
+
+export interface StackItem {
+  id: string;
+  controllerId: 'player' | 'opponent';
+  type: 'SPELL_CAST' | 'ABILITY_TRIGGER' | 'ATTACK_DECLARATION' | 'BLOCK_DECLARATION';
+  sourceCardId: string;
+  targetInstanceId?: string | 'nexus';
+  timestamp: string;
+}
+
+export type ActionErrorCode =
+  | 'ERR_NOT_YOUR_TURN'
+  | 'ERR_WRONG_PHASE'
+  | 'ERR_WRONG_COMBAT_STEP'
+  | 'ERR_NOT_IN_ZONE'
+  | 'ERR_CONVERSION_TIMING'
+  | 'ERR_CORE_CAP_EXCEEDED'
+  | 'ERR_INSUFFICIENT_CORE'
+  | 'ERR_PACE_GATED'
+  | 'ERR_DORMANT_UNIT'
+  | 'ERR_GUARD_INTERCEPTION_REQUIRED'
+  | 'ERR_INVALID_TARGET'
+  | 'ERR_STACK_NOT_EMPTY';
+
+export interface ValidationResult {
+  valid: boolean;
+  errorCode?: ActionErrorCode;
+  reason?: string;
+}
+
+export type GameAction =
+  | { type: 'CONVERT_CORE'; playerId: 'player' | 'opponent'; cardId: string }
+  | { type: 'PLAY_CARD'; playerId: 'player' | 'opponent'; cardId: string; targetInstanceId?: string | 'nexus' }
+  | { type: 'DECLARE_ATTACKER'; playerId: 'player' | 'opponent'; attackerInstanceId: string; targetId: string | 'nexus'; bankedCore?: number }
+  | { type: 'DECLARE_BLOCKER'; playerId: 'player' | 'opponent'; blockerInstanceId: string; attackerInstanceId: string }
+  | { type: 'RESOLVE_COMBAT'; playerId: 'player' | 'opponent' }
+  | { type: 'ACTIVATE_PRIMAL_ABILITY'; playerId: 'player' | 'opponent'; abilityIndex: 1 | 2 }
+  | { type: 'PASS_PRIORITY'; playerId: 'player' | 'opponent' }
+  | { type: 'END_TURN'; playerId: 'player' | 'opponent' };
+
+export interface BugReport {
+  id: string;
+  timestamp: string;
+  actionId?: string;
+  turnNumber: number;
+  phase: GamePhase;
+  userDescription: string;
+  gameStateSnapshot: GameState;
+}
+
 // User Profile & Social Types
 export interface UserProfile {
   displayName: string;

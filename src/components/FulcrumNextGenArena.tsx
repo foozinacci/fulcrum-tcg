@@ -5,7 +5,8 @@ import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
 import { OracleSearchModal } from './OracleSearchModal';
-import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, BookOpen, Swords, Zap, Shield, Sparkles, ChevronRight, RotateCw, Search } from 'lucide-react';
+import { BugReportModal } from './BugReportModal';
+import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, BookOpen, Swords, Zap, Shield, Sparkles, ChevronRight, RotateCw, Search, Bug } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface FulcrumNextGenArenaProps {
@@ -18,6 +19,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
   const [state, setState] = useState<GameState>(initialState);
   const [showLogs, setShowLogs] = useState(false);
   const [showOracle, setShowOracle] = useState(false);
+  const [showBugReport, setShowBugReport] = useState(false);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hasNotifiedEnd, setHasNotifiedEnd] = useState(false);
@@ -505,16 +507,27 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
             </button>
 
             <button
-              onClick={toggleSound}
-              className="py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-fulcrum-gold text-slate-300 font-serif font-bold text-[10px] flex items-center justify-center gap-1 transition"
+              onClick={() => setShowBugReport(true)}
+              className="py-2 rounded-xl bg-amber-950/80 border border-amber-500 hover:border-amber-400 text-amber-200 font-serif font-bold text-[10px] flex items-center justify-center gap-1 transition"
             >
-              {isMuted ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5 text-fulcrum-gold" />}
-              <span>{isMuted ? 'Muted' : 'Audio'}</span>
+              <Bug className="w-3.5 h-3.5 text-amber-400" />
+              <span>Report Bug</span>
             </button>
           </div>
         </div>
 
       </div>
+
+      {/* Bug Report Modal */}
+      {showBugReport && (
+        <BugReportModal
+          gameState={state}
+          onClose={() => setShowBugReport(false)}
+          onSubmitReport={(report) => {
+            console.log('User logged bug report:', report.id);
+          }}
+        />
+      )}
 
       {/* Oracle Search Modal */}
       {showOracle && <OracleSearchModal onClose={() => setShowOracle(false)} />}
