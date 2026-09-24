@@ -147,234 +147,268 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
       <div className="grid grid-cols-1 lg:grid-cols-4 h-full gap-3 min-h-0 overflow-hidden">
         
         {/* ========================================================================= */}
-        {/* CENTER/LEFT BATTLEFIELD (3 COLUMNS - CLEAN SYMMETRICAL PLAYMAT STAGE)     */}
+        {/* CENTER/LEFT BATTLEFIELD (3 COLUMNS - ISOMETRIC 3D ARENA STAGE)            */}
         {/* ========================================================================= */}
-        <div className="lg:col-span-3 flex flex-col justify-between gap-2 h-full min-h-0 overflow-hidden bg-fulcrum-panel/50 border-2 border-fulcrum-gold rounded-3xl p-3 shadow-[0_0_60px_rgba(243,198,105,0.3)] relative order-1">
+        <div className="lg:col-span-3 flex flex-col justify-between gap-2 h-full min-h-0 overflow-hidden bg-gradient-to-b from-[#0e0a1f] via-[#070412] to-[#0c081b] border-2 border-fulcrum-gold rounded-3xl p-3 shadow-[0_0_80px_rgba(243,198,105,0.35)] relative order-1 [perspective:1200px] [transform-style:preserve-3d]">
           
-          {/* Decorative Gold Filigree Accents */}
-          <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2 border-fulcrum-gold pointer-events-none" />
-          <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-fulcrum-gold pointer-events-none" />
-          <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-fulcrum-gold pointer-events-none" />
-          <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-fulcrum-gold pointer-events-none" />
+          {/* Volumetric Sub-surface Ambient Stage Lighting */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(243,198,105,0.08)_0%,transparent_75%)] pointer-events-none" />
+          <div className="absolute inset-0 [background-image:radial-gradient(rgba(243,198,105,0.06)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-60" />
 
-          {/* ----------------------------------------------------------------------- */}
-          {/* ROW 1: OPPONENT TERRITORY & 50% TOP-CENTER SYMMETRICAL COMMAND PEDESTAL   */}
-          {/* ----------------------------------------------------------------------- */}
-          <div className="flex items-center justify-between gap-3 h-[25%] bg-black/40 border border-white/10 rounded-2xl px-4 py-2 relative overflow-hidden">
-            {/* Top Left: Opponent Discard Pile */}
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div className="w-14 h-20 rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-lg">
-                {state.opponent.graveyard.length > 0 ? (
-                  <CardView card={state.opponent.graveyard[state.opponent.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
-                ) : (
-                  <span className="text-[10px] font-bold text-slate-600">Discard</span>
-                )}
-                <span className="absolute inset-0 bg-black/50 flex items-center justify-center font-mono font-bold text-xs text-slate-200">
-                  {state.opponent.graveyard.length}
-                </span>
-              </div>
-              <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Opp Discard</span>
-            </div>
+          {/* Decorative Gold Filigree Accents with Ambient Glow */}
+          <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2 border-fulcrum-gold shadow-[0_0_12px_rgba(243,198,105,0.5)] pointer-events-none z-10" />
+          <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-fulcrum-gold shadow-[0_0_12px_rgba(243,198,105,0.5)] pointer-events-none z-10" />
+          <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-fulcrum-gold shadow-[0_0_12px_rgba(243,198,105,0.5)] pointer-events-none z-10" />
+          <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-fulcrum-gold shadow-[0_0_12px_rgba(243,198,105,0.5)] pointer-events-none z-10" />
 
-            {/* 50% TOP-CENTER: OPPONENT SYMMETRICAL PRIMAL COMMAND PEDESTAL */}
-            <div
-              onMouseEnter={() => setHoveredCard(state.opponent.primalAvatar)}
-              onClick={handleOpponentNexusClick}
-              className={`flex items-center gap-3 cursor-pointer transition transform hover:scale-105 relative px-5 py-2 rounded-2xl border-2 shadow-2xl ${
-                isAttackerSelected || isSpellSelected
-                  ? 'border-red-500 bg-red-950/60 shadow-[0_0_25px_rgba(239,68,68,0.6)] animate-pulse'
-                  : 'border-fulcrum-gold bg-black/70'
-              }`}
-            >
-              <CardView card={state.opponent.primalAvatar} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+          {/* 3D ISOMETRIC INCLINATION CONTAINER */}
+          <div className="flex flex-col justify-between h-full min-h-0 w-full [transform:rotateX(12deg)_scale(0.98)] transition-transform duration-500 ease-out [transform-style:preserve-3d] space-y-2">
+
+            {/* ----------------------------------------------------------------------- */}
+            {/* ZONE 1: OPPONENT TERRITORY & RAISED 3D COMMAND PEDESTAL                 */}
+            {/* ----------------------------------------------------------------------- */}
+            <div className="flex items-center justify-between gap-3 h-[25%] bg-gradient-to-b from-black/80 via-purple-950/20 to-black/60 border border-white/15 rounded-2xl px-5 py-2 relative overflow-visible shadow-[0_15px_35px_rgba(0,0,0,0.8),_inset_0_1px_2px_rgba(255,255,255,0.15)] [transform:translateZ(15px)]">
               
-              <div className="space-y-1 text-left font-mono min-w-[150px]">
-                <div className="font-serif font-black text-xs text-gold-gradient uppercase flex items-center gap-1">
-                  <Crown className="w-3.5 h-3.5 text-fulcrum-gold" />
-                  <span>{state.opponent.primalAvatar.name}</span>
-                </div>
-                <div className="text-xs font-bold text-red-400">
-                  {state.opponent.lifeTotal} / {state.opponent.startingLife} HP
-                </div>
-                <div className="text-[10px] font-bold text-amber-300">
-                  Primal Dmg: <span className="text-red-400">{oppPrimalDmg}</span> / 5
-                </div>
-                <div className="text-[10px] text-cyan-300 font-bold">Core Pool: {state.opponent.corePool}</div>
-              </div>
-            </div>
+              {/* Volumetric Top Glow Halo */}
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-20 bg-amber-500/10 blur-2xl pointer-events-none rounded-full" />
 
-            {/* Top Right: Opponent FULCRUM Card Back Deck Stack */}
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div className="w-14 h-20 rounded-xl border border-fulcrum-gold/80 bg-[#0a0814] overflow-hidden relative shadow-lg">
-                <img src="/assets/card-back.jpg" alt="Opponent Deck" className="w-full h-full object-cover" />
-                <span className="absolute inset-0 bg-black/40 flex items-center justify-center font-mono font-bold text-xs text-amber-300">
-                  {state.opponent.deck.length}
-                </span>
-              </div>
-              <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Opp Deck</span>
-            </div>
-          </div>
-
-          {/* ----------------------------------------------------------------------- */}
-          {/* ROW 2 & 3: TACTICAL FIELD SLOTS (UN-CLUTTERED CENTER BATTLEFIELD)         */}
-          {/* ----------------------------------------------------------------------- */}
-          <div
-            onDragOver={handleDragOver}
-            onDrop={handleDropOnField}
-            className="flex-1 my-1 bg-black/30 border border-white/10 rounded-2xl p-3 flex flex-col justify-between relative overflow-hidden"
-          >
-            {/* Opponent Tactical Field Slots */}
-            <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[100px]">
-              {state.opponent.field.length === 0 ? (
-                <div className="border border-dashed border-white/10 rounded-xl px-6 py-4 text-center text-xs text-slate-600 italic">
-                  Opponent Tactical Field Empty
-                </div>
-              ) : (
-                state.opponent.field.map((perm) => (
-                  <div
-                    key={perm.instanceId}
-                    onMouseEnter={() => setHoveredCard(perm.card)}
-                    onClick={() => handleOpponentUnitClick(perm)}
-                    className="flex-shrink-0 transition transform hover:scale-105 cursor-pointer"
-                  >
-                    <CardView
-                      card={perm.card}
-                      disableClickFlip={true}
-                      disableHoverPreview={true}
-                      customEdge={perm.currentEdge}
-                      customGrit={perm.currentGrit}
-                      isDormant={perm.state === 'dormant'}
-                      size="sm"
-                      isTargetable={isAttackerSelected || isSpellSelected}
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Subtle Battlefield Divider Line */}
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-fulcrum-gold/40 to-transparent my-1" />
-
-            {/* Player Tactical Field Slots */}
-            <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[100px]">
-              {state.player.field.length === 0 ? (
-                <div className="border border-dashed border-fulcrum-gold/30 rounded-xl px-6 py-4 text-center text-xs text-slate-400 italic">
-                  Drag & Drop Beings or Spells Here to Cast
-                </div>
-              ) : (
-                state.player.field.map((perm) => (
-                  <div
-                    key={perm.instanceId}
-                    onMouseEnter={() => setHoveredCard(perm.card)}
-                    onClick={() => handleFriendlyUnitClick(perm)}
-                    className={`flex-shrink-0 transition transform hover:scale-105 cursor-pointer ${
-                      state.selectedBoardInstanceId === perm.instanceId ? 'ring-2 ring-fulcrum-gold rounded-xl scale-105' : ''
-                    }`}
-                  >
-                    <CardView
-                      card={perm.card}
-                      disableClickFlip={true}
-                      disableHoverPreview={true}
-                      customEdge={perm.currentEdge}
-                      customGrit={perm.currentGrit}
-                      isDormant={perm.state === 'dormant'}
-                      size="sm"
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* ----------------------------------------------------------------------- */}
-          {/* ROW 4: PLAYER TERRITORY & 50% BOTTOM-CENTER SYMMETRICAL COMMAND PEDESTAL */}
-          {/* ----------------------------------------------------------------------- */}
-          <div className="flex flex-col justify-between bg-black/40 border border-white/10 rounded-2xl p-3 relative">
-            
-            {/* Top Sub-Bar: Symmetrical Player Avatar + Deck & Discard Piles */}
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-2">
-              {/* Bottom Left: Player Discard Pile */}
-              <div className="flex flex-col items-center flex-shrink-0">
-                <div className="w-14 h-20 rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-lg">
-                  {state.player.graveyard.length > 0 ? (
-                    <CardView card={state.player.graveyard[state.player.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+              {/* Top Left: 3D Stacked Opponent Discard Pile */}
+              <div className="flex flex-col items-center flex-shrink-0 [transform:translateZ(10px)]">
+                <div className="w-14 h-20 rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-[0_12px_24px_rgba(0,0,0,0.85)] border-b-2 border-r-2 border-b-slate-900 border-r-slate-900">
+                  {state.opponent.graveyard.length > 0 ? (
+                    <CardView card={state.opponent.graveyard[state.opponent.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
                   ) : (
                     <span className="text-[10px] font-bold text-slate-600">Discard</span>
                   )}
-                  <span className="absolute inset-0 bg-black/50 flex items-center justify-center font-mono font-bold text-xs text-slate-200">
-                    {state.player.graveyard.length}
+                  <span className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center font-mono font-bold text-xs text-slate-200">
+                    {state.opponent.graveyard.length}
                   </span>
                 </div>
-                <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Your Discard</span>
+                <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Opp Discard</span>
               </div>
 
-              {/* 50% BOTTOM-CENTER: PLAYER SYMMETRICAL PRIMAL COMMAND PEDESTAL (EXACT MATCH TO OPPONENT) */}
+              {/* 50% TOP-CENTER: RAISED 3D OPPONENT PRIMAL COMMAND PEDESTAL */}
               <div
-                onMouseEnter={() => setHoveredCard(state.player.primalAvatar)}
-                className="flex items-center gap-3 bg-black/70 border-2 border-fulcrum-gold rounded-2xl px-5 py-2 shadow-2xl"
+                onMouseEnter={() => setHoveredCard(state.opponent.primalAvatar)}
+                onClick={handleOpponentNexusClick}
+                className={`flex items-center gap-3 cursor-pointer transition-all duration-300 relative px-6 py-2.5 rounded-2xl border-2 shadow-[0_20px_40px_rgba(0,0,0,0.9),_0_0_30px_rgba(243,198,105,0.25)] [transform:translateZ(25px)] ${
+                  isAttackerSelected || isSpellSelected
+                    ? 'border-red-500 bg-red-950/80 shadow-[0_0_35px_rgba(239,68,68,0.8)] animate-pulse scale-105'
+                    : 'border-fulcrum-gold bg-gradient-to-r from-black/90 via-slate-950/90 to-black/90 hover:scale-105 hover:border-amber-300'
+                }`}
               >
-                <CardView card={state.player.primalAvatar} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                <div className="shadow-[0_10px_20px_rgba(0,0,0,0.8)] rounded-xl overflow-hidden border border-amber-400/40">
+                  <CardView card={state.opponent.primalAvatar} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                </div>
                 
-                <div className="space-y-1 text-left font-mono min-w-[150px]">
-                  <div className="font-serif font-black text-xs text-gold-gradient uppercase flex items-center gap-1">
-                    <Crown className="w-3.5 h-3.5 text-fulcrum-gold" />
-                    <span>{state.player.primalAvatar.name}</span>
+                <div className="space-y-1 text-left font-mono min-w-[160px]">
+                  <div className="font-serif font-black text-xs text-gold-gradient uppercase flex items-center gap-1.5 drop-shadow">
+                    <Crown className="w-4 h-4 text-fulcrum-gold animate-bounce" />
+                    <span>{state.opponent.primalAvatar.name}</span>
                   </div>
-                  <div className="text-xs font-bold text-emerald-400">
-                    {state.player.lifeTotal} / {state.player.startingLife} HP
+                  <div className="text-xs font-bold text-red-400 flex items-center gap-1">
+                    <Shield className="w-3.5 h-3.5 text-red-500" />
+                    <span>{state.opponent.lifeTotal} / {state.opponent.startingLife} HP</span>
                   </div>
                   <div className="text-[10px] font-bold text-amber-300">
-                    Primal Dmg: <span className="text-red-400">{playerPrimalDmg}</span> / 5
+                    Primal Dmg: <span className="text-red-400 font-extrabold">{oppPrimalDmg}</span> / 5
                   </div>
-                  <div className="text-[10px] text-cyan-300 font-bold">Core Pool: {state.player.corePool}</div>
+                  <div className="text-[10px] text-cyan-300 font-bold flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-cyan-400" />
+                    <span>Core Pool: {state.opponent.corePool}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bottom Right: Player FULCRUM Card Back Deck Stack */}
-              <div className="flex flex-col items-center flex-shrink-0">
-                <div className="w-14 h-20 rounded-xl border border-fulcrum-gold/80 bg-[#0a0814] overflow-hidden relative shadow-lg">
-                  <img src="/assets/card-back.jpg" alt="Your Deck" className="w-full h-full object-cover" />
-                  <span className="absolute inset-0 bg-black/40 flex items-center justify-center font-mono font-bold text-xs text-amber-300">
-                    {state.player.deck.length}
+              {/* Top Right: 3D Stacked Opponent FULCRUM Card Back Deck */}
+              <div className="flex flex-col items-center flex-shrink-0 [transform:translateZ(10px)]">
+                <div className="w-14 h-20 rounded-xl border-2 border-fulcrum-gold/90 bg-[#0a0814] overflow-hidden relative shadow-[0_14px_28px_rgba(0,0,0,0.9),_0_3px_0_#946927]">
+                  <img src="/assets/card-back.jpg" alt="Opponent Deck" className="w-full h-full object-cover" />
+                  <span className="absolute inset-0 bg-black/40 flex items-center justify-center font-mono font-bold text-xs text-amber-300 drop-shadow">
+                    {state.opponent.deck.length}
                   </span>
                 </div>
-                <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Your Deck</span>
+                <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Opp Deck</span>
               </div>
             </div>
 
-            {/* Bottom Sub-Bar: PLAYER BEZIER CURVED HAND FAN */}
-            <div className="flex items-center justify-center -space-x-8 pt-3 pb-1 overflow-x-auto min-h-[110px]">
-              {state.player.hand.map((hc, idx) => {
-                const isSelected = state.selectedHandCardId === hc.card.id;
-                const canConvert = hc.drawnThisTurn && state.player.corePool < 10;
-                const canCast = state.player.corePool >= hc.card.load && state.turnNumber >= hc.card.pace;
-
-                return (
-                  <div
-                    key={hc.card.id + idx}
-                    onMouseEnter={() => setHoveredCard(hc.card)}
-                    onClick={() => handleHandCardClick(hc.card)}
-                    draggable={canCast || canConvert}
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('text/plain', hc.card.id);
-                    }}
-                    className={`flex-shrink-0 transition-all duration-300 cursor-pointer relative group transform hover:-translate-y-6 hover:scale-110 hover:z-30 ${
-                      isSelected ? 'ring-2 ring-fulcrum-gold rounded-xl -translate-y-6 scale-110 z-40' : ''
-                    }`}
-                  >
-                    <CardView card={hc.card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
-
-                    {canConvert && (
-                      <button
-                        onClick={(e) => handleConvertCard(hc.card, e)}
-                        className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-400 text-emerald-300 font-mono font-bold text-[9px] px-2 py-0.5 rounded-full shadow-lg z-50 whitespace-nowrap"
-                      >
-                        +1 Core
-                      </button>
-                    )}
+            {/* ----------------------------------------------------------------------- */}
+            {/* ZONE 2, 3 & 4: RECESSED TACTICAL FIELD & VOLUMETRIC FULCRUM CATALYST     */}
+            {/* ----------------------------------------------------------------------- */}
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDropOnField}
+              className="flex-1 my-1 bg-gradient-to-b from-[#0a0618] via-[#04020a] to-[#0a0618] border border-white/10 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden shadow-[inset_0_12px_30px_rgba(0,0,0,0.95)] [transform:translateZ(5px)]"
+            >
+              {/* Opponent Tactical Field Zone (Upper Battlefield) */}
+              <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[105px] py-1">
+                {state.opponent.field.length === 0 ? (
+                  <div className="border border-dashed border-white/10 rounded-xl px-8 py-4 text-center text-xs text-slate-600 italic bg-black/20">
+                    Opponent Tactical Field Empty
                   </div>
-                );
-              })}
+                ) : (
+                  state.opponent.field.map((perm) => (
+                    <div
+                      key={perm.instanceId}
+                      onMouseEnter={() => setHoveredCard(perm.card)}
+                      onClick={() => handleOpponentUnitClick(perm)}
+                      className="flex-shrink-0 transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 cursor-pointer shadow-[0_12px_24px_rgba(0,0,0,0.85)] rounded-xl"
+                    >
+                      <CardView
+                        card={perm.card}
+                        disableClickFlip={true}
+                        disableHoverPreview={true}
+                        customEdge={perm.currentEdge}
+                        customGrit={perm.currentGrit}
+                        isDormant={perm.state === 'dormant'}
+                        size="sm"
+                        isTargetable={isAttackerSelected || isSpellSelected}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* ZONE 3: FULCRUM CATALYST ENERGY CONDUIT (VOLUMETRIC DIVIDER) */}
+              <div className="relative my-2 flex items-center justify-center">
+                <div className="w-full h-[2px] bg-gradient-to-r from-transparent via-fulcrum-gold/80 to-transparent shadow-[0_0_20px_rgba(243,198,105,0.9)]" />
+                <div className="absolute px-4 py-0.5 rounded-full bg-black/90 border border-fulcrum-gold text-[9px] font-serif font-bold text-amber-300 uppercase tracking-widest shadow-[0_0_15px_rgba(243,198,105,0.4)] flex items-center gap-1.5 [transform:translateZ(10px)]">
+                  <Sparkles className="w-3 h-3 text-fulcrum-gold animate-spin" />
+                  <span>Fulcrum Nexus Catalyst Zone</span>
+                  <Sparkles className="w-3 h-3 text-fulcrum-gold animate-spin" />
+                </div>
+              </div>
+
+              {/* Player Tactical Field Zone (Lower Battlefield) */}
+              <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[105px] py-1">
+                {state.player.field.length === 0 ? (
+                  <div className="border border-dashed border-fulcrum-gold/30 rounded-xl px-8 py-4 text-center text-xs text-slate-400 italic bg-amber-950/10">
+                    Drag & Drop Beings or Spells Here to Cast
+                  </div>
+                ) : (
+                  state.player.field.map((perm) => (
+                    <div
+                      key={perm.instanceId}
+                      onMouseEnter={() => setHoveredCard(perm.card)}
+                      onClick={() => handleFriendlyUnitClick(perm)}
+                      className={`flex-shrink-0 transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 cursor-pointer shadow-[0_12px_24px_rgba(0,0,0,0.85)] rounded-xl ${
+                        state.selectedBoardInstanceId === perm.instanceId ? 'ring-2 ring-fulcrum-gold rounded-xl scale-110 -translate-y-2 shadow-[0_0_30px_rgba(243,198,105,0.6)]' : ''
+                      }`}
+                    >
+                      <CardView
+                        card={perm.card}
+                        disableClickFlip={true}
+                        disableHoverPreview={true}
+                        customEdge={perm.currentEdge}
+                        customGrit={perm.currentGrit}
+                        isDormant={perm.state === 'dormant'}
+                        size="sm"
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* ----------------------------------------------------------------------- */}
+            {/* ZONE 5 & 6: PLAYER TERRITORY, RAISED PEDESTAL & FLOATING HAND             */}
+            {/* ----------------------------------------------------------------------- */}
+            <div className="flex flex-col justify-between bg-gradient-to-b from-black/60 via-amber-950/20 to-black/80 border border-white/15 rounded-2xl p-3 relative shadow-[0_15px_35px_rgba(0,0,0,0.8),_inset_0_1px_2px_rgba(255,255,255,0.15)] [transform:translateZ(20px)]">
+              
+              {/* Volumetric Bottom Ambient Halo */}
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-96 h-20 bg-cyan-500/10 blur-2xl pointer-events-none rounded-full" />
+
+              {/* Sub-Bar: Symmetrical Player Avatar + Deck & Discard Piles */}
+              <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-2">
+                {/* Bottom Left: 3D Stacked Player Discard */}
+                <div className="flex flex-col items-center flex-shrink-0 [transform:translateZ(10px)]">
+                  <div className="w-14 h-20 rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-[0_12px_24px_rgba(0,0,0,0.85)] border-b-2 border-r-2 border-b-slate-900 border-r-slate-900">
+                    {state.player.graveyard.length > 0 ? (
+                      <CardView card={state.player.graveyard[state.player.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                    ) : (
+                      <span className="text-[10px] font-bold text-slate-600">Discard</span>
+                    )}
+                    <span className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center font-mono font-bold text-xs text-slate-200">
+                      {state.player.graveyard.length}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Your Discard</span>
+                </div>
+
+                {/* 50% BOTTOM-CENTER: RAISED 3D PLAYER PRIMAL COMMAND PEDESTAL */}
+                <div
+                  onMouseEnter={() => setHoveredCard(state.player.primalAvatar)}
+                  className="flex items-center gap-3 bg-gradient-to-r from-black/90 via-slate-950/90 to-black/90 border-2 border-fulcrum-gold rounded-2xl px-6 py-2.5 shadow-[0_20px_40px_rgba(0,0,0,0.9),_0_0_30px_rgba(243,198,105,0.25)] [transform:translateZ(25px)] hover:scale-105 transition-all duration-300"
+                >
+                  <div className="shadow-[0_10px_20px_rgba(0,0,0,0.8)] rounded-xl overflow-hidden border border-amber-400/40">
+                    <CardView card={state.player.primalAvatar} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                  </div>
+                  
+                  <div className="space-y-1 text-left font-mono min-w-[160px]">
+                    <div className="font-serif font-black text-xs text-gold-gradient uppercase flex items-center gap-1.5 drop-shadow">
+                      <Crown className="w-4 h-4 text-fulcrum-gold animate-bounce" />
+                      <span>{state.player.primalAvatar.name}</span>
+                    </div>
+                    <div className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                      <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{state.player.lifeTotal} / {state.player.startingLife} HP</span>
+                    </div>
+                    <div className="text-[10px] font-bold text-amber-300">
+                      Primal Dmg: <span className="text-red-400 font-extrabold">{playerPrimalDmg}</span> / 5
+                    </div>
+                    <div className="text-[10px] text-cyan-300 font-bold flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-cyan-400" />
+                      <span>Core Pool: {state.player.corePool}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Right: 3D Stacked Player FULCRUM Card Back Deck */}
+                <div className="flex flex-col items-center flex-shrink-0 [transform:translateZ(10px)]">
+                  <div className="w-14 h-20 rounded-xl border-2 border-fulcrum-gold/90 bg-[#0a0814] overflow-hidden relative shadow-[0_14px_28px_rgba(0,0,0,0.9),_0_3px_0_#946927]">
+                    <img src="/assets/card-back.jpg" alt="Your Deck" className="w-full h-full object-cover" />
+                    <span className="absolute inset-0 bg-black/40 flex items-center justify-center font-mono font-bold text-xs text-amber-300 drop-shadow">
+                      {state.player.deck.length}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Your Deck</span>
+                </div>
+              </div>
+
+              {/* ZONE 6: FLOATING FOREGROUND PLAYER HAND FAN */}
+              <div className="flex items-center justify-center -space-x-8 pt-3 pb-1 overflow-x-auto min-h-[110px] [transform:translateZ(40px)]">
+                {state.player.hand.map((hc, idx) => {
+                  const isSelected = state.selectedHandCardId === hc.card.id;
+                  const canConvert = hc.drawnThisTurn && state.player.corePool < 10;
+                  const canCast = state.player.corePool >= hc.card.load && state.turnNumber >= hc.card.pace;
+
+                  return (
+                    <div
+                      key={hc.card.id + idx}
+                      onMouseEnter={() => setHoveredCard(hc.card)}
+                      onClick={() => handleHandCardClick(hc.card)}
+                      draggable={canCast || canConvert}
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', hc.card.id);
+                      }}
+                      className={`flex-shrink-0 transition-all duration-300 cursor-pointer relative group transform hover:-translate-y-8 hover:scale-115 hover:z-30 shadow-[0_15px_30px_rgba(0,0,0,0.9)] rounded-xl ${
+                        isSelected ? 'ring-2 ring-fulcrum-gold rounded-xl -translate-y-8 scale-115 z-40 shadow-[0_0_35px_rgba(243,198,105,0.7)]' : ''
+                      }`}
+                    >
+                      <CardView card={hc.card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+
+                      {canConvert && (
+                        <button
+                          onClick={(e) => handleConvertCard(hc.card, e)}
+                          className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-400 text-emerald-300 font-mono font-bold text-[9px] px-2.5 py-0.5 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)] z-50 whitespace-nowrap"
+                        >
+                          +1 Core
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
