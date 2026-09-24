@@ -138,3 +138,90 @@ export interface GameState {
   isTargeting: boolean;
   validTargetType: 'being' | 'nexus' | 'any' | null;
 }
+
+// User Profile & Social Types
+export interface UserProfile {
+  displayName: string;
+  tag: string; // e.g. #1337
+  avatarId: string;
+  title: string;
+  activeCardBack: string;
+  rankTier: 'Iron' | 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond' | 'Fulcrum Master' | 'Primal Master';
+  mmr: number;
+  wins: number;
+  losses: number;
+  favoritePact: PactName;
+  soundEnabled: boolean;
+  musicEnabled: boolean;
+}
+
+export interface Friend {
+  id: string;
+  displayName: string;
+  tag: string;
+  status: 'online' | 'in_game' | 'offline';
+  rankTier: string;
+  avatarId: string;
+}
+
+// Season / Battle Pass Types
+export interface BattlePassReward {
+  type: 'shards' | 'bones' | 'pack' | 'card_back' | 'title';
+  amount?: number;
+  packType?: string;
+  title?: string;
+  cardBackId?: string;
+  label: string;
+}
+
+export interface BattlePassTier {
+  level: number;
+  requiredXp: number;
+  freeReward: BattlePassReward;
+  premiumReward: BattlePassReward;
+}
+
+export interface UserBattlePass {
+  currentLevel: number;
+  currentXp: number;
+  hasPremiumPass: boolean;
+  claimedFreeLevels: number[];
+  claimedPremiumLevels: number[];
+}
+
+// Replay Engine Types
+export interface ReplayStep {
+  stepIndex: number;
+  turnNumber: number;
+  turnOwner: 'player' | 'opponent';
+  logText: string;
+  playerLife: number;
+  opponentLife: number;
+  playerCore: number;
+  opponentCore: number;
+  playerFieldCount: number;
+  opponentFieldCount: number;
+}
+
+// Draft / Sealed Types
+export interface DraftPack {
+  cards: Card[];
+}
+
+export interface DraftState {
+  mode: 'sealed' | 'draft';
+  activePackIndex: number;
+  picks: Card[];
+  pool: Card[];
+  selectedAvatar: Card | null;
+  isCompleted: boolean;
+}
+
+// Tutorial Onboarding Types
+export interface TutorialStep {
+  id: number;
+  title: string;
+  message: string;
+  highlightElement?: string; // CSS selector or identifier
+  expectedAction?: 'convert_core' | 'cast_being' | 'attack' | 'end_turn' | 'any';
+}

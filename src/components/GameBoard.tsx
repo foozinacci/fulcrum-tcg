@@ -4,7 +4,8 @@ import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTu
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView, getPactBorderStyle } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
-import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign } from 'lucide-react';
+import { OracleSearchModal } from './OracleSearchModal';
+import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, BookOpen } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface GameBoardProps {
@@ -15,6 +16,7 @@ interface GameBoardProps {
 export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart }) => {
   const [state, setState] = useState<GameState>(initialState);
   const [showLogs, setShowLogs] = useState(false);
+  const [showOracle, setShowOracle] = useState(false);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
   const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
@@ -570,6 +572,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
                 {isMuted ? <VolumeX className="w-3.5 h-3.5 text-red-400" /> : <Volume2 className="w-3.5 h-3.5 text-fulcrum-gold" />}
               </button>
               <button
+                onClick={() => setShowOracle(true)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-500/60 text-[11px] font-semibold text-purple-200"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                <span>Oracle</span>
+              </button>
+              <button
                 onClick={() => setShowLogs(!showLogs)}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-slate-200 border border-slate-600"
               >
@@ -587,6 +596,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart })
           </div>
         </div>
       </div>
+
+      {/* Oracle Rules Search Modal */}
+      {showOracle && <OracleSearchModal onClose={() => setShowOracle(false)} />}
 
       {/* Logs Modal */}
       {showLogs && (
