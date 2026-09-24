@@ -5,6 +5,7 @@ import { PRIMAL_AVATARS_LIST, STARTER_DECK_A } from './data/cards';
 
 // Core Components
 import { GameBoard } from './components/GameBoard';
+import { FulcrumNextGenArena } from './components/FulcrumNextGenArena';
 import { Playmat3DBoard } from './components/Playmat3DBoard';
 import { DeckBuilder } from './components/DeckBuilder';
 import { CardCodex } from './components/CardCodex';
@@ -386,9 +387,9 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Game Board View */}
+      {/* Game Board View (Next-Gen Cosmic Art-Deco Arena) */}
       {viewMode === 'game' && gameState && (
-        <GameBoard
+        <FulcrumNextGenArena
           initialState={gameState}
           onRestart={() => {
             const fresh = createInitialGameState(customDeck);
