@@ -17,6 +17,7 @@ import { ParticleCanvas } from './components/ParticleCanvas';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { CollectionBinder } from './components/CollectionBinder';
 import { MatchmakingModal } from './components/MatchmakingModal';
+import { OnlineMatchmakingModal } from './components/OnlineMatchmakingModal';
 import { DraftSealedModal } from './components/DraftSealedModal';
 import { OracleSearchModal } from './components/OracleSearchModal';
 import { ReplayViewer } from './components/ReplayViewer';
@@ -104,6 +105,7 @@ export const App: React.FC = () => {
   const [showRules, setShowRules] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showMatchmaking, setShowMatchmaking] = useState(false);
+  const [showOnlineMatchmaking, setShowOnlineMatchmaking] = useState(false);
   const [showOracle, setShowOracle] = useState(false);
   const [showReplay, setShowReplay] = useState(false);
   const [showBattlePass, setShowBattlePass] = useState(false);
@@ -298,7 +300,7 @@ export const App: React.FC = () => {
               </button>
 
               <button
-                onClick={() => { soundFx.playButtonClickSound(); setShowMatchmaking(true); }}
+                onClick={() => { soundFx.playButtonClickSound(); setShowOnlineMatchmaking(true); }}
                 className="py-3.5 rounded-2xl bg-gradient-to-r from-cyan-950 via-slate-900 to-amber-950 border border-cyan-500/50 hover:border-fulcrum-gold text-amber-300 font-serif font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition hover:scale-[1.02] shadow-lg"
               >
                 <Swords className="w-4 h-4 text-cyan-300" />
@@ -464,6 +466,18 @@ export const App: React.FC = () => {
           onStartMatch={(format, isRanked) => {
             setShowMatchmaking(false);
             handleStartGame();
+          }}
+        />
+      )}
+
+      {showOnlineMatchmaking && (
+        <OnlineMatchmakingModal
+          userId={`${userProfile.displayName}${userProfile.tag}`}
+          onClose={() => setShowOnlineMatchmaking(false)}
+          onMatchStart={(_matchId, _role, serverState) => {
+            setShowOnlineMatchmaking(false);
+            setGameState(serverState);
+            setViewMode('game');
           }}
         />
       )}

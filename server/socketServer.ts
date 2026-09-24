@@ -60,20 +60,23 @@ export class FulcrumSocketServer {
     switch (payload.type) {
       case 'JOIN_MATCHMAKING': {
         const { userId, deck } = payload;
-        const user = db.getUserById(userId) || { id: userId, mmr: 1000 };
+        // Async lookup — fall back to default MMR 1000 if user not found
+        (async () => {
+          const user = (await db.getUserById(userId)) ?? { id: userId, mmr: 1000 };
 
-        // Remove existing queue instance if present
-        this.queue = this.queue.filter((q) => q.userId !== userId);
-        this.queue.push({
-          userId,
-          socket: ws,
-          mmr: user.mmr,
-          deck: deck || [],
-          joinedAt: Date.now(),
-        });
+          // Remove existing queue instance if present
+          this.queue = this.queue.filter((q) => q.userId !== userId);
+          this.queue.push({
+            userId,
+            socket: ws,
+            mmr: user.mmr,
+            deck: deck || [],
+            joinedAt: Date.now(),
+          });
 
-        ws.send(JSON.stringify({ type: 'QUEUE_JOINED', message: 'Searching for live opponent...' }));
-        console.log(`[QUEUE] Player ${userId} (MMR: ${user.mmr}) joined queue. Total in queue: ${this.queue.length}`);
+          ws.send(JSON.stringify({ type: 'QUEUE_JOINED', message: 'Searching for live opponent...' }));
+          console.log(`[QUEUE] Player ${userId} (MMR: ${user.mmr}) joined queue. Total in queue: ${this.queue.length}`);
+        })();
         break;
       }
 
@@ -159,14 +162,14 @@ export class FulcrumSocketServer {
     }
   }
 
-  private handleMatchEnd(room: MatchRoom): void {
+  private async handleMatchEnd(room: MatchRoom): Promise<void> {
     const winnerId = room.state.winner === 'player' ? room.p1.userId : room.p2.userId;
     const loserId = room.state.winner === 'player' ? room.p2.userId : room.p1.userId;
 
-    db.updateUserStats(winnerId, true, +25, 100);
-    db.updateUserStats(loserId, false, -15, 25);
+    await db.updateUserStats(winnerId, true, +25, 100);
+    await db.updateUserStats(loserId, false, -15, 25);
 
-    db.saveMatchReplay({
+    await db.saveMatchReplay({
       matchId: room.matchId,
       player1Id: room.p1.userId,
       player2Id: room.p2.userId,

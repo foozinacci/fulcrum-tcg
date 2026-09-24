@@ -29,15 +29,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // 2. Global Ranked Leaderboard
-app.get('/api/leaderboard', (req, res) => {
+app.get('/api/leaderboard', async (req, res) => {
   const limit = parseInt(req.query.limit as string) || 20;
-  const leaderboard = db.getGlobalLeaderboard(limit);
+  const leaderboard = await db.getGlobalLeaderboard(limit);
   res.json({ success: true, leaderboard });
 });
 
 // 3. User Profile & MMR Query
-app.get('/api/profile/:userId', (req, res) => {
-  const user = db.getUserById(req.params.userId);
+app.get('/api/profile/:userId', async (req, res) => {
+  const user = await db.getUserById(req.params.userId);
   if (!user) {
     return res.status(404).json({ success: false, message: 'User profile not found.' });
   }
@@ -45,8 +45,8 @@ app.get('/api/profile/:userId', (req, res) => {
 });
 
 // 4. Match Replay Audit Query
-app.get('/api/replays/:matchId', (req, res) => {
-  const replay = db.getMatchReplay(req.params.matchId);
+app.get('/api/replays/:matchId', async (req, res) => {
+  const replay = await db.getMatchReplay(req.params.matchId);
   if (!replay) {
     return res.status(404).json({ success: false, message: 'Match replay audit log not found.' });
   }

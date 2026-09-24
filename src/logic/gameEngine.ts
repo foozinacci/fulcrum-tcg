@@ -1,5 +1,5 @@
 import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase, GameFormat, GameFormatConfig } from '../types/game';
-import { STARTER_DECK_A, GLUTTRIX_COREFEASTER, VORRATH_IRONBOUND, NYSSARA_VOIDHALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, KHARV_ROTWATCH, PRIMAL_AVATARS_LIST } from '../data/cards';
+import { STARTER_DECK_A, STARTER_DECK_B, GLUTTRIX_COREFEASTER, VORRATH_IRONBOUND, NYSSARA_VOIDHALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, KHARV_ROTWATCH, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
 export const GAME_FORMATS: Record<GameFormat, GameFormatConfig> = {
@@ -38,17 +38,17 @@ export function createInitialGameState(
   const oAvatar = opponentAvatar || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
 
   const pDeck = shuffleDeck(customPlayerDeck || STARTER_DECK_A);
-  // AI Deck & Hand removed until further notice as requested
-  const oDeck: Card[] = [];
-  const oRawHand: Card[] = [];
+  // AI Deck restored with STARTER_DECK_B
+  const oDeck = shuffleDeck(customOpponentDeck || STARTER_DECK_B);
+  const oRawHand = oDeck.splice(0, 4);
 
   const pRawHand = pDeck.splice(0, 4);
 
   const pHand: HandCard[] = pRawHand.map((card) => ({ card, drawnThisTurn: true }));
-  const oHand: HandCard[] = [];
+  const oHand: HandCard[] = oRawHand.map((card) => ({ card, drawnThisTurn: true }));
 
   const pCoreSeed = pRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
-  const oCoreSeed = 0;
+  const oCoreSeed = oRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
 
   const player: PlayerState = {
     id: 'player',
