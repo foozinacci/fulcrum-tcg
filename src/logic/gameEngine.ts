@@ -38,16 +38,17 @@ export function createInitialGameState(
   const oAvatar = opponentAvatar || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
 
   const pDeck = shuffleDeck(customPlayerDeck || STARTER_DECK_A);
-  const oDeck = shuffleDeck(customOpponentDeck || STARTER_DECK_A);
+  // AI Deck & Hand removed until further notice as requested
+  const oDeck: Card[] = [];
+  const oRawHand: Card[] = [];
 
   const pRawHand = pDeck.splice(0, 4);
-  const oRawHand = oDeck.splice(0, 4);
 
   const pHand: HandCard[] = pRawHand.map((card) => ({ card, drawnThisTurn: true }));
-  const oHand: HandCard[] = oRawHand.map((card) => ({ card, drawnThisTurn: true }));
+  const oHand: HandCard[] = [];
 
   const pCoreSeed = pRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
-  const oCoreSeed = oRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
+  const oCoreSeed = 0;
 
   const player: PlayerState = {
     id: 'player',
