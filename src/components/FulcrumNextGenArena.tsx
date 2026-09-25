@@ -53,7 +53,21 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
     if (state.turnOwner !== 'player' || state.winner) return;
     soundFx.playButtonClickSound();
 
-    if (card.type === 'charm' && card.ability?.damage) {
+    if (card.type === 'attachment') {
+      const friendlyBeings = state.player.field.filter((p) => p.card.type === 'being');
+      if (friendlyBeings.length > 0) {
+        setState((prev) => ({
+          ...prev,
+          selectedHandCardId: card.id,
+          selectedBoardInstanceId: null,
+          isTargeting: true,
+          validTargetType: 'being',
+        }));
+        return;
+      }
+    }
+
+    if (card.type === 'charm' && (card.ability?.damage || card.ability?.buffEdge || card.ability?.buffGrit)) {
       setState((prev) => ({
         ...prev,
         selectedHandCardId: card.id,
@@ -76,13 +90,19 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
   const handleFriendlyUnitClick = (perm: BoardPermanent) => {
     if (state.turnOwner !== 'player' || state.winner) return;
     soundFx.playButtonClickSound();
-    setState((prev) => ({
-      ...prev,
-      selectedBoardInstanceId: state.selectedBoardInstanceId === perm.instanceId ? null : perm.instanceId,
-      selectedHandCardId: null,
-      isTargeting: state.selectedBoardInstanceId !== perm.instanceId,
-      validTargetType: 'being',
-    }));
+
+    if (state.selectedHandCardId) {
+      soundFx.playCardDrawSound();
+      setState((prev) => playHandCard(prev, state.selectedHandCardId!, perm.instanceId));
+    } else {
+      setState((prev) => ({
+        ...prev,
+        selectedBoardInstanceId: state.selectedBoardInstanceId === perm.instanceId ? null : perm.instanceId,
+        selectedHandCardId: null,
+        isTargeting: state.selectedBoardInstanceId !== perm.instanceId,
+        validTargetType: 'being',
+      }));
+    }
   };
 
   const handleOpponentUnitClick = (targetPerm: BoardPermanent) => {

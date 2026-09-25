@@ -8,9 +8,11 @@ export function runAiTurnStep(state: GameState): GameState {
   const player = state.player;
 
   // 1. Conversion Phase: Convert extra card if Core pool is low
-  if (ai.corePool < 2 && ai.hand.length > 3) {
-    const cardToConvert = ai.hand[0].card;
-    return convertHandCardToCore(state, cardToConvert.id);
+  if (ai.corePool < 2 && ai.hand.length > 0) {
+    const convertable = ai.hand.find((hc) => hc.drawnThisTurn || ai.primalAvatar.id === 'primal_kharv_06');
+    if (convertable) {
+      return convertHandCardToCore(state, convertable.card.id);
+    }
   }
 
   // 2. Play Hand Cards (Evaluating standard Load vs Expedite Load)

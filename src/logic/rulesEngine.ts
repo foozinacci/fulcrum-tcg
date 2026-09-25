@@ -306,16 +306,18 @@ export function executeValidatedAction(state: GameState, action: GameAction): Ga
 
       player.corePool -= cost;
 
-      if (card.type === 'being') {
+      if (card.type === 'being' || card.type === 'relic' || card.type === 'rune' || card.type === 'attachment') {
         const afterMove = transferCardZone(newState, card.id, 'hand', 'field', action.playerId);
         const playedPerm = afterMove[pKey].field[afterMove[pKey].field.length - 1];
-        if (playedPerm) {
+        if (playedPerm && card.type === 'being') {
           playedPerm.state = isExpedite || player.primalAvatar.id === KAZRITH_RUNESCALE.id ? 'alert' : 'dormant';
+        } else if (playedPerm) {
+          playedPerm.state = 'alert';
         }
 
         afterMove.logs.unshift({
           id: Math.random().toString(),
-          text: `${player.name} cast Being ${card.name} (Cost: ${cost} Core) - Enters ${playedPerm?.state.toUpperCase()}.`,
+          text: `${player.name} cast ${card.type.toUpperCase()} ${card.name} (Cost: ${cost} Core).`,
           type: 'summon',
           timestamp: new Date().toLocaleTimeString(),
         });

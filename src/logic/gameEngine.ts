@@ -37,9 +37,8 @@ export function createInitialGameState(
   const pAvatar = playerAvatar || PRIMAL_AVATARS_LIST[0];
   const oAvatar = opponentAvatar || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
 
-  const pDeck = shuffleDeck(customPlayerDeck || STARTER_DECK_A);
-  // AI Deck restored with STARTER_DECK_B
-  const oDeck = shuffleDeck(customOpponentDeck || STARTER_DECK_B);
+  const pDeck = shuffleDeck(customPlayerDeck && customPlayerDeck.length >= 10 ? customPlayerDeck : STARTER_DECK_A);
+  const oDeck = shuffleDeck(customOpponentDeck && customOpponentDeck.length >= 10 ? customOpponentDeck : STARTER_DECK_B);
   const oRawHand = oDeck.splice(0, 4);
 
   const pRawHand = pDeck.splice(0, 4);
@@ -431,24 +430,40 @@ export function playHandCard(
       timestamp: new Date().toLocaleTimeString(),
     });
   } else if (card.type === 'attachment') {
-    if (targetInstanceId && targetInstanceId !== 'nexus') {
-      const targetBeing = player.field.find((p) => p.instanceId === targetInstanceId);
-      if (targetBeing) {
-        targetBeing.attachments.push(card);
-        if (card.attachmentType === 'weapon' && card.ability?.buffEdge) {
-          targetBeing.currentEdge += card.ability.buffEdge;
-        }
-        if (card.attachmentType === 'armor' && card.ability?.buffGrit) {
-          targetBeing.currentGrit += card.ability.buffGrit;
-          targetBeing.maxGrit += card.ability.buffGrit;
-        }
-        logs.unshift({
-          id: Math.random().toString(),
-          text: `${player.name} attached ${card.name} to ${targetBeing.card.name}.`,
-          type: 'summon',
-          timestamp: new Date().toLocaleTimeString(),
-        });
+    const targetBeing = (targetInstanceId && targetInstanceId !== 'nexus')
+      ? player.field.find((p) => p.instanceId === targetInstanceId)
+      : player.field.find((p) => p.card.type === 'being');
+
+    if (targetBeing) {
+      targetBeing.attachments.push(card);
+      if (card.ability?.buffEdge) {
+        targetBeing.currentEdge += card.ability.buffEdge;
       }
+      if (card.ability?.buffGrit) {
+        targetBeing.currentGrit += card.ability.buffGrit;
+        targetBeing.maxGrit += card.ability.buffGrit;
+      }
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `${player.name} attached ${card.name} to ${targetBeing.card.name}.`,
+        type: 'summon',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      soundFx.playSpellCastSound();
+    } else {
+      const perm: BoardPermanent = {
+        instanceId: Math.random().toString(),
+        card,
+        currentEdge: card.edge || 0,
+        currentGrit: card.grit || 1,
+        maxGrit: card.grit || 1,
+        state: 'alert',
+        bankedCore: 0,
+        attachments: [],
+        isGuard: false,
+      };
+      player.field.push(perm);
+      soundFx.playSpellCastSound();
     }
   } else {
     const perm: BoardPermanent = {

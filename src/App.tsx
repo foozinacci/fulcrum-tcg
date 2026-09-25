@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card, UserEconomy, UserProfile, UserBattlePass, ReplayStep, GameFormat } from './types/game';
 import { createInitialGameState } from './logic/gameEngine';
-import { PRIMAL_AVATARS_LIST, STARTER_DECK_A } from './data/cards';
+import { PRIMAL_AVATARS_LIST, STARTER_DECK_A, STARTER_DECK_B } from './data/cards';
 
 // Core Components
 import { GameBoard } from './components/GameBoard';
@@ -130,7 +130,14 @@ export const App: React.FC = () => {
   useEffect(() => {
     const saved = localStorage.getItem('fulcrum_custom_deck');
     if (saved) {
-      try { setCustomDeck(JSON.parse(saved)); } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 10) {
+          setCustomDeck(parsed);
+        } else {
+          localStorage.removeItem('fulcrum_custom_deck');
+        }
+      } catch (e) {}
     }
   }, []);
 
@@ -139,8 +146,8 @@ export const App: React.FC = () => {
     const savedAvatarId = localStorage.getItem('fulcrum_primal_avatar_id');
     const pAvatar = PRIMAL_AVATARS_LIST.find((a: Card) => a.id === savedAvatarId) || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
     const oAvatar = PRIMAL_AVATARS_LIST[0];
-    const deckToUse = overrideDeck || customDeck;
-    const initial = createInitialGameState(deckToUse, undefined, pAvatar, oAvatar);
+    const deckToUse = (overrideDeck && overrideDeck.length >= 10) ? overrideDeck : (customDeck && customDeck.length >= 10 ? customDeck : STARTER_DECK_A);
+    const initial = createInitialGameState(deckToUse, STARTER_DECK_B, pAvatar, oAvatar);
     setGameState(initial);
     setViewMode('game');
     if (isTutorial) setShowTutorial(true);
