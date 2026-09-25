@@ -315,7 +315,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                     <span>{state.opponent.lifeTotal} / {state.opponent.startingLife} HP</span>
                   </div>
                   <div className="text-[9.5px] font-bold text-amber-300">
-                    Primal Dmg: <span className="text-red-400 font-extrabold">{oppPrimalDmg}</span> / 5
+                    Primal Dmg: <span className="text-red-400 font-extrabold">{oppPrimalDmg}</span> / {state.opponent.startingLife / 2}
                   </div>
                   <div className="text-[9.5px] text-cyan-300 font-bold flex items-center gap-1">
                     <Zap className="w-3 h-3 text-cyan-400" />
@@ -478,7 +478,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                     <span>{state.player.lifeTotal} / {state.player.startingLife} HP</span>
                   </div>
                   <div className="text-[9.5px] font-bold text-amber-300">
-                    Primal Dmg: <span className="text-red-400 font-extrabold">{playerPrimalDmg}</span> / 5
+                    Primal Dmg: <span className="text-red-400 font-extrabold">{playerPrimalDmg}</span> / {state.player.startingLife / 2}
                   </div>
                   <div className="text-[9.5px] text-cyan-300 font-bold flex items-center gap-1">
                     <Zap className="w-3 h-3 text-cyan-400" />
@@ -496,7 +496,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
 
                   return (
                     <div
-                      key={hc.card.id + idx}
+                      key={hc.instanceId || (hc.card.id + idx)}
                       onMouseEnter={() => setHoveredCard(hc.card)}
                       onClick={() => handleHandCardClick(hc.card)}
                       draggable={canCast || canConvert}
@@ -512,9 +512,9 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                       {canConvert && (
                         <button
                           onClick={(e) => handleConvertCard(hc.card, e)}
-                          className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-400 text-emerald-300 font-mono font-bold text-[9px] px-2 py-0.5 rounded-full shadow-md z-50 whitespace-nowrap"
+                          className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-400 text-emerald-300 font-mono font-bold text-[9px] px-2 py-0.5 rounded-full shadow-md z-50 whitespace-nowrap cursor-pointer"
                         >
-                          +1 Core
+                          +{hc.card.coreValue || 1} Core
                         </button>
                       )}
                     </div>
@@ -715,10 +715,10 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
           </div>
         </div>
       )}
-      {/* Discard Pile Inspection Modal */}
+      {/* Discard Pile Inspection Modal with Embedded Oracle Inspector */}
       {inspectingGraveyard && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#0e0a1f] border-2 border-fulcrum-gold rounded-3xl p-6 max-w-4xl w-full max-h-[85vh] flex flex-col shadow-[0_0_60px_rgba(243,198,105,0.4)]">
+          <div className="bg-[#0e0a1f] border-2 border-fulcrum-gold rounded-3xl p-6 max-w-5xl w-full max-h-[85vh] flex flex-col shadow-[0_0_60px_rgba(243,198,105,0.4)]">
             <div className="flex items-center justify-between border-b border-fulcrum-gold/40 pb-4 mb-4">
               <h3 className="font-serif font-black text-xl text-gold-gradient uppercase flex items-center gap-2">
                 <BookOpen className="w-6 h-6 text-fulcrum-gold" />
@@ -732,24 +732,55 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2">
-              {state[inspectingGraveyard].graveyard.length === 0 ? (
-                <div className="text-center py-16 text-slate-500 font-mono italic">
-                  Discard pile is currently empty.
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {state[inspectingGraveyard].graveyard.map((card, idx) => (
-                    <div
-                      key={card.id + idx}
-                      onMouseEnter={() => setHoveredCard(card)}
-                      className="transform hover:scale-105 transition cursor-pointer shadow-lg rounded-xl overflow-hidden"
-                    >
-                      <CardView card={card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden p-2">
+              {/* Discard Cards Grid (2 Cols) */}
+              <div className="md:col-span-2 overflow-y-auto pr-2">
+                {state[inspectingGraveyard].graveyard.length === 0 ? (
+                  <div className="text-center py-16 text-slate-500 font-mono italic">
+                    Discard pile is currently empty.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {state[inspectingGraveyard].graveyard.map((card, idx) => (
+                      <div
+                        key={card.id + idx}
+                        onMouseEnter={() => setHoveredCard(card)}
+                        onClick={() => setHoveredCard(card)}
+                        className="transform hover:scale-105 transition cursor-pointer shadow-lg rounded-xl overflow-hidden hover:ring-2 hover:ring-fulcrum-gold"
+                      >
+                        <CardView card={card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Embedded Card Inspector Sidebar (1 Col) */}
+              <div className="bg-black/60 border border-fulcrum-gold/40 rounded-2xl p-4 flex flex-col items-center justify-center overflow-y-auto">
+                {hoveredCard ? (
+                  <div className="flex flex-col items-center gap-3 w-full text-center">
+                    <CardView card={hoveredCard} size="md" disableClickFlip={true} disableHoverPreview={true} />
+                    
+                    <div className="w-full grid grid-cols-5 gap-1 font-mono text-xs font-bold bg-black/80 border border-white/10 p-2 rounded-xl mt-1">
+                      <span className="text-lime-400">P{hoveredCard.pace}</span>
+                      <span className="text-pink-400">L{hoveredCard.load}</span>
+                      <span className="text-yellow-400">+{hoveredCard.coreValue || 1}</span>
+                      <span className="text-cyan-400">E{hoveredCard.edge ?? '-'}</span>
+                      <span className="text-blue-400">G{hoveredCard.grit ?? '-'}</span>
                     </div>
-                  ))}
-                </div>
-              )}
+
+                    <div className="w-full bg-black/60 border border-white/15 rounded-xl p-3 text-left text-xs text-slate-200 leading-relaxed max-h-48 overflow-y-auto font-sans">
+                      <div className="font-serif font-black text-amber-300 text-sm mb-1">{hoveredCard.name} ({hoveredCard.pact || 'Neutral'})</div>
+                      <div className="text-slate-300 font-medium">{hoveredCard.description}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-slate-500 space-y-2 p-4">
+                    <BookOpen className="w-10 h-10 text-fulcrum-gold/40 mx-auto" />
+                    <p className="text-xs font-serif text-slate-400 uppercase">Hover or click any card on the left to inspect full abilities & rules text</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -773,14 +804,15 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
 
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-[50vh] overflow-y-auto p-2 mb-6">
               {state.player.hand.map((hc) => {
-                const isSelected = endStepDiscardSelectedIds.includes(hc.card.id);
+                const targetId = hc.instanceId || hc.card.id;
+                const isSelected = endStepDiscardSelectedIds.includes(targetId);
                 return (
                   <div
-                    key={hc.card.id}
+                    key={targetId}
                     onClick={() => {
                       soundFx.playButtonClickSound();
                       setEndStepDiscardSelectedIds((prev) =>
-                        prev.includes(hc.card.id) ? prev.filter((id) => id !== hc.card.id) : [...prev, hc.card.id]
+                        prev.includes(targetId) ? prev.filter((id) => id !== targetId) : [...prev, targetId]
                       );
                     }}
                     className={`cursor-pointer transition-all duration-300 rounded-xl overflow-hidden relative ${
@@ -838,16 +870,17 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
             {/* Hand Cards Grid for Resource Mulligan */}
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 my-2 w-full">
               {state.player.hand.map((hc) => {
-                const isSelected = mulliganSelectedIds.includes(hc.card.id);
+                const targetId = hc.instanceId || hc.card.id;
+                const isSelected = mulliganSelectedIds.includes(targetId);
                 return (
                   <div
-                    key={hc.card.id}
+                    key={targetId}
                     onClick={() => {
                       soundFx.playButtonClickSound();
                       if (isSelected) {
-                        setMulliganSelectedIds(mulliganSelectedIds.filter((id) => id !== hc.card.id));
+                        setMulliganSelectedIds(mulliganSelectedIds.filter((id) => id !== targetId));
                       } else if (mulliganSelectedIds.length < 3) {
-                        setMulliganSelectedIds([...mulliganSelectedIds, hc.card.id]);
+                        setMulliganSelectedIds([...mulliganSelectedIds, targetId]);
                       }
                     }}
                     className={`cursor-pointer transition-all duration-200 relative rounded-xl border-2 p-1 flex flex-col items-center ${

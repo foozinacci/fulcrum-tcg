@@ -9,6 +9,7 @@ export type CardColor = 'purple' | 'amber' | 'green' | 'red';
 export type PactName = 'Voidhallow' | 'Rotwatch' | 'Charmbrand' | 'Corefeast' | 'Ironbound' | 'Runescale';
 
 export interface HandCard {
+  instanceId?: string; // Unique instance ID for every hand card instance
   card: Card;
   drawnThisTurn: boolean; // Conversion into Core is only legal the turn it is drawn!
 }

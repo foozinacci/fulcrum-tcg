@@ -47,8 +47,8 @@ export function createInitialGameState(
   const oRawHand = oDeck.splice(0, 6);
   const pRawHand = pDeck.splice(0, 6);
 
-  const pHand: HandCard[] = pRawHand.map((card) => ({ card, drawnThisTurn: true }));
-  const oHand: HandCard[] = oRawHand.map((card) => ({ card, drawnThisTurn: true }));
+  const pHand: HandCard[] = pRawHand.map((card) => ({ instanceId: Math.random().toString(), card, drawnThisTurn: true }));
+  const oHand: HandCard[] = oRawHand.map((card) => ({ instanceId: Math.random().toString(), card, drawnThisTurn: true }));
 
   // Starting core is 0; players convert 1-3 cards during Resource Mulligan to seed their starting Core pool (max 10).
   const player: PlayerState = {
@@ -119,14 +119,15 @@ export function executeMulligan(state: GameState, playerSelectedCardIds: string[
   let selectedIds = playerSelectedCardIds.slice(0, 3);
   if (selectedIds.length === 0 && player.hand.length > 0) {
     // Default: Convert the first card if no card was selected
-    selectedIds = [player.hand[0].card.id];
+    selectedIds = [player.hand[0].instanceId || player.hand[0].card.id];
   }
 
   const pKeptHand: HandCard[] = [];
   const pConvertedCards: Card[] = [];
 
   player.hand.forEach((hc) => {
-    if (selectedIds.includes(hc.card.id)) {
+    const targetId = hc.instanceId || hc.card.id;
+    if (selectedIds.includes(targetId) || selectedIds.includes(hc.card.id)) {
       pConvertedCards.push(hc.card);
     } else {
       pKeptHand.push(hc);
@@ -143,7 +144,7 @@ export function executeMulligan(state: GameState, playerSelectedCardIds: string[
 
   // Draw replacement cards from deck
   const pDrawn = player.deck.splice(0, pConvertedCards.length);
-  const pReplacementHand: HandCard[] = pDrawn.map((c) => ({ card: c, drawnThisTurn: true }));
+  const pReplacementHand: HandCard[] = pDrawn.map((c) => ({ instanceId: Math.random().toString(), card: c, drawnThisTurn: true }));
   player.hand = [...pKeptHand, ...pReplacementHand];
 
   logs.unshift({
@@ -156,13 +157,13 @@ export function executeMulligan(state: GameState, playerSelectedCardIds: string[
   // 2. Process AI Resource Mulligan (AI selects 1 to 2 cards to convert to Core)
   const aiCandidates = [...opponent.hand].sort((a, b) => b.card.pace - a.card.pace);
   const aiConvertedHandCards = aiCandidates.slice(0, Math.min(2, opponent.hand.length));
-  const aiConvertedIds = aiConvertedHandCards.map((hc) => hc.card.id);
+  const aiConvertedIds = aiConvertedHandCards.map((hc) => hc.instanceId);
 
   const aiKeptHand: HandCard[] = [];
   const aiConvertedCards: Card[] = [];
 
   opponent.hand.forEach((hc) => {
-    if (aiConvertedIds.includes(hc.card.id)) {
+    if (aiConvertedIds.includes(hc.instanceId)) {
       aiConvertedCards.push(hc.card);
     } else {
       aiKeptHand.push(hc);
@@ -178,7 +179,7 @@ export function executeMulligan(state: GameState, playerSelectedCardIds: string[
   opponent.graveyard = [...opponent.graveyard, ...aiConvertedCards];
 
   const aiDrawn = opponent.deck.splice(0, aiConvertedCards.length);
-  opponent.hand = [...aiKeptHand, ...aiDrawn.map((c) => ({ card: c, drawnThisTurn: true }))];
+  opponent.hand = [...aiKeptHand, ...aiDrawn.map((c) => ({ instanceId: Math.random().toString(), card: c, drawnThisTurn: true }))];
 
   logs.unshift({
     id: Math.random().toString(),
@@ -210,7 +211,7 @@ export function drawCard(playerState: PlayerState, logs: GameLogEntry[]): Player
 
   const [topCard, ...remainingDeck] = p.deck;
   p.deck = remainingDeck;
-  p.hand = [...p.hand, { card: topCard, drawnThisTurn: true }];
+  p.hand = [...p.hand, { instanceId: Math.random().toString(), card: topCard, drawnThisTurn: true }];
 
   logs.unshift({
     id: Math.random().toString(),
@@ -833,7 +834,7 @@ export function activatePrimalAvatarAbility2(state: GameState): GameState {
     const targetIdx = p.deck.findIndex((c) => c.type === 'relic' || c.type === 'rune');
     if (targetIdx !== -1) {
       const [tutored] = p.deck.splice(targetIdx, 1);
-      p.hand.push({ card: tutored, drawnThisTurn: false });
+      p.hand.push({ instanceId: Math.random().toString(), card: tutored, drawnThisTurn: false });
       logs.unshift({
         id: Math.random().toString(),
         text: `${p.name} activated Gluttrix Ability 2 (Paid 3 Core): Tutored ${tutored.name} into hand!`,
