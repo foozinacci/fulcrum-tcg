@@ -11,7 +11,8 @@ export function runAiTurnStep(state: GameState): GameState {
   if (ai.corePool < 2 && ai.hand.length > 0) {
     const convertable = ai.hand.find((hc) => hc.drawnThisTurn || ai.primalAvatar.id === 'primal_kharv_06');
     if (convertable) {
-      return convertHandCardToCore(state, convertable.card.id);
+      const next = convertHandCardToCore(state, convertable.card.id);
+      if (next !== state) return next;
     }
   }
 
@@ -26,34 +27,42 @@ export function runAiTurnStep(state: GameState): GameState {
     return false;
   });
 
-  if (playableHandCards.length > 0 && ai.field.length < 5) {
+  if (playableHandCards.length > 0 && ai.field.length < 6) {
     playableHandCards.sort((a, b) => b.card.load - a.card.load);
-    const cardToPlay = playableHandCards[0].card;
+    for (const hc of playableHandCards) {
+      const cardToPlay = hc.card;
+      let target: string | 'nexus' | undefined = undefined;
 
-    let target: string | 'nexus' | undefined = undefined;
-    if (cardToPlay.type === 'charm' && cardToPlay.ability?.damage) {
-      if (player.field.length > 0) {
-        target = player.field[0].instanceId;
-      } else {
-        target = 'nexus';
+      if (cardToPlay.type === 'attachment') {
+        const aiBeings = ai.field.filter((p) => p.card.type === 'being');
+        if (aiBeings.length > 0) {
+          target = aiBeings[0].instanceId;
+        }
+      } else if (cardToPlay.type === 'charm' && cardToPlay.ability?.damage) {
+        if (player.field.length > 0) {
+          target = player.field[0].instanceId;
+        } else {
+          target = 'nexus';
+        }
       }
-    }
 
-    return playHandCard(state, cardToPlay.id, target);
+      const next = playHandCard(state, cardToPlay.id, target);
+      if (next !== state) return next;
+    }
   }
 
   // 3. Attack with Alert Beings
   const alertAttackers = ai.field.filter((p) => p.state === 'alert' && p.currentEdge > 0);
   if (alertAttackers.length > 0 && ai.corePool >= 1) {
-    const attacker = alertAttackers[0];
-    const playerGuards = player.field.filter((p) => p.card.isGuard);
-
-    let targetId: string | 'nexus' = 'nexus';
-    if (playerGuards.length > 0) {
-      targetId = playerGuards[0].instanceId;
+    for (const attacker of alertAttackers) {
+      const playerGuards = player.field.filter((p) => p.card.isGuard);
+      let targetId: string | 'nexus' = 'nexus';
+      if (playerGuards.length > 0) {
+        targetId = playerGuards[0].instanceId;
+      }
+      const next = executeCombat(state, attacker.instanceId, targetId);
+      if (next !== state) return next;
     }
-
-    return executeCombat(state, attacker.instanceId, targetId);
   }
 
   // 4. End AI Turn

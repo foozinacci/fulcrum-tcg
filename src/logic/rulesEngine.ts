@@ -172,6 +172,11 @@ export function validateAction(state: GameState, action: GameAction): Validation
       }
 
       const card = handCard.card;
+
+      if (card.pact && player.primalAvatar.pact && card.pact.toLowerCase() !== player.primalAvatar.pact.toLowerCase()) {
+        return { valid: false, errorCode: 'ERR_COLOR_IDENTITY_MISMATCH', reason: `Cast rejected: ${card.name} (${card.pact}) violates Primal Avatar ${player.primalAvatar.name} (${player.primalAvatar.pact}) color identity.` };
+      }
+
       const isExpediteRequired = state.turnNumber < card.pace;
       let requiredCost = card.load;
 

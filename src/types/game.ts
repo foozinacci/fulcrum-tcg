@@ -164,6 +164,7 @@ export type ActionErrorCode =
   | 'ERR_DORMANT_UNIT'
   | 'ERR_GUARD_INTERCEPTION_REQUIRED'
   | 'ERR_INVALID_TARGET'
+  | 'ERR_COLOR_IDENTITY_MISMATCH'
   | 'ERR_STACK_NOT_EMPTY';
 
 export interface ValidationResult {

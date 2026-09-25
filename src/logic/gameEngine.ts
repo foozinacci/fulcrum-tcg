@@ -1,5 +1,5 @@
 import { GameState, PlayerState, Card, HandCard, BoardPermanent, GameLogEntry, GamePhase, GameFormat, GameFormatConfig } from '../types/game';
-import { STARTER_DECK_A, STARTER_DECK_B, GLUTTRIX_COREFEASTER, VORRATH_IRONBOUND, NYSSARA_VOIDHALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, KHARV_ROTWATCH, PRIMAL_AVATARS_LIST } from '../data/cards';
+import { STARTER_DECK_A, STARTER_DECK_B, getPreconDeckForAvatar, GLUTTRIX_COREFEASTER, VORRATH_IRONBOUND, NYSSARA_VOIDHALLOWER, GROTHMAW_CHARMBRANDED, KAZRITH_RUNESCALE, KHARV_ROTWATCH, PRIMAL_AVATARS_LIST } from '../data/cards';
 import { soundFx } from '../utils/soundFx';
 
 export const GAME_FORMATS: Record<GameFormat, GameFormatConfig> = {
@@ -37,8 +37,11 @@ export function createInitialGameState(
   const pAvatar = playerAvatar || PRIMAL_AVATARS_LIST[0];
   const oAvatar = opponentAvatar || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
 
-  const pDeck = shuffleDeck(customPlayerDeck && customPlayerDeck.length >= 10 ? customPlayerDeck : STARTER_DECK_A);
-  const oDeck = shuffleDeck(customOpponentDeck && customOpponentDeck.length >= 10 ? customOpponentDeck : STARTER_DECK_B);
+  const defaultPDeck = getPreconDeckForAvatar(pAvatar);
+  const defaultODeck = getPreconDeckForAvatar(oAvatar);
+
+  const pDeck = shuffleDeck(customPlayerDeck && customPlayerDeck.length >= 10 ? customPlayerDeck : defaultPDeck);
+  const oDeck = shuffleDeck(customOpponentDeck && customOpponentDeck.length >= 10 ? customOpponentDeck : defaultODeck);
   const oRawHand = oDeck.splice(0, 4);
 
   const pRawHand = pDeck.splice(0, 4);

@@ -82,6 +82,9 @@ export const DeckBuilder: React.FC<DeckBuilderProps> = ({ onBack, onSaveDeck }) 
   };
 
   const filteredPool = CARD_DATABASE.filter((card) => {
+    if (selectedPrimalAvatar.pact && card.pact && card.pact.toLowerCase() !== selectedPrimalAvatar.pact.toLowerCase() && !card.isPrimal && card.type !== 'primal_avatar') {
+      return false;
+    }
     if (pactFilter !== 'all' && card.pact?.toLowerCase() !== pactFilter.toLowerCase()) {
       return false;
     }
