@@ -1,5 +1,5 @@
 import { GameState } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, endTurn, discardHandCardsForEndStep } from './gameEngine';
+import { playHandCard, executeCombat, convertHandCardToCore, convertTopDeckCardToCore, drawCard, endTurn, discardHandCardsForEndStep } from './gameEngine';
 
 export function runAiTurnStep(state: GameState): GameState {
   if (state.turnOwner !== 'opponent' || state.winner) return state;
@@ -7,14 +7,23 @@ export function runAiTurnStep(state: GameState): GameState {
   const ai = state.opponent;
   const player = state.player;
 
-  // 1. Conversion Phase: Convert extra card if Core pool is low
-  if (state.phase === 'conversion' && ai.corePool < 2 && ai.hand.length > 0) {
-    const convertable = ai.hand.find((hc) => hc.drawnThisTurn || ai.primalAvatar.id === 'primal_kharv_06');
-    if (convertable) {
-      const next = convertHandCardToCore(state, convertable.card.id);
-      if (next.opponent.hand.length < ai.hand.length || next.opponent.corePool > ai.corePool) {
-        return next;
+  // 1. Turn Start Conversion Phase Handling:
+  // If Core pool is low, convert top deck card for Core; otherwise draw top deck card and proceed to Main 1.
+  if (state.phase === 'conversion') {
+    if (ai.corePool < 2 && ai.deck.length > 0) {
+      return convertTopDeckCardToCore(state);
+    } else {
+      let updatedAi = { ...ai };
+      const logs = [...state.logs];
+      if (state.turnNumber > 1 && updatedAi.deck.length > 0) {
+        updatedAi = drawCard(updatedAi, logs);
       }
+      return {
+        ...state,
+        opponent: updatedAi,
+        phase: 'main1',
+        logs,
+      };
     }
   }
 

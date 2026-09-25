@@ -306,6 +306,87 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
     ...state,
     [playerKey]: p,
     [opponentKey]: opp,
+    phase: state.phase === 'conversion' ? 'main1' : state.phase,
+    logs,
+  };
+}
+
+export function convertTopDeckCardToCore(state: GameState): GameState {
+  const isPlayer = state.turnOwner === 'player';
+  const playerKey = isPlayer ? 'player' : 'opponent';
+  const p = { ...state[playerKey] };
+  const logs = [...state.logs];
+
+  if (state.phase !== 'conversion') {
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Cannot convert top deck card! Core conversion is only legal during the Conversion Phase at the start of your turn.`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+    return { ...state, logs };
+  }
+
+  if (p.deck.length === 0) {
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `${p.name}'s deck is empty. Cannot convert for Core.`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+    return { ...state, logs };
+  }
+
+  const [topCard, ...remainingDeck] = p.deck;
+  p.deck = remainingDeck;
+  p.graveyard.push(topCard);
+
+  const coreGain = topCard.coreValue || 1;
+  if (p.corePool < 10) {
+    p.corePool = Math.min(10, p.corePool + coreGain);
+  }
+
+  const opponentKey = isPlayer ? 'opponent' : 'player';
+  const opp = { ...state[opponentKey] };
+
+  logs.unshift({
+    id: Math.random().toString(),
+    text: `${p.name} converted top deck card ${topCard.name} into +${coreGain} Core! (Total Core Pool: ${p.corePool})`,
+    type: 'conversion',
+    timestamp: new Date().toLocaleTimeString(),
+  });
+
+  if (p.primalAvatar.id === GROTHMAW_CHARMBRANDED.id && topCard.type === 'charm') {
+    topCard.castableFromGraveyardThisTurn = true;
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Grothmaw Ability 1: ${topCard.name} is now castable from Graveyard this turn!`,
+      type: 'primal',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+
+  if (opp.primalAvatar.id === NYSSARA_VOIDHALLOWER.id) {
+    const siphoned = Math.min(2, p.corePool);
+    p.corePool -= siphoned;
+    if (opp.corePool < 10) {
+      opp.corePool = Math.min(10, opp.corePool + siphoned);
+    }
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Nyssara Ability 1 Triggered! ${opp.name} siphoned ${siphoned} Core from ${p.name}!`,
+      type: 'primal',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+
+  soundFx.playCardSummonSound();
+
+  return {
+    ...state,
+    [playerKey]: p,
+    [opponentKey]: opp,
+    phase: 'main1',
     logs,
   };
 }
@@ -391,19 +472,8 @@ export function startTurn(state: GameState): GameState {
     ability2UsedThisTurn: false,
   }));
 
-  // Draw card at turn start (Orbit 2 onwards — Orbit 1 hand of 6 is drawn during setup)
-  if (state.turnNumber > 1) {
-    activePlayer = drawCard(activePlayer, logs);
-    if (activePlayer.primalAvatar.id === GLUTTRIX_COREFEASTER.id) {
-      activePlayer = drawCard(activePlayer, logs);
-      logs.unshift({
-        id: Math.random().toString(),
-        text: `Gluttrix Ability 1: Drew +1 additional card at start of turn!`,
-        type: 'info',
-        timestamp: new Date().toLocaleTimeString(),
-      });
-    }
-  }
+  // Turn Start Conversion Phase Choice (Orbit 2 onwards):
+  // The active player is prompted in Conversion Phase to either Convert the top deck card for Core or Draw it.
 
   activePlayer.field.forEach((perm) => {
     if (perm.card.type === 'rune' && perm.card.ability?.produceCore) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card, BoardPermanent } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn, executeMulligan, discardHandCardsForEndStep, drawCard } from '../logic/gameEngine';
+import { playHandCard, executeCombat, convertHandCardToCore, convertTopDeckCardToCore, advancePhase, endTurn, executeMulligan, discardHandCardsForEndStep, drawCard } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
@@ -102,6 +102,12 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
     setState((prev) => convertHandCardToCore(prev, card.id));
   };
 
+  const handleConvertTopDeckCard = () => {
+    if (state.turnOwner !== 'player' || state.winner) return;
+    soundFx.playButtonClickSound();
+    setState((prev) => convertTopDeckCardToCore(prev));
+  };
+
   const handleFriendlyUnitClick = (perm: BoardPermanent) => {
     if (state.turnOwner !== 'player' || state.winner) return;
     soundFx.playButtonClickSound();
@@ -173,11 +179,10 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
       return {
         ...prev,
         player: updatedPlayer,
-        phase: 'main1',
         logs: [
           {
             id: Math.random().toString(),
-            text: `${prev.player.name} selected Turn Start Action: Drew 1 card from deck.`,
+            text: `${prev.player.name} selected Turn Start Action: Drew 1 card from deck into hand.`,
             type: 'info',
             timestamp: new Date().toLocaleTimeString(),
           },
@@ -331,11 +336,22 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                 <div className="flex items-center gap-2 text-amber-200">
                   <Sparkles className="w-5 h-5 text-fulcrum-gold animate-spin" />
                   <div>
-                    <span className="font-serif font-black uppercase text-sm text-gold-gradient block">Conversion Phase — Turn Start Action</span>
-                    <span className="text-xs text-slate-300">Click a fresh card below to Convert (+Core), draw from deck, or proceed to Main 1.</span>
+                    <span className="font-serif font-black uppercase text-sm text-gold-gradient block">Conversion Phase — Turn Start Choice</span>
+                    <span className="text-xs text-slate-300">
+                      Choose to convert the top card of your deck for Core, draw it into your hand, or proceed to Main 1.
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {state.player.deck.length > 0 && (
+                    <button
+                      onClick={handleConvertTopDeckCard}
+                      className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-600 hover:from-emerald-500 hover:to-teal-400 text-slate-950 font-black text-xs px-3 py-1.5 rounded-xl shadow-lg border border-emerald-300 transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
+                      <span>Convert Top Deck Card (+{state.player.deck[0].coreValue || 1} Core)</span>
+                    </button>
+                  )}
                   <button
                     onClick={handleTurnStartDraw}
                     className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-bold text-xs px-3 py-1.5 rounded-xl shadow-md transition cursor-pointer"
