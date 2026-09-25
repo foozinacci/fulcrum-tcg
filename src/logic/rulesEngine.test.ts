@@ -1,4 +1,5 @@
-import { createInitialGameState } from './gameEngine';
+import { createInitialGameState, endTurn } from './gameEngine';
+import { runAiTurnStep } from './aiBot';
 import { validateAction, executeValidatedAction, transferCardZone } from './rulesEngine';
 import { GameAction, Card } from '../types/game';
 
@@ -202,6 +203,31 @@ export function runRulesEngineTests(): boolean {
 
     assert(state2.opponent.lifeTotal === 0, 'Primal Head-Removal: 10 Primal Damage (50% of 20 HP) instantly eliminates opponent (0 HP)');
     assert(state2.winner === 'player', 'Primal Head-Removal: Player declared match winner');
+  }
+
+  // --------------------------------------------------------------------------
+  // TEST GROUP 6: AI TURN PROGRESSION & HANDBACK
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST GROUP 6: AI Turn Progression & Handback ---');
+  {
+    let state = createInitialGameState();
+    state.turnOwner = 'opponent';
+    state.phase = 'conversion';
+
+    // Run AI turn steps until control passes back to player or max iterations (20)
+    let iterations = 0;
+    while (state.turnOwner === 'opponent' && !state.winner && iterations < 20) {
+      const nextState = runAiTurnStep(state);
+      if (nextState === state) {
+        state = endTurn(state);
+      } else {
+        state = nextState;
+      }
+      iterations++;
+    }
+
+    assert(state.turnOwner === 'player', 'AI turn completes and hands control back to player');
+    assert(iterations < 20, 'AI turn completes in finite steps without infinite loop');
   }
 
   console.log('\n======================================================');

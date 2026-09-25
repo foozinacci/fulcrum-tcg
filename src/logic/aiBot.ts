@@ -1,5 +1,5 @@
 import { GameState } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, endTurn } from './gameEngine';
+import { playHandCard, executeCombat, convertHandCardToCore, endTurn, discardHandCardsForEndStep } from './gameEngine';
 
 export function runAiTurnStep(state: GameState): GameState {
   if (state.turnOwner !== 'opponent' || state.winner) return state;
@@ -8,11 +8,13 @@ export function runAiTurnStep(state: GameState): GameState {
   const player = state.player;
 
   // 1. Conversion Phase: Convert extra card if Core pool is low
-  if (ai.corePool < 2 && ai.hand.length > 0) {
+  if (state.phase === 'conversion' && ai.corePool < 2 && ai.hand.length > 0) {
     const convertable = ai.hand.find((hc) => hc.drawnThisTurn || ai.primalAvatar.id === 'primal_kharv_06');
     if (convertable) {
       const next = convertHandCardToCore(state, convertable.card.id);
-      if (next !== state) return next;
+      if (next.opponent.hand.length < ai.hand.length || next.opponent.corePool > ai.corePool) {
+        return next;
+      }
     }
   }
 
@@ -47,7 +49,9 @@ export function runAiTurnStep(state: GameState): GameState {
       }
 
       const next = playHandCard(state, cardToPlay.id, target);
-      if (next !== state) return next;
+      if (next.opponent.hand.length < ai.hand.length) {
+        return next;
+      }
     }
   }
 
@@ -61,10 +65,22 @@ export function runAiTurnStep(state: GameState): GameState {
         targetId = playerGuards[0].instanceId;
       }
       const next = executeCombat(state, attacker.instanceId, targetId);
-      if (next !== state) return next;
+      const updatedAttacker = next.opponent.field.find((p) => p.instanceId === attacker.instanceId);
+      if (!updatedAttacker || updatedAttacker.state !== 'alert') {
+        return next;
+      }
     }
   }
 
-  // 4. End AI Turn
+  // 4. Hand size limit check before ending turn (max 6 in hand)
+  if (ai.hand.length > 6) {
+    const extraCount = ai.hand.length - 6;
+    const sortedHand = [...ai.hand].sort((a, b) => (a.card.coreValue || 1) - (b.card.coreValue || 1));
+    const toDiscardIds = sortedHand.slice(0, extraCount).map((hc) => hc.card.id);
+    return discardHandCardsForEndStep(state, toDiscardIds);
+  }
+
+  // 5. End AI Turn
   return endTurn(state);
 }
+

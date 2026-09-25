@@ -44,10 +44,10 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
           }
           return nextState;
         });
-      }, 800);
+      }, 600);
       return () => clearTimeout(timer);
     }
-  }, [state.turnOwner, state.turnNumber, state.phase, state.winner]);
+  }, [state]);
 
   // Match End Notification
   useEffect(() => {

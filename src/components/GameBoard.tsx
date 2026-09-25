@@ -35,11 +35,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({ initialState, onRestart, o
   useEffect(() => {
     if (state.turnOwner === 'opponent' && !state.winner) {
       const timer = setTimeout(() => {
-        setState((prevState) => runAiTurnStep(prevState));
-      }, 1000);
+        setState((prevState) => {
+          if (prevState.turnOwner !== 'opponent' || prevState.winner) return prevState;
+          const nextState = runAiTurnStep(prevState);
+          if (nextState === prevState) {
+            return endTurn(prevState);
+          }
+          return nextState;
+        });
+      }, 600);
       return () => clearTimeout(timer);
     }
-  }, [state.turnOwner, state.turnNumber, state.winner]);
+  }, [state]);
 
   const toggleSound = () => {
     setIsMuted(soundFx.toggleMute());
