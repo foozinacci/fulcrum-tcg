@@ -834,6 +834,33 @@ export function executeCombat(
   };
 }
 
+export function executeGroupCombat(
+  state: GameState,
+  attackerInstanceIds: string[],
+  blockerAssignments: Record<string, string> = {} // blockerInstanceId -> attackerInstanceId
+): GameState {
+  if (attackerInstanceIds.length === 0) {
+    return advancePhase(state);
+  }
+
+  let currentState = { ...state };
+
+  for (const attackerId of attackerInstanceIds) {
+    // Find if a defender unit was assigned to block this specific attacker
+    const assignedBlockerId = Object.keys(blockerAssignments).find(
+      (bId) => blockerAssignments[bId] === attackerId
+    );
+
+    const targetId = assignedBlockerId || 'nexus';
+    currentState = executeCombat(currentState, attackerId, targetId);
+  }
+
+  return {
+    ...currentState,
+    phase: 'main2',
+  };
+}
+
 export function endTurn(state: GameState): GameState {
   if (state.winner) return state;
 

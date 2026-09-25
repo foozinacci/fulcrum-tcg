@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card, BoardPermanent } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, convertTopDeckCardToCore, advancePhase, endTurn, executeMulligan, discardHandCardsForEndStep, drawCard } from '../logic/gameEngine';
+import { playHandCard, executeCombat, executeGroupCombat, convertHandCardToCore, convertTopDeckCardToCore, advancePhase, endTurn, executeMulligan, discardHandCardsForEndStep, drawCard } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
@@ -25,6 +25,10 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hasNotifiedEnd, setHasNotifiedEnd] = useState(false);
   
+  // Multi-Attacker & Blocker Combat State
+  const [selectedAttackerIds, setSelectedAttackerIds] = useState<string[]>([]);
+  const [blockerAssignments, setBlockerAssignments] = useState<Record<string, string>>({});
+
   // Discard Pile Inspection Modal State
   const [inspectingGraveyard, setInspectingGraveyard] = useState<'player' | 'opponent' | null>(null);
 
@@ -112,6 +116,16 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
     if (state.turnOwner !== 'player' || state.winner) return;
     soundFx.playButtonClickSound();
 
+    // In Combat Phase, clicking alert units toggles them into the attack group!
+    if (state.phase === 'combat') {
+      if (perm.state === 'alert') {
+        setSelectedAttackerIds((prev) =>
+          prev.includes(perm.instanceId) ? prev.filter((id) => id !== perm.instanceId) : [...prev, perm.instanceId]
+        );
+      }
+      return;
+    }
+
     if (state.selectedHandCardId) {
       soundFx.playCardDrawSound();
       setState((prev) => playHandCard(prev, state.selectedHandCardId!, perm.instanceId));
@@ -126,10 +140,22 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
     }
   };
 
+  const handleConfirmGroupAttack = () => {
+    if (selectedAttackerIds.length === 0 || state.turnOwner !== 'player' || state.winner) return;
+    soundFx.playButtonClickSound();
+    setState((prev) => executeGroupCombat(prev, selectedAttackerIds, blockerAssignments));
+    setSelectedAttackerIds([]);
+    setBlockerAssignments({});
+  };
+
   const handleOpponentUnitClick = (targetPerm: BoardPermanent) => {
     if (state.turnOwner !== 'player' || state.winner) return;
 
-    if (state.selectedBoardInstanceId) {
+    if (selectedAttackerIds.length > 0) {
+      soundFx.playButtonClickSound();
+      setState((prev) => executeGroupCombat(prev, selectedAttackerIds, { [targetPerm.instanceId]: selectedAttackerIds[0] }));
+      setSelectedAttackerIds([]);
+    } else if (state.selectedBoardInstanceId) {
       soundFx.playButtonClickSound();
       setState((prev) => executeCombat(prev, state.selectedBoardInstanceId!, targetPerm.instanceId));
     } else if (state.selectedHandCardId) {
@@ -141,7 +167,11 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
   const handleOpponentNexusClick = () => {
     if (state.turnOwner !== 'player' || state.winner) return;
 
-    if (state.selectedBoardInstanceId) {
+    if (selectedAttackerIds.length > 0) {
+      soundFx.playButtonClickSound();
+      setState((prev) => executeGroupCombat(prev, selectedAttackerIds, {}));
+      setSelectedAttackerIds([]);
+    } else if (state.selectedBoardInstanceId) {
       soundFx.playButtonClickSound();
       setState((prev) => executeCombat(prev, state.selectedBoardInstanceId!, 'nexus'));
     } else if (state.selectedHandCardId) {
@@ -246,13 +276,13 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
             {/* ----------------------------------------------------------------------- */}
             {/* ZONE 1: OPPONENT TERRITORY (DISCARD/DECK LEFT | HAND TOP | AVATAR RIGHT)  */}
             {/* ----------------------------------------------------------------------- */}
-            <div className="flex items-center justify-between gap-3 min-h-[100px] sm:min-h-[115px] flex-shrink-0 bg-gradient-to-b from-black/80 via-purple-950/20 to-black/60 border border-white/15 rounded-2xl px-4 py-2 relative overflow-visible shadow-lg">
+            <div className="flex items-center justify-between gap-3 min-h-[190px] sm:min-h-[210px] flex-shrink-0 bg-gradient-to-b from-black/80 via-purple-950/20 to-black/60 border border-white/15 rounded-2xl px-4 py-3 relative overflow-visible shadow-lg">
               
               {/* Volumetric Top Glow Halo */}
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-20 bg-amber-500/10 blur-2xl pointer-events-none rounded-full" />
 
               {/* TOP LEFT: Stacked Opponent DISCARD (Top) & DECK (Bottom) */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Discard */}
                 <div
                   onClick={() => setInspectingGraveyard('opponent')}
@@ -262,29 +292,42 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                     }
                   }}
                   title="Click to View Opponent's Discard Pile"
-                  className="w-12 h-16 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-md cursor-pointer hover:scale-105 hover:border-fulcrum-gold transition"
+                  className="w-20 sm:w-24 h-28 sm:h-32 rounded-xl border-2 border-slate-700 bg-slate-950 flex flex-col items-center justify-center relative shadow-lg cursor-pointer hover:scale-105 hover:border-fulcrum-gold transition overflow-hidden group"
                 >
                   {state.opponent.graveyard.length > 0 ? (
-                    <CardView card={state.opponent.graveyard[state.opponent.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                    <>
+                      <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:opacity-100 transition transform scale-75">
+                        <CardView card={state.opponent.graveyard[state.opponent.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/60 flex flex-col items-center justify-between p-1 z-10">
+                        <span className="text-[9px] font-serif font-black text-amber-300 uppercase tracking-widest bg-black/80 px-1.5 py-0.5 rounded-full border border-fulcrum-gold/50 shadow">Discard</span>
+                        <span className="font-mono font-black text-xs text-slate-100 bg-purple-950/90 px-2 py-0.5 rounded-full border border-purple-400/60 shadow-md">
+                          {state.opponent.graveyard.length}
+                        </span>
+                      </div>
+                    </>
                   ) : (
-                    <span className="text-[8px] font-bold text-slate-500 uppercase">Discard</span>
+                    <div className="flex flex-col items-center gap-1 p-2 text-center">
+                      <span className="text-[9px] font-serif font-bold text-slate-500 uppercase tracking-wider">Discard</span>
+                      <span className="font-mono font-bold text-xs text-slate-600">0</span>
+                    </div>
                   )}
-                  <span className="absolute inset-0 bg-black/60 flex items-center justify-center font-mono font-bold text-xs text-slate-200">
-                    {state.opponent.graveyard.length}
-                  </span>
                 </div>
 
                 {/* Deck */}
-                <div className="w-12 h-16 rounded-lg border border-fulcrum-gold/80 bg-[#0a0814] overflow-hidden relative shadow-md">
-                  <img src="/assets/card-back.jpg" alt="Opponent Deck" className="w-full h-full object-cover" />
-                  <span className="absolute inset-0 bg-black/40 flex items-center justify-center font-mono font-bold text-xs text-amber-300">
-                    {state.opponent.deck.length}
-                  </span>
+                <div className="w-20 sm:w-24 h-28 sm:h-32 rounded-xl border-2 border-fulcrum-gold/80 bg-[#0a0814] overflow-hidden relative shadow-lg group flex flex-col items-center justify-between p-1">
+                  <img src="/assets/card-back.jpg" alt="Opponent Deck" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition flex flex-col items-center justify-between p-1">
+                    <span className="text-[9px] font-serif font-black text-amber-300 uppercase tracking-widest bg-black/80 px-1.5 py-0.5 rounded-full border border-fulcrum-gold/50 shadow z-10">Deck</span>
+                    <span className="font-mono font-black text-xs text-amber-300 bg-black/90 px-2 py-0.5 rounded-full border border-fulcrum-gold z-10 shadow-md">
+                      {state.opponent.deck.length}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* TOP CENTER: OPPONENT HAND (FULLY REVEALED - OPEN INFORMATION) */}
-              <div className="flex items-center justify-center -space-x-5 pt-1 pb-1 px-2 overflow-visible min-h-[100px] flex-1">
+              <div className="flex items-center justify-center -space-x-5 pt-1 pb-1 px-2 overflow-visible min-h-[175px] flex-1">
                 {state.opponent.hand.map((hc, idx) => (
                   <div
                     key={hc.card.id + idx}
@@ -301,7 +344,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                 onMouseEnter={() => setHoveredCard(state.opponent.primalAvatar)}
                 onClick={handleOpponentNexusClick}
                 className={`flex items-center gap-2.5 cursor-pointer transition-all duration-300 relative px-4 py-2 rounded-2xl border-2 shadow-lg ${
-                  isAttackerSelected || isSpellSelected || (state.isTargeting && state.selectedHandCardId)
+                  selectedAttackerIds.length > 0 || isAttackerSelected || isSpellSelected || (state.isTargeting && state.selectedHandCardId)
                     ? 'border-red-500 bg-red-950/80 shadow-[0_0_25px_rgba(239,68,68,0.8)] animate-pulse scale-105 ring-2 ring-red-400'
                     : 'border-fulcrum-gold bg-gradient-to-r from-black/90 via-slate-950/90 to-black/90 hover:scale-105 hover:border-amber-300'
                 }`}
@@ -371,6 +414,45 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               </div>
             )}
 
+            {/* COMBAT PHASE — MULTI-ATTACKER DECLARATION BANNER */}
+            {state.turnOwner === 'player' && state.phase === 'combat' && !state.winner && (
+              <div className="bg-gradient-to-r from-red-950/90 via-amber-950/90 to-red-950/90 border-2 border-red-500 rounded-2xl p-3 my-1 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_0_35px_rgba(239,68,68,0.5)] z-30 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2 text-amber-200">
+                  <Swords className="w-5 h-5 text-red-400 animate-bounce" />
+                  <div>
+                    <span className="font-serif font-black uppercase text-sm text-gold-gradient block">Combat Phase — Declare Attack Group</span>
+                    <span className="text-xs text-slate-300">
+                      Click your alert units to toggle them into the attack group, then click 'Confirm Group Attack' or target an enemy unit.
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={handleConfirmGroupAttack}
+                    disabled={selectedAttackerIds.length === 0}
+                    className={`px-3 py-1.5 rounded-xl font-serif font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition cursor-pointer ${
+                      selectedAttackerIds.length > 0
+                        ? 'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-slate-950 border border-amber-300 hover:scale-105'
+                        : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                    }`}
+                  >
+                    <Swords className="w-3.5 h-3.5" />
+                    <span>Confirm Group Attack ({selectedAttackerIds.length} Units)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      soundFx.playButtonClickSound();
+                      setState((prev) => advancePhase(prev));
+                      setSelectedAttackerIds([]);
+                    }}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-600 shadow-md transition cursor-pointer"
+                  >
+                    Pass Combat &gt;
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* SPELL / ABILITY TARGETING MODE PROMPT BANNER */}
             {state.isTargeting && state.selectedHandCardId && (
               <div className="bg-gradient-to-r from-red-950/90 via-amber-950/90 to-red-950/90 border-2 border-amber-400 rounded-2xl p-2.5 my-1 flex items-center justify-between gap-3 shadow-[0_0_25px_rgba(243,198,105,0.7)] z-30 animate-pulse">
@@ -396,7 +478,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               className="flex-1 my-1 bg-gradient-to-b from-[#0a0618] via-[#04020a] to-[#0a0618] border border-white/10 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden shadow-[inset_0_12px_30px_rgba(0,0,0,0.95)] [transform:translateZ(5px)]"
             >
               {/* Opponent Tactical Field Zone (Upper Battlefield) */}
-              <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[105px] py-1">
+              <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[175px] py-1">
                 {state.opponent.field.length === 0 ? (
                   <div className="border border-dashed border-white/10 rounded-xl px-8 py-4 text-center text-xs text-slate-600 italic bg-black/20">
                     Opponent Tactical Field Empty
@@ -419,7 +501,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                         customGrit={perm.currentGrit}
                         isDormant={perm.state === 'dormant'}
                         size="sm"
-                        isTargetable={isAttackerSelected || isSpellSelected || (state.isTargeting && !!state.selectedHandCardId)}
+                        isTargetable={selectedAttackerIds.length > 0 || isAttackerSelected || isSpellSelected || (state.isTargeting && !!state.selectedHandCardId)}
                       />
                     </div>
                   ))
@@ -437,32 +519,41 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               </div>
 
               {/* Player Tactical Field Zone (Lower Battlefield) */}
-              <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[105px] py-1">
+              <div className="flex items-center justify-center gap-3 overflow-x-auto min-h-[175px] py-1">
                 {state.player.field.length === 0 ? (
                   <div className="border border-dashed border-fulcrum-gold/30 rounded-xl px-8 py-4 text-center text-xs text-slate-400 italic bg-amber-950/10">
                     Drag & Drop Beings or Spells Here to Cast
                   </div>
                 ) : (
-                  state.player.field.map((perm) => (
-                    <div
-                      key={perm.instanceId}
-                      onMouseEnter={() => setHoveredCard(perm.card)}
-                      onClick={() => handleFriendlyUnitClick(perm)}
-                      className={`flex-shrink-0 transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 cursor-pointer shadow-[0_12px_24px_rgba(0,0,0,0.85)] rounded-xl ${
-                        state.selectedBoardInstanceId === perm.instanceId ? 'ring-2 ring-fulcrum-gold rounded-xl scale-110 -translate-y-2 shadow-[0_0_30px_rgba(243,198,105,0.6)]' : ''
-                      }`}
-                    >
-                      <CardView
-                        card={perm.card}
-                        disableClickFlip={true}
-                        disableHoverPreview={true}
-                        customEdge={perm.currentEdge}
-                        customGrit={perm.currentGrit}
-                        isDormant={perm.state === 'dormant'}
-                        size="sm"
-                      />
-                    </div>
-                  ))
+                  state.player.field.map((perm) => {
+                    const isAttacking = selectedAttackerIds.includes(perm.instanceId);
+                    return (
+                      <div
+                        key={perm.instanceId}
+                        onMouseEnter={() => setHoveredCard(perm.card)}
+                        onClick={() => handleFriendlyUnitClick(perm)}
+                        className={`flex-shrink-0 transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 cursor-pointer shadow-[0_12px_24px_rgba(0,0,0,0.85)] rounded-xl relative ${
+                          isAttacking ? 'ring-4 ring-red-500 rounded-xl scale-110 -translate-y-3 shadow-[0_0_30px_rgba(239,68,68,0.8)]' : ''
+                        } ${state.selectedBoardInstanceId === perm.instanceId ? 'ring-2 ring-fulcrum-gold rounded-xl scale-110 -translate-y-2 shadow-[0_0_30px_rgba(243,198,105,0.6)]' : ''}`}
+                      >
+                        <CardView
+                          card={perm.card}
+                          disableClickFlip={true}
+                          disableHoverPreview={true}
+                          customEdge={perm.currentEdge}
+                          customGrit={perm.currentGrit}
+                          isDormant={perm.state === 'dormant'}
+                          size="sm"
+                        />
+                        {isAttacking && (
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg border border-yellow-300 flex items-center gap-1 uppercase tracking-wider z-40 animate-bounce">
+                            <Swords className="w-3 h-3 text-yellow-300" />
+                            <span>ATTACKING</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -470,7 +561,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
             {/* ----------------------------------------------------------------------- */}
             {/* ZONE 5 & 6: PLAYER TERRITORY (AVATAR LEFT | HAND BOTTOM | DECK/DISCARD RIGHT) */}
             {/* ----------------------------------------------------------------------- */}
-            <div className="flex items-center justify-between gap-3 min-h-[110px] sm:min-h-[120px] flex-shrink-0 bg-gradient-to-b from-black/60 via-amber-950/20 to-black/80 border border-white/15 rounded-2xl px-4 py-2 relative overflow-visible shadow-lg">
+            <div className="flex items-center justify-between gap-3 min-h-[190px] sm:min-h-[210px] flex-shrink-0 bg-gradient-to-b from-black/60 via-amber-950/20 to-black/80 border border-white/15 rounded-2xl px-4 py-3 relative overflow-visible shadow-lg">
               
               {/* Volumetric Bottom Ambient Halo */}
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-96 h-20 bg-cyan-500/10 blur-2xl pointer-events-none rounded-full" />
@@ -504,7 +595,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               </div>
 
               {/* BOTTOM CENTER: PLAYER HAND FAN */}
-              <div className="flex items-center justify-center -space-x-4 sm:-space-x-5 pt-3 pb-1 px-4 overflow-x-auto max-w-full min-h-[120px] flex-1 scrollbar-thin scrollbar-thumb-fulcrum-gold/40">
+              <div className="flex items-center justify-center -space-x-4 sm:-space-x-5 pt-3 pb-1 px-4 overflow-x-auto max-w-full min-h-[175px] flex-1 scrollbar-thin scrollbar-thumb-fulcrum-gold/40">
                 {state.player.hand.map((hc, idx) => {
                   const isSelected = state.selectedHandCardId === hc.card.id;
                   const canConvert = state.phase === 'conversion' && hc.drawnThisTurn && state.player.corePool < 10;
@@ -539,13 +630,16 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               </div>
 
               {/* BOTTOM RIGHT: Stacked Player DECK (Top) & DISCARD (Bottom) */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Deck */}
-                <div className="w-12 h-16 rounded-lg border-2 border-fulcrum-gold/90 bg-[#0a0814] overflow-hidden relative shadow-md">
-                  <img src="/assets/card-back.jpg" alt="Your Deck" className="w-full h-full object-cover" />
-                  <span className="absolute inset-0 bg-black/40 flex items-center justify-center font-mono font-bold text-xs text-amber-300">
-                    {state.player.deck.length}
-                  </span>
+                <div className="w-20 sm:w-24 h-28 sm:h-32 rounded-xl border-2 border-fulcrum-gold/80 bg-[#0a0814] overflow-hidden relative shadow-lg group flex flex-col items-center justify-between p-1">
+                  <img src="/assets/card-back.jpg" alt="Your Deck" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition flex flex-col items-center justify-between p-1">
+                    <span className="text-[9px] font-serif font-black text-amber-300 uppercase tracking-widest bg-black/80 px-1.5 py-0.5 rounded-full border border-fulcrum-gold/50 shadow z-10">Deck</span>
+                    <span className="font-mono font-black text-xs text-amber-300 bg-black/90 px-2 py-0.5 rounded-full border border-fulcrum-gold z-10 shadow-md">
+                      {state.player.deck.length}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Discard */}
@@ -557,16 +651,26 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                     }
                   }}
                   title="Click to View Your Discard Pile"
-                  className="w-12 h-16 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-md cursor-pointer hover:scale-105 hover:border-fulcrum-gold transition"
+                  className="w-20 sm:w-24 h-28 sm:h-32 rounded-xl border-2 border-slate-700 bg-slate-950 flex flex-col items-center justify-center relative shadow-lg cursor-pointer hover:scale-105 hover:border-fulcrum-gold transition overflow-hidden group"
                 >
                   {state.player.graveyard.length > 0 ? (
-                    <CardView card={state.player.graveyard[state.player.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                    <>
+                      <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:opacity-100 transition transform scale-75">
+                        <CardView card={state.player.graveyard[state.player.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/60 flex flex-col items-center justify-between p-1 z-10">
+                        <span className="text-[9px] font-serif font-black text-amber-300 uppercase tracking-widest bg-black/80 px-1.5 py-0.5 rounded-full border border-fulcrum-gold/50 shadow">Discard</span>
+                        <span className="font-mono font-black text-xs text-slate-100 bg-purple-950/90 px-2 py-0.5 rounded-full border border-purple-400/60 shadow-md">
+                          {state.player.graveyard.length}
+                        </span>
+                      </div>
+                    </>
                   ) : (
-                    <span className="text-[8px] font-bold text-slate-500 uppercase">Discard</span>
+                    <div className="flex flex-col items-center gap-1 p-2 text-center">
+                      <span className="text-[9px] font-serif font-bold text-slate-500 uppercase tracking-wider">Discard</span>
+                      <span className="font-mono font-bold text-xs text-slate-600">0</span>
+                    </div>
                   )}
-                  <span className="absolute inset-0 bg-black/60 flex items-center justify-center font-mono font-bold text-xs text-slate-200">
-                    {state.player.graveyard.length}
-                  </span>
                 </div>
               </div>
             </div>

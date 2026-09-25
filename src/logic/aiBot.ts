@@ -1,5 +1,5 @@
 import { GameState } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, convertTopDeckCardToCore, drawCard, endTurn, discardHandCardsForEndStep } from './gameEngine';
+import { playHandCard, executeCombat, executeGroupCombat, convertHandCardToCore, convertTopDeckCardToCore, drawCard, endTurn, discardHandCardsForEndStep, advancePhase } from './gameEngine';
 
 export function runAiTurnStep(state: GameState): GameState {
   if (state.turnOwner !== 'opponent' || state.winner) return state;
@@ -8,7 +8,6 @@ export function runAiTurnStep(state: GameState): GameState {
   const player = state.player;
 
   // 1. Turn Start Conversion Phase Handling:
-  // If Core pool is low, convert top deck card for Core; otherwise draw top deck card and proceed to Main 1.
   if (state.phase === 'conversion') {
     if (ai.corePool < 2 && ai.deck.length > 0) {
       return convertTopDeckCardToCore(state);
@@ -64,21 +63,21 @@ export function runAiTurnStep(state: GameState): GameState {
     }
   }
 
-  // 3. Attack with Alert Beings
-  const alertAttackers = ai.field.filter((p) => p.state === 'alert' && p.currentEdge > 0);
-  if (alertAttackers.length > 0 && ai.corePool >= 1) {
-    for (const attacker of alertAttackers) {
+  // 3. Combat Phase: Multi-Attack Execution
+  if (state.phase === 'combat') {
+    const alertAttackers = ai.field.filter((p) => p.state === 'alert' && p.currentEdge > 0);
+    if (alertAttackers.length > 0 && ai.corePool >= 1) {
+      const maxAttacks = Math.min(alertAttackers.length, ai.corePool);
+      const chosenAttackers = alertAttackers.slice(0, maxAttacks);
+      const attackerIds = chosenAttackers.map((p) => p.instanceId);
       const playerGuards = player.field.filter((p) => p.card.isGuard);
-      let targetId: string | 'nexus' = 'nexus';
+      const blockerAssignments: Record<string, string> = {};
       if (playerGuards.length > 0) {
-        targetId = playerGuards[0].instanceId;
+        blockerAssignments[playerGuards[0].instanceId] = attackerIds[0];
       }
-      const next = executeCombat(state, attacker.instanceId, targetId);
-      const updatedAttacker = next.opponent.field.find((p) => p.instanceId === attacker.instanceId);
-      if (!updatedAttacker || updatedAttacker.state !== 'alert') {
-        return next;
-      }
+      return executeGroupCombat(state, attackerIds, blockerAssignments);
     }
+    return advancePhase(state);
   }
 
   // 4. Hand size limit check before ending turn (max 6 in hand)
