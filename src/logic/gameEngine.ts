@@ -213,6 +213,16 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
   const p = { ...state[playerKey] };
   const logs = [...state.logs];
 
+  if (state.phase !== 'conversion') {
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `Cannot convert card! Core conversion is only legal during the Conversion Phase at the start of your turn.`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+    return { ...state, logs };
+  }
+
   const cardIndex = p.hand.findIndex((hc) => hc.card.id === cardId);
   if (cardIndex === -1) return state;
 
@@ -235,7 +245,11 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
   const coreGain = card.coreValue || 0;
   p.hand.splice(cardIndex, 1);
   p.graveyard.push(card);
-  p.corePool += coreGain;
+
+  // Core Pool cap rule: Can only start above 10 at match start; cannot increase while >= 10, and once under 10 capped at 10 max.
+  if (p.corePool < 10) {
+    p.corePool = Math.min(10, p.corePool + coreGain);
+  }
 
   logs.unshift({
     id: Math.random().toString(),
@@ -259,7 +273,9 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
   if (opp.primalAvatar.id === NYSSARA_VOIDHALLOWER.id) {
     const siphoned = Math.min(2, p.corePool);
     p.corePool -= siphoned;
-    opp.corePool += siphoned;
+    if (opp.corePool < 10) {
+      opp.corePool = Math.min(10, opp.corePool + siphoned);
+    }
     logs.unshift({
       id: Math.random().toString(),
       text: `Nyssara Ability 1 Triggered! ${opp.name} siphoned ${siphoned} Core from ${p.name}!`,
@@ -276,6 +292,39 @@ export function convertHandCardToCore(state: GameState, cardId: string): GameSta
     [opponentKey]: opp,
     logs,
   };
+}
+
+export function discardHandCardsForEndStep(state: GameState, cardIdsToDiscard: string[]): GameState {
+  const isPlayer = state.turnOwner === 'player';
+  const playerKey = isPlayer ? 'player' : 'opponent';
+  const p = { ...state[playerKey] };
+  const logs = [...state.logs];
+
+  const discardedCards: Card[] = [];
+  p.hand = p.hand.filter((hc) => {
+    if (cardIdsToDiscard.includes(hc.card.id)) {
+      discardedCards.push(hc.card);
+      return false;
+    }
+    return true;
+  });
+
+  p.graveyard = [...p.graveyard, ...discardedCards];
+
+  logs.unshift({
+    id: Math.random().toString(),
+    text: `${p.name} discarded ${discardedCards.length} card(s) to meet the 6-card hand size limit.`,
+    type: 'info',
+    timestamp: new Date().toLocaleTimeString(),
+  });
+
+  const stateWithDiscard = {
+    ...state,
+    [playerKey]: p,
+    logs,
+  };
+
+  return endTurn(stateWithDiscard);
 }
 
 export function advancePhase(state: GameState): GameState {

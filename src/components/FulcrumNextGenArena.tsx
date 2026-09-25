@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card, BoardPermanent } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn, executeMulligan } from '../logic/gameEngine';
+import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn, executeMulligan, discardHandCardsForEndStep, drawCard } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
 import { OracleSearchModal } from './OracleSearchModal';
 import { BugReportModal } from './BugReportModal';
-import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, BookOpen, Swords, Zap, Shield, Sparkles, ChevronRight, RotateCw, Search, Bug } from 'lucide-react';
+import { ScrollText, Volume2, VolumeX, RotateCcw, Crown, CircleDollarSign, BookOpen, Swords, Zap, Shield, Sparkles, ChevronRight, RotateCw, Search, Bug, Crosshair } from 'lucide-react';
 import { soundFx } from '../utils/soundFx';
 
 interface FulcrumNextGenArenaProps {
@@ -24,6 +24,13 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hasNotifiedEnd, setHasNotifiedEnd] = useState(false);
+  
+  // Discard Pile Inspection Modal State
+  const [inspectingGraveyard, setInspectingGraveyard] = useState<'player' | 'opponent' | null>(null);
+
+  // End Step Max Hand Size (6) Discard Modal State
+  const [showEndStepDiscardModal, setShowEndStepDiscardModal] = useState(false);
+  const [endStepDiscardSelectedIds, setEndStepDiscardSelectedIds] = useState<string[]>([]);
 
   // AI Turn Step Trigger with Fail-safe Watchdog
   useEffect(() => {
@@ -140,7 +147,44 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
   const handleEndTurn = () => {
     if (state.turnOwner !== 'player' || state.winner) return;
     soundFx.playButtonClickSound();
+
+    if (state.player.hand.length > 6) {
+      setShowEndStepDiscardModal(true);
+      setEndStepDiscardSelectedIds([]);
+      return;
+    }
+
     setState((prev) => endTurn(prev));
+  };
+
+  const handleConfirmEndStepDiscards = () => {
+    const requiredCount = state.player.hand.length - 6;
+    if (endStepDiscardSelectedIds.length !== requiredCount) return;
+    soundFx.playButtonClickSound();
+    setShowEndStepDiscardModal(false);
+    setState((prev) => discardHandCardsForEndStep(prev, endStepDiscardSelectedIds));
+    setEndStepDiscardSelectedIds([]);
+  };
+
+  const handleTurnStartDraw = () => {
+    soundFx.playButtonClickSound();
+    setState((prev) => {
+      const updatedPlayer = drawCard(prev.player, prev.logs);
+      return {
+        ...prev,
+        player: updatedPlayer,
+        phase: 'main1',
+        logs: [
+          {
+            id: Math.random().toString(),
+            text: `${prev.player.name} selected Turn Start Action: Drew 1 card from deck.`,
+            type: 'info',
+            timestamp: new Date().toLocaleTimeString(),
+          },
+          ...prev.logs,
+        ],
+      };
+    });
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -205,7 +249,16 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               {/* TOP LEFT: Stacked Opponent DISCARD (Top) & DECK (Bottom) */}
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
                 {/* Discard */}
-                <div className="w-12 h-16 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-md">
+                <div
+                  onClick={() => setInspectingGraveyard('opponent')}
+                  onMouseEnter={() => {
+                    if (state.opponent.graveyard.length > 0) {
+                      setHoveredCard(state.opponent.graveyard[state.opponent.graveyard.length - 1]);
+                    }
+                  }}
+                  title="Click to View Opponent's Discard Pile"
+                  className="w-12 h-16 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-md cursor-pointer hover:scale-105 hover:border-fulcrum-gold transition"
+                >
                   {state.opponent.graveyard.length > 0 ? (
                     <CardView card={state.opponent.graveyard[state.opponent.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
                   ) : (
@@ -243,8 +296,8 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                 onMouseEnter={() => setHoveredCard(state.opponent.primalAvatar)}
                 onClick={handleOpponentNexusClick}
                 className={`flex items-center gap-2.5 cursor-pointer transition-all duration-300 relative px-4 py-2 rounded-2xl border-2 shadow-lg ${
-                  isAttackerSelected || isSpellSelected
-                    ? 'border-red-500 bg-red-950/80 shadow-[0_0_25px_rgba(239,68,68,0.8)] animate-pulse scale-105'
+                  isAttackerSelected || isSpellSelected || (state.isTargeting && state.selectedHandCardId)
+                    ? 'border-red-500 bg-red-950/80 shadow-[0_0_25px_rgba(239,68,68,0.8)] animate-pulse scale-105 ring-2 ring-red-400'
                     : 'border-fulcrum-gold bg-gradient-to-r from-black/90 via-slate-950/90 to-black/90 hover:scale-105 hover:border-amber-300'
                 }`}
               >
@@ -272,6 +325,52 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               </div>
             </div>
 
+            {/* TURN START CONVERSION PHASE PROMPT BANNER */}
+            {state.turnOwner === 'player' && state.phase === 'conversion' && !state.winner && (
+              <div className="bg-gradient-to-r from-amber-950/90 via-purple-950/90 to-amber-950/90 border-2 border-fulcrum-gold rounded-2xl p-3 my-1 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[0_0_30px_rgba(243,198,105,0.4)] z-30 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2 text-amber-200">
+                  <Sparkles className="w-5 h-5 text-fulcrum-gold animate-spin" />
+                  <div>
+                    <span className="font-serif font-black uppercase text-sm text-gold-gradient block">Conversion Phase — Turn Start Action</span>
+                    <span className="text-xs text-slate-300">Click a fresh card below to Convert (+Core), draw from deck, or proceed to Main 1.</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleTurnStartDraw}
+                    className="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-black font-bold text-xs px-3 py-1.5 rounded-xl shadow-md transition cursor-pointer"
+                  >
+                    Draw 1 Card from Deck
+                  </button>
+                  <button
+                    onClick={() => {
+                      soundFx.playButtonClickSound();
+                      setState((prev) => advancePhase(prev));
+                    }}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-600 shadow-md transition cursor-pointer"
+                  >
+                    Proceed to Main 1 &gt;
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SPELL / ABILITY TARGETING MODE PROMPT BANNER */}
+            {state.isTargeting && state.selectedHandCardId && (
+              <div className="bg-gradient-to-r from-red-950/90 via-amber-950/90 to-red-950/90 border-2 border-amber-400 rounded-2xl p-2.5 my-1 flex items-center justify-between gap-3 shadow-[0_0_25px_rgba(243,198,105,0.7)] z-30 animate-pulse">
+                <div className="flex items-center gap-2 text-amber-200 font-bold text-xs">
+                  <Crosshair className="w-5 h-5 text-red-400 animate-spin" />
+                  <span>TARGET SELECTION REQUIRED: Click an enemy unit or opponent Nexus to resolve spell!</span>
+                </div>
+                <button
+                  onClick={() => setState((prev) => ({ ...prev, isTargeting: false, selectedHandCardId: null }))}
+                  className="bg-red-900/80 hover:bg-red-800 text-red-200 font-bold text-[10px] px-3 py-1 rounded-full border border-red-500/50 cursor-pointer"
+                >
+                  Cancel Target Selection
+                </button>
+              </div>
+            )}
+
             {/* ----------------------------------------------------------------------- */}
             {/* ZONE 2, 3 & 4: RECESSED TACTICAL FIELD & VOLUMETRIC FULCRUM CATALYST     */}
             {/* ----------------------------------------------------------------------- */}
@@ -292,7 +391,9 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                       key={perm.instanceId}
                       onMouseEnter={() => setHoveredCard(perm.card)}
                       onClick={() => handleOpponentUnitClick(perm)}
-                      className="flex-shrink-0 transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 cursor-pointer shadow-[0_12px_24px_rgba(0,0,0,0.85)] rounded-xl"
+                      className={`flex-shrink-0 transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 cursor-pointer shadow-[0_12px_24px_rgba(0,0,0,0.85)] rounded-xl ${
+                        state.isTargeting && state.selectedHandCardId ? 'ring-2 ring-red-500 animate-pulse scale-105' : ''
+                      }`}
                     >
                       <CardView
                         card={perm.card}
@@ -302,7 +403,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                         customGrit={perm.currentGrit}
                         isDormant={perm.state === 'dormant'}
                         size="sm"
-                        isTargetable={isAttackerSelected || isSpellSelected}
+                        isTargetable={isAttackerSelected || isSpellSelected || (state.isTargeting && !!state.selectedHandCardId)}
                       />
                     </div>
                   ))
@@ -387,10 +488,10 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
               </div>
 
               {/* BOTTOM CENTER: PLAYER HAND FAN */}
-              <div className="flex items-center justify-center -space-x-5 pt-3 pb-1 px-2 overflow-visible min-h-[120px] flex-1">
+              <div className="flex items-center justify-center -space-x-4 sm:-space-x-5 pt-3 pb-1 px-4 overflow-x-auto max-w-full min-h-[120px] flex-1 scrollbar-thin scrollbar-thumb-fulcrum-gold/40">
                 {state.player.hand.map((hc, idx) => {
                   const isSelected = state.selectedHandCardId === hc.card.id;
-                  const canConvert = hc.drawnThisTurn && state.player.corePool < 10;
+                  const canConvert = state.phase === 'conversion' && hc.drawnThisTurn && state.player.corePool < 10;
                   const canCast = state.player.corePool >= hc.card.load && state.turnNumber >= hc.card.pace;
 
                   return (
@@ -432,7 +533,16 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                 </div>
 
                 {/* Discard */}
-                <div className="w-12 h-16 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-md">
+                <div
+                  onClick={() => setInspectingGraveyard('player')}
+                  onMouseEnter={() => {
+                    if (state.player.graveyard.length > 0) {
+                      setHoveredCard(state.player.graveyard[state.player.graveyard.length - 1]);
+                    }
+                  }}
+                  title="Click to View Your Discard Pile"
+                  className="w-12 h-16 rounded-lg border border-slate-700 bg-slate-950 flex items-center justify-center relative shadow-md cursor-pointer hover:scale-105 hover:border-fulcrum-gold transition"
+                >
                   {state.player.graveyard.length > 0 ? (
                     <CardView card={state.player.graveyard[state.player.graveyard.length - 1]} size="sm" disableClickFlip={true} disableHoverPreview={true} />
                   ) : (
@@ -605,6 +715,109 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
           </div>
         </div>
       )}
+      {/* Discard Pile Inspection Modal */}
+      {inspectingGraveyard && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#0e0a1f] border-2 border-fulcrum-gold rounded-3xl p-6 max-w-4xl w-full max-h-[85vh] flex flex-col shadow-[0_0_60px_rgba(243,198,105,0.4)]">
+            <div className="flex items-center justify-between border-b border-fulcrum-gold/40 pb-4 mb-4">
+              <h3 className="font-serif font-black text-xl text-gold-gradient uppercase flex items-center gap-2">
+                <BookOpen className="w-6 h-6 text-fulcrum-gold" />
+                <span>{inspectingGraveyard === 'player' ? 'Your Discard Pile' : "Opponent's Discard Pile"} ({state[inspectingGraveyard].graveyard.length} Cards)</span>
+              </h3>
+              <button
+                onClick={() => setInspectingGraveyard(null)}
+                className="text-slate-400 hover:text-white font-bold text-sm px-3.5 py-1.5 rounded-xl border border-slate-700 bg-slate-900 cursor-pointer"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2">
+              {state[inspectingGraveyard].graveyard.length === 0 ? (
+                <div className="text-center py-16 text-slate-500 font-mono italic">
+                  Discard pile is currently empty.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {state[inspectingGraveyard].graveyard.map((card, idx) => (
+                    <div
+                      key={card.id + idx}
+                      onMouseEnter={() => setHoveredCard(card)}
+                      className="transform hover:scale-105 transition cursor-pointer shadow-lg rounded-xl overflow-hidden"
+                    >
+                      <CardView card={card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End Step Max Hand Size (6) Discard Modal */}
+      {showEndStepDiscardModal && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in zoom-in-95 duration-200">
+          <div className="bg-[#0e0a1f] border-2 border-red-500 rounded-3xl p-6 max-w-2xl w-full flex flex-col shadow-[0_0_60px_rgba(239,68,68,0.5)]">
+            <div className="text-center space-y-2 mb-6">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-950 border border-red-500 text-red-400">
+                <Shield className="w-6 h-6" />
+              </div>
+              <h3 className="font-serif font-black text-2xl text-red-400 uppercase">Maximum Hand Size Exceeded</h3>
+              <p className="text-xs text-slate-300 max-w-md mx-auto">
+                At End Step, maximum hand size is <span className="text-amber-300 font-bold">6 cards</span>.
+                You currently have <span className="text-red-400 font-bold">{state.player.hand.length} cards</span>.
+                Select <span className="text-fulcrum-gold font-bold">{state.player.hand.length - 6} card(s)</span> to discard to your graveyard.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-[50vh] overflow-y-auto p-2 mb-6">
+              {state.player.hand.map((hc) => {
+                const isSelected = endStepDiscardSelectedIds.includes(hc.card.id);
+                return (
+                  <div
+                    key={hc.card.id}
+                    onClick={() => {
+                      soundFx.playButtonClickSound();
+                      setEndStepDiscardSelectedIds((prev) =>
+                        prev.includes(hc.card.id) ? prev.filter((id) => id !== hc.card.id) : [...prev, hc.card.id]
+                      );
+                    }}
+                    className={`cursor-pointer transition-all duration-300 rounded-xl overflow-hidden relative ${
+                      isSelected ? 'ring-4 ring-red-500 scale-105 shadow-[0_0_20px_rgba(239,68,68,0.8)]' : 'opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <CardView card={hc.card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-red-950/60 flex items-center justify-center font-black text-red-300 uppercase text-xs">
+                        Discarding
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <span className="text-xs font-mono text-slate-400">
+                Selected: {endStepDiscardSelectedIds.length} / {state.player.hand.length - 6}
+              </span>
+              <button
+                disabled={endStepDiscardSelectedIds.length !== state.player.hand.length - 6}
+                onClick={handleConfirmEndStepDiscards}
+                className={`font-bold text-xs px-6 py-2.5 rounded-xl shadow-lg transition ${
+                  endStepDiscardSelectedIds.length === state.player.hand.length - 6
+                    ? 'bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white cursor-pointer'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                }`}
+              >
+                Confirm Discard & Pass Turn
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mulligan Phase Overlay */}
       {state.phase === 'mulligan' && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
