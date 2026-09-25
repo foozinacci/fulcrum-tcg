@@ -225,11 +225,15 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                 </div>
               </div>
 
-              {/* TOP CENTER: OPPONENT HAND */}
-              <div className="flex items-center justify-center -space-x-4 flex-1">
-                {state.opponent.hand.map((_, idx) => (
-                  <div key={idx} className="w-12 h-16 rounded-lg border border-purple-500/40 bg-[#0c081a] shadow-md overflow-hidden transform hover:-translate-y-1 transition">
-                    <img src="/assets/card-back.jpg" alt="Opponent Hand Card" className="w-full h-full object-cover opacity-80" />
+              {/* TOP CENTER: OPPONENT HAND (FULLY REVEALED - OPEN INFORMATION) */}
+              <div className="flex items-center justify-center -space-x-5 pt-1 pb-1 px-2 overflow-visible min-h-[100px] flex-1">
+                {state.opponent.hand.map((hc, idx) => (
+                  <div
+                    key={hc.card.id + idx}
+                    onMouseEnter={() => setHoveredCard(hc.card)}
+                    className="flex-shrink-0 transition-all duration-300 cursor-pointer relative group transform hover:-translate-y-3 hover:scale-105 hover:z-30 shadow-md rounded-xl"
+                  >
+                    <CardView card={hc.card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
                   </div>
                 ))}
               </div>

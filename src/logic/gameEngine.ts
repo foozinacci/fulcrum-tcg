@@ -326,16 +326,18 @@ export function startTurn(state: GameState): GameState {
     ability2UsedThisTurn: false,
   }));
 
-  // Gluttrix Ability 1: Each player draws an additional card at turn start!
-  activePlayer = drawCard(activePlayer, logs);
-  if (activePlayer.primalAvatar.id === GLUTTRIX_COREFEASTER.id) {
+  // Draw card at turn start (Orbit 2 onwards — Orbit 1 hand of 6 is drawn during setup)
+  if (state.turnNumber > 1) {
     activePlayer = drawCard(activePlayer, logs);
-    logs.unshift({
-      id: Math.random().toString(),
-      text: `Gluttrix Ability 1: Drew +1 additional card at start of turn!`,
-      type: 'info',
-      timestamp: new Date().toLocaleTimeString(),
-    });
+    if (activePlayer.primalAvatar.id === GLUTTRIX_COREFEASTER.id) {
+      activePlayer = drawCard(activePlayer, logs);
+      logs.unshift({
+        id: Math.random().toString(),
+        text: `Gluttrix Ability 1: Drew +1 additional card at start of turn!`,
+        type: 'info',
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
   }
 
   activePlayer.field.forEach((perm) => {
