@@ -43,16 +43,14 @@ export function createInitialGameState(
   const pDeck = shuffleDeck(customPlayerDeck && customPlayerDeck.length >= 10 ? customPlayerDeck : defaultPDeck);
   const oDeck = shuffleDeck(customOpponentDeck && customOpponentDeck.length >= 10 ? customOpponentDeck : defaultODeck);
 
-  // FULCRUM Rule: Opening Hand is 6 cards (leaving 54 cards in deck)
+  // FULCRUM Rule: Opening Hand is 6 cards (leaving 54 cards in deck). Starting Core pool is 0.
   const oRawHand = oDeck.splice(0, 6);
   const pRawHand = pDeck.splice(0, 6);
 
   const pHand: HandCard[] = pRawHand.map((card) => ({ card, drawnThisTurn: true }));
   const oHand: HandCard[] = oRawHand.map((card) => ({ card, drawnThisTurn: true }));
 
-  const pCoreSeed = pRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
-  const oCoreSeed = oRawHand.reduce((acc, c) => acc + (c.coreValue || 0), 0);
-
+  // Starting core is 0; players convert 1-3 cards during Resource Mulligan to seed their starting Core pool (max 10).
   const player: PlayerState = {
     id: 'player',
     name: 'Player 1',
@@ -60,7 +58,7 @@ export function createInitialGameState(
     lifeTotal: startingLife,
     startingLife: startingLife,
     primalDamageTaken: {},
-    corePool: pCoreSeed,
+    corePool: 0,
     hand: pHand,
     deck: pDeck,
     graveyard: [],
@@ -75,7 +73,7 @@ export function createInitialGameState(
     lifeTotal: startingLife,
     startingLife: startingLife,
     primalDamageTaken: {},
-    corePool: oCoreSeed,
+    corePool: 0,
     hand: oHand,
     deck: oDeck,
     graveyard: [],
@@ -88,7 +86,7 @@ export function createInitialGameState(
   const initialLogs: GameLogEntry[] = [
     {
       id: Math.random().toString(),
-      text: `Official FULCRUM Match Started! (${startingLife} HP • Primal Threshold: ${primalThreshold}). 6-Card Hand drawn (54 cards remaining in deck). ${pAvatar.name} deployed in 61st Slot.`,
+      text: `Official FULCRUM Match Started! (${startingLife} HP • Primal Threshold: ${primalThreshold}). 6-Card Hand drawn (54 cards remaining in deck). Starting Core: 0. ${pAvatar.name} deployed in 61st Slot.`,
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     },
@@ -117,60 +115,77 @@ export function executeMulligan(state: GameState, playerSelectedCardIds: string[
   const opponent = { ...state.opponent };
   const logs = [...state.logs];
 
-  // 1. Process Player Mulligan (max 3 cards)
-  const cardsToShuffleBackIds = playerSelectedCardIds.slice(0, 3);
-  const keptHand: HandCard[] = [];
-  const returnedCards: Card[] = [];
+  // 1. Process Player Resource Mulligan (must select between 1 and 3 cards)
+  let selectedIds = playerSelectedCardIds.slice(0, 3);
+  if (selectedIds.length === 0 && player.hand.length > 0) {
+    // Default: Convert the first card if no card was selected
+    selectedIds = [player.hand[0].card.id];
+  }
+
+  const pKeptHand: HandCard[] = [];
+  const pConvertedCards: Card[] = [];
 
   player.hand.forEach((hc) => {
-    if (cardsToShuffleBackIds.includes(hc.card.id)) {
-      returnedCards.push(hc.card);
+    if (selectedIds.includes(hc.card.id)) {
+      pConvertedCards.push(hc.card);
     } else {
-      keptHand.push(hc);
+      pKeptHand.push(hc);
     }
   });
 
-  if (returnedCards.length > 0) {
-    player.deck = shuffleDeck([...player.deck, ...returnedCards]);
-    const drawn = player.deck.splice(0, returnedCards.length);
-    const drawnHand: HandCard[] = drawn.map((c) => ({ card: c, drawnThisTurn: true }));
-    player.hand = [...keptHand, ...drawnHand];
+  let pCoreGained = 0;
+  pConvertedCards.forEach((c) => {
+    pCoreGained += (c.coreValue || 1);
+  });
 
-    logs.unshift({
-      id: Math.random().toString(),
-      text: `${player.name} mulliganed ${returnedCards.length} card(s) back into deck and drew replacement(s). (${player.hand.length} cards in hand, ${player.deck.length} remaining in deck).`,
-      type: 'info',
-      timestamp: new Date().toLocaleTimeString(),
-    });
-  } else {
-    logs.unshift({
-      id: Math.random().toString(),
-      text: `${player.name} kept opening hand (${player.hand.length} cards in hand, ${player.deck.length} remaining in deck).`,
-      type: 'info',
-      timestamp: new Date().toLocaleTimeString(),
-    });
-  }
+  player.corePool = Math.min(10, player.corePool + pCoreGained);
+  player.graveyard = [...player.graveyard, ...pConvertedCards];
 
-  // Recalculate opening core seed
-  player.corePool = player.hand.reduce((acc, c) => acc + (c.card.coreValue || 0), 0);
+  // Draw replacement cards from deck
+  const pDrawn = player.deck.splice(0, pConvertedCards.length);
+  const pReplacementHand: HandCard[] = pDrawn.map((c) => ({ card: c, drawnThisTurn: true }));
+  player.hand = [...pKeptHand, ...pReplacementHand];
 
-  // 2. Process AI Mulligan (AI shuffles up to 2 high load cards if pace > 3)
-  const aiHighLoad = opponent.hand.filter((hc) => hc.card.pace > 3).slice(0, 2);
-  if (aiHighLoad.length > 0) {
-    const aiKept = opponent.hand.filter((hc) => !aiHighLoad.includes(hc));
-    const aiReturned = aiHighLoad.map((hc) => hc.card);
-    opponent.deck = shuffleDeck([...opponent.deck, ...aiReturned]);
-    const aiDrawn = opponent.deck.splice(0, aiReturned.length);
-    opponent.hand = [...aiKept, ...aiDrawn.map((c) => ({ card: c, drawnThisTurn: true }))];
+  logs.unshift({
+    id: Math.random().toString(),
+    text: `${player.name} Resource Mulligan: Converted ${pConvertedCards.length} card(s) to Discard for +${pCoreGained} Core (Starting Core: ${player.corePool}) and drew ${pDrawn.length} replacement(s). (${player.deck.length} cards remaining in deck).`,
+    type: 'conversion',
+    timestamp: new Date().toLocaleTimeString(),
+  });
 
-    logs.unshift({
-      id: Math.random().toString(),
-      text: `${opponent.name} mulliganed ${aiReturned.length} card(s) back into deck.`,
-      type: 'info',
-      timestamp: new Date().toLocaleTimeString(),
-    });
-  }
-  opponent.corePool = opponent.hand.reduce((acc, c) => acc + (c.card.coreValue || 0), 0);
+  // 2. Process AI Resource Mulligan (AI selects 1 to 2 cards to convert to Core)
+  const aiCandidates = [...opponent.hand].sort((a, b) => b.card.pace - a.card.pace);
+  const aiConvertedHandCards = aiCandidates.slice(0, Math.min(2, opponent.hand.length));
+  const aiConvertedIds = aiConvertedHandCards.map((hc) => hc.card.id);
+
+  const aiKeptHand: HandCard[] = [];
+  const aiConvertedCards: Card[] = [];
+
+  opponent.hand.forEach((hc) => {
+    if (aiConvertedIds.includes(hc.card.id)) {
+      aiConvertedCards.push(hc.card);
+    } else {
+      aiKeptHand.push(hc);
+    }
+  });
+
+  let aiCoreGained = 0;
+  aiConvertedCards.forEach((c) => {
+    aiCoreGained += (c.coreValue || 1);
+  });
+
+  opponent.corePool = Math.min(10, opponent.corePool + aiCoreGained);
+  opponent.graveyard = [...opponent.graveyard, ...aiConvertedCards];
+
+  const aiDrawn = opponent.deck.splice(0, aiConvertedCards.length);
+  opponent.hand = [...aiKeptHand, ...aiDrawn.map((c) => ({ card: c, drawnThisTurn: true }))];
+
+  logs.unshift({
+    id: Math.random().toString(),
+    text: `${opponent.name} Resource Mulligan: Converted ${aiConvertedCards.length} card(s) to Discard for +${aiCoreGained} Core (Starting Core: ${opponent.corePool}) and drew replacement(s). (${opponent.deck.length} cards remaining in deck).`,
+    type: 'conversion',
+    timestamp: new Date().toLocaleTimeString(),
+  });
 
   return {
     ...state,

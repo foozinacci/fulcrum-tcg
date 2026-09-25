@@ -824,18 +824,18 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
           <div className="bg-gradient-to-b from-[#1c1538] via-[#0f0a21] to-[#080512] border-2 border-fulcrum-gold rounded-3xl p-6 max-w-2xl w-full text-center shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center gap-2 text-fulcrum-gold font-serif font-black text-xs uppercase tracking-widest px-4 py-1 rounded-full bg-black/50 border border-fulcrum-gold/40">
               <Sparkles className="w-4 h-4 text-fulcrum-gold animate-pulse" />
-              <span>Official FULCRUM Opening Hand Rule</span>
+              <span>Official FULCRUM Resource Mulligan System</span>
             </div>
 
             <h2 className="font-serif font-black text-2xl text-gold-gradient tracking-wider uppercase">
-              OPENING HAND MULLIGAN
+              RESOURCE MULLIGAN PHASE
             </h2>
 
             <p className="text-xs text-slate-300 max-w-md font-sans">
-              You drew <span className="text-amber-300 font-bold">6 cards</span> (54 cards remaining in deck). Select <span className="text-cyan-300 font-bold">up to 3 cards</span> to shuffle back into your deck and redraw replacement(s).
+              Select <span className="text-amber-300 font-bold">at least 1 and up to 3 cards</span> from your opening 6-card hand to convert directly into starting Core (capped at 10 max). Selected cards go to your <span className="text-red-400 font-bold">Discard Pile</span>, and you draw equal replacement(s) from your deck.
             </p>
 
-            {/* Hand Cards Grid for Mulligan */}
+            {/* Hand Cards Grid for Resource Mulligan */}
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 my-2 w-full">
               {state.player.hand.map((hc) => {
                 const isSelected = mulliganSelectedIds.includes(hc.card.id);
@@ -852,15 +852,15 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
                     }}
                     className={`cursor-pointer transition-all duration-200 relative rounded-xl border-2 p-1 flex flex-col items-center ${
                       isSelected
-                        ? 'border-cyan-400 bg-cyan-950/80 ring-2 ring-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.6)] scale-105'
+                        ? 'border-emerald-400 bg-emerald-950/80 ring-2 ring-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.6)] scale-105'
                         : 'border-slate-700 bg-slate-900/60 hover:border-fulcrum-gold'
                     }`}
                   >
                     <CardView card={hc.card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
-                    <span className={`text-[9px] font-mono font-bold mt-1 px-2 py-0.5 rounded ${
-                      isSelected ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                    <span className={`text-[9px] font-mono font-bold mt-1 px-1.5 py-0.5 rounded text-center whitespace-nowrap ${
+                      isSelected ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'
                     }`}>
-                      {isSelected ? 'SHUFFLE BACK' : 'KEEP'}
+                      {isSelected ? `+${hc.card.coreValue || 1} CORE` : 'KEEP'}
                     </span>
                   </div>
                 );
@@ -869,13 +869,18 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
 
             <div className="flex items-center gap-3">
               <button
+                disabled={mulliganSelectedIds.length === 0}
                 onClick={() => {
                   soundFx.playVictorySound();
                   setState((prev) => executeMulligan(prev, mulliganSelectedIds));
                 }}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-fulcrum-gold via-amber-500 to-amber-600 text-slate-950 font-serif font-black uppercase text-xs tracking-wider shadow-lg hover:scale-105 transition flex items-center gap-2"
+                className={`px-6 py-3 rounded-xl font-serif font-black uppercase text-xs tracking-wider shadow-lg transition flex items-center gap-2 ${
+                  mulliganSelectedIds.length > 0
+                    ? 'bg-gradient-to-r from-fulcrum-gold via-amber-500 to-amber-600 text-slate-950 hover:scale-105 cursor-pointer'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                }`}
               >
-                <span>Confirm Mulligan ({mulliganSelectedIds.length}/3 Shuffled)</span>
+                <span>Confirm Resource Mulligan ({mulliganSelectedIds.length}/3 Converted)</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
