@@ -101,7 +101,7 @@ export interface PlayerState {
   grothmawDealtDamageThisTurn?: boolean; // Grothmaw Ability 2 flag
 }
 
-export type GamePhase = 'draw' | 'conversion' | 'main1' | 'combat' | 'main2' | 'end' | 'gameover';
+export type GamePhase = 'mulligan' | 'draw' | 'conversion' | 'main1' | 'combat' | 'main2' | 'end' | 'gameover';
 
 export interface GameLogEntry {
   id: string;

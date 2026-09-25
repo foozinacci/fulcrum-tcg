@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GameState, Card, BoardPermanent } from '../types/game';
-import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn } from '../logic/gameEngine';
+import { playHandCard, executeCombat, convertHandCardToCore, advancePhase, endTurn, executeMulligan } from '../logic/gameEngine';
 import { runAiTurnStep } from '../logic/aiBot';
 import { CardView } from './CardView';
 import { TurnPhaseBar } from './TurnPhaseBar';
@@ -20,6 +20,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
   const [showLogs, setShowLogs] = useState(false);
   const [showOracle, setShowOracle] = useState(false);
   const [showBugReport, setShowBugReport] = useState(false);
+  const [mulliganSelectedIds, setMulliganSelectedIds] = useState<string[]>([]);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [hasNotifiedEnd, setHasNotifiedEnd] = useState(false);
@@ -178,7 +179,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
         {/* ========================================================================= */}
         {/* CENTER/LEFT BATTLEFIELD (3 COLUMNS - ISOMETRIC 3D ARENA STAGE)            */}
         {/* ========================================================================= */}
-        <div className="lg:col-span-3 flex flex-col justify-between gap-2 h-full min-h-0 overflow-visible bg-gradient-to-b from-[#0e0a1f] via-[#070412] to-[#0c081b] border-2 border-fulcrum-gold rounded-3xl p-4 sm:p-5 shadow-[0_0_80px_rgba(243,198,105,0.35)] relative order-1 [perspective:1200px] [transform-style:preserve-3d]">
+        <div className="lg:col-span-3 flex flex-col justify-between gap-2 h-full min-h-0 overflow-hidden bg-gradient-to-b from-[#0e0a1f] via-[#070412] to-[#0c081b] border-2 border-fulcrum-gold rounded-3xl p-3 sm:p-4 shadow-[0_0_80px_rgba(243,198,105,0.35)] relative order-1">
           
           {/* Volumetric Sub-surface Ambient Stage Lighting */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(243,198,105,0.08)_0%,transparent_75%)] pointer-events-none" />
@@ -190,13 +191,13 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
           <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-fulcrum-gold shadow-[0_0_12px_rgba(243,198,105,0.5)] pointer-events-none z-10" />
           <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-fulcrum-gold shadow-[0_0_12px_rgba(243,198,105,0.5)] pointer-events-none z-10" />
 
-          {/* 3D ISOMETRIC INCLINATION CONTAINER */}
-          <div className="flex flex-col justify-between h-full min-h-0 w-full [transform:rotateX(5deg)_scale(0.96)] transition-transform duration-500 ease-out [transform-style:preserve-3d] space-y-2">
+          {/* BATTLEFIELD STAGE CONTAINER */}
+          <div className="flex flex-col justify-between h-full min-h-0 w-full space-y-2">
 
             {/* ----------------------------------------------------------------------- */}
             {/* ZONE 1: OPPONENT TERRITORY (DISCARD/DECK LEFT | HAND TOP | AVATAR RIGHT)  */}
             {/* ----------------------------------------------------------------------- */}
-            <div className="flex items-center justify-between gap-3 h-[26%] bg-gradient-to-b from-black/80 via-purple-950/20 to-black/60 border border-white/15 rounded-2xl px-5 py-2 relative overflow-visible shadow-lg">
+            <div className="flex items-center justify-between gap-3 min-h-[100px] sm:min-h-[115px] flex-shrink-0 bg-gradient-to-b from-black/80 via-purple-950/20 to-black/60 border border-white/15 rounded-2xl px-4 py-2 relative overflow-visible shadow-lg">
               
               {/* Volumetric Top Glow Halo */}
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-20 bg-amber-500/10 blur-2xl pointer-events-none rounded-full" />
@@ -348,7 +349,7 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
             {/* ----------------------------------------------------------------------- */}
             {/* ZONE 5 & 6: PLAYER TERRITORY (AVATAR LEFT | HAND BOTTOM | DECK/DISCARD RIGHT) */}
             {/* ----------------------------------------------------------------------- */}
-            <div className="flex items-center justify-between gap-3 h-[28%] bg-gradient-to-b from-black/60 via-amber-950/20 to-black/80 border border-white/15 rounded-2xl px-5 py-2 relative overflow-visible shadow-lg">
+            <div className="flex items-center justify-between gap-3 min-h-[110px] sm:min-h-[120px] flex-shrink-0 bg-gradient-to-b from-black/60 via-amber-950/20 to-black/80 border border-white/15 rounded-2xl px-4 py-2 relative overflow-visible shadow-lg">
               
               {/* Volumetric Bottom Ambient Halo */}
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-96 h-20 bg-cyan-500/10 blur-2xl pointer-events-none rounded-full" />
@@ -597,6 +598,70 @@ export const FulcrumNextGenArena: React.FC<FulcrumNextGenArenaProps> = ({ initia
             >
               Play Again
             </button>
+          </div>
+        </div>
+      )}
+      {/* Mulligan Phase Overlay */}
+      {state.phase === 'mulligan' && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-[#1c1538] via-[#0f0a21] to-[#080512] border-2 border-fulcrum-gold rounded-3xl p-6 max-w-2xl w-full text-center shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-2 text-fulcrum-gold font-serif font-black text-xs uppercase tracking-widest px-4 py-1 rounded-full bg-black/50 border border-fulcrum-gold/40">
+              <Sparkles className="w-4 h-4 text-fulcrum-gold animate-pulse" />
+              <span>Official FULCRUM Opening Hand Rule</span>
+            </div>
+
+            <h2 className="font-serif font-black text-2xl text-gold-gradient tracking-wider uppercase">
+              OPENING HAND MULLIGAN
+            </h2>
+
+            <p className="text-xs text-slate-300 max-w-md font-sans">
+              You drew <span className="text-amber-300 font-bold">6 cards</span> (54 cards remaining in deck). Select <span className="text-cyan-300 font-bold">up to 3 cards</span> to shuffle back into your deck and redraw replacement(s).
+            </p>
+
+            {/* Hand Cards Grid for Mulligan */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 my-2 w-full">
+              {state.player.hand.map((hc) => {
+                const isSelected = mulliganSelectedIds.includes(hc.card.id);
+                return (
+                  <div
+                    key={hc.card.id}
+                    onClick={() => {
+                      soundFx.playButtonClickSound();
+                      if (isSelected) {
+                        setMulliganSelectedIds(mulliganSelectedIds.filter((id) => id !== hc.card.id));
+                      } else if (mulliganSelectedIds.length < 3) {
+                        setMulliganSelectedIds([...mulliganSelectedIds, hc.card.id]);
+                      }
+                    }}
+                    className={`cursor-pointer transition-all duration-200 relative rounded-xl border-2 p-1 flex flex-col items-center ${
+                      isSelected
+                        ? 'border-cyan-400 bg-cyan-950/80 ring-2 ring-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.6)] scale-105'
+                        : 'border-slate-700 bg-slate-900/60 hover:border-fulcrum-gold'
+                    }`}
+                  >
+                    <CardView card={hc.card} size="sm" disableClickFlip={true} disableHoverPreview={true} />
+                    <span className={`text-[9px] font-mono font-bold mt-1 px-2 py-0.5 rounded ${
+                      isSelected ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      {isSelected ? 'SHUFFLE BACK' : 'KEEP'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  soundFx.playVictorySound();
+                  setState((prev) => executeMulligan(prev, mulliganSelectedIds));
+                }}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-fulcrum-gold via-amber-500 to-amber-600 text-slate-950 font-serif font-black uppercase text-xs tracking-wider shadow-lg hover:scale-105 transition flex items-center gap-2"
+              >
+                <span>Confirm Mulligan ({mulliganSelectedIds.length}/3 Shuffled)</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}

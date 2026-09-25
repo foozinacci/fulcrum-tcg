@@ -42,9 +42,10 @@ export function createInitialGameState(
 
   const pDeck = shuffleDeck(customPlayerDeck && customPlayerDeck.length >= 10 ? customPlayerDeck : defaultPDeck);
   const oDeck = shuffleDeck(customOpponentDeck && customOpponentDeck.length >= 10 ? customOpponentDeck : defaultODeck);
-  const oRawHand = oDeck.splice(0, 4);
 
-  const pRawHand = pDeck.splice(0, 4);
+  // FULCRUM Rule: Opening Hand is 6 cards (leaving 54 cards in deck)
+  const oRawHand = oDeck.splice(0, 6);
+  const pRawHand = pDeck.splice(0, 6);
 
   const pHand: HandCard[] = pRawHand.map((card) => ({ card, drawnThisTurn: true }));
   const oHand: HandCard[] = oRawHand.map((card) => ({ card, drawnThisTurn: true }));
@@ -87,7 +88,7 @@ export function createInitialGameState(
   const initialLogs: GameLogEntry[] = [
     {
       id: Math.random().toString(),
-      text: `Official FULCRUM Match Started! (${startingLife} HP • Primal Elimination Threshold: ${primalThreshold}). ${pAvatar.name} deployed in 61st Slot.`,
+      text: `Official FULCRUM Match Started! (${startingLife} HP • Primal Threshold: ${primalThreshold}). 6-Card Hand drawn (54 cards remaining in deck). ${pAvatar.name} deployed in 61st Slot.`,
       type: 'info',
       timestamp: new Date().toLocaleTimeString(),
     },
@@ -98,7 +99,7 @@ export function createInitialGameState(
     opponent,
     turnOwner: 'player',
     turnNumber: 1,
-    phase: 'conversion',
+    phase: 'mulligan',
     winner: null,
     logs: initialLogs,
     selectedHandCardId: null,
@@ -106,6 +107,77 @@ export function createInitialGameState(
     bankCoreAmount: 0,
     isTargeting: false,
     validTargetType: null,
+  };
+}
+
+export function executeMulligan(state: GameState, playerSelectedCardIds: string[]): GameState {
+  if (state.phase !== 'mulligan') return state;
+
+  const player = { ...state.player };
+  const opponent = { ...state.opponent };
+  const logs = [...state.logs];
+
+  // 1. Process Player Mulligan (max 3 cards)
+  const cardsToShuffleBackIds = playerSelectedCardIds.slice(0, 3);
+  const keptHand: HandCard[] = [];
+  const returnedCards: Card[] = [];
+
+  player.hand.forEach((hc) => {
+    if (cardsToShuffleBackIds.includes(hc.card.id)) {
+      returnedCards.push(hc.card);
+    } else {
+      keptHand.push(hc);
+    }
+  });
+
+  if (returnedCards.length > 0) {
+    player.deck = shuffleDeck([...player.deck, ...returnedCards]);
+    const drawn = player.deck.splice(0, returnedCards.length);
+    const drawnHand: HandCard[] = drawn.map((c) => ({ card: c, drawnThisTurn: true }));
+    player.hand = [...keptHand, ...drawnHand];
+
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `${player.name} mulliganed ${returnedCards.length} card(s) back into deck and drew replacement(s). (${player.hand.length} cards in hand, ${player.deck.length} remaining in deck).`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  } else {
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `${player.name} kept opening hand (${player.hand.length} cards in hand, ${player.deck.length} remaining in deck).`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+
+  // Recalculate opening core seed
+  player.corePool = player.hand.reduce((acc, c) => acc + (c.card.coreValue || 0), 0);
+
+  // 2. Process AI Mulligan (AI shuffles up to 2 high load cards if pace > 3)
+  const aiHighLoad = opponent.hand.filter((hc) => hc.card.pace > 3).slice(0, 2);
+  if (aiHighLoad.length > 0) {
+    const aiKept = opponent.hand.filter((hc) => !aiHighLoad.includes(hc));
+    const aiReturned = aiHighLoad.map((hc) => hc.card);
+    opponent.deck = shuffleDeck([...opponent.deck, ...aiReturned]);
+    const aiDrawn = opponent.deck.splice(0, aiReturned.length);
+    opponent.hand = [...aiKept, ...aiDrawn.map((c) => ({ card: c, drawnThisTurn: true }))];
+
+    logs.unshift({
+      id: Math.random().toString(),
+      text: `${opponent.name} mulliganed ${aiReturned.length} card(s) back into deck.`,
+      type: 'info',
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  }
+  opponent.corePool = opponent.hand.reduce((acc, c) => acc + (c.card.coreValue || 0), 0);
+
+  return {
+    ...state,
+    player,
+    opponent,
+    phase: 'conversion',
+    logs,
   };
 }
 

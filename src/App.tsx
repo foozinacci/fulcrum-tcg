@@ -144,10 +144,14 @@ export const App: React.FC = () => {
   const handleStartGame = (overrideDeck?: Card[], isTutorial: boolean = false) => {
     soundFx.playVictorySound();
     const savedAvatarId = localStorage.getItem('fulcrum_primal_avatar_id');
-    const pAvatar = PRIMAL_AVATARS_LIST.find((a: Card) => a.id === savedAvatarId) || PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
-    const oAvatar = PRIMAL_AVATARS_LIST[0];
-    const deckToUse = (overrideDeck && overrideDeck.length >= 10) ? overrideDeck : (customDeck && customDeck.length >= 10 ? customDeck : STARTER_DECK_A);
-    const initial = createInitialGameState(deckToUse, STARTER_DECK_B, pAvatar, oAvatar);
+    const pAvatar = PRIMAL_AVATARS_LIST.find((a: Card) => a.id === savedAvatarId) || PRIMAL_AVATARS_LIST[0];
+    const oAvatar = PRIMAL_AVATARS_LIST[1] || PRIMAL_AVATARS_LIST[0];
+
+    const deckToUse = (overrideDeck && overrideDeck.length >= 10)
+      ? overrideDeck
+      : (customDeck && customDeck.length >= 10 ? customDeck : undefined);
+
+    const initial = createInitialGameState(deckToUse, undefined, pAvatar, oAvatar);
     setGameState(initial);
     setViewMode('game');
     if (isTutorial) setShowTutorial(true);
